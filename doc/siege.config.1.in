@@ -1,0 +1,54 @@
+.ig \"-*- Siege -*-
+Copyright (C) 2013 %_AUTHOR%
+
+Siege is distributed under the terms of the GNU GPL.
+
+..
+.de TQ
+.br
+.ns
+.TP \\$1
+..
+.\" Like TP, but if specified indent is more than half
+.\" the current line-length - indent, use the default indent.
+.de Tp
+.ie \\n(.$=0:((0\\$1)*2u>(\\n(.lu-\\n(.iu)) .TP
+.el .TP "\\$1"
+..
+.TH SIEGE.CONFIG 1 "%_DATE%" "Siege v%_VERSION%"
+.SH NAME
+.B siege.config
+\- builds a .siegerc template in the user's home directory.
+.SH INTRODUCTION
+.LP
+With the release of version 2.00, siege supports a settings configuration file to permanently store runtime variables.  The settings in this file are the default values for every siege invocation. They are superceded by command line options, so if the configuration file has a default "times = 10" and the user invokes siege with \-t1000, then siege will run 1000 times and not 10.
+.LP
+When siege is installed on a system, a .siegerc file is installed in the installing user's home directory.  This means that only the user who installed siege has a configuration file.  The siege.config utility was designed to install a .siegerc file in the home directory of the user who invoked it. This makes it possible to have customized siege configuration on a per user basis.
+.SH INVOCATION
+.LP
+The format for invoking siege.config is this:\fR
+.br
+siege.config [no arguments]\fR
+
+.SH AUTHOR
+%_AUTHOR% <%_EMAIL%>
+.SH BUGS
+Report bugs to %_EMAIL%.
+Give a detailed description of the problem
+and report the version of %_PROGRAM% that
+you are using.
+.SH COPYRIGHT
+Copyright \(co 2000 2001 2004 %_AUTHOR%
+.LP
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.LP
+.SH AVAILABILITY
+The most recent released version of siege is available by
+anonymous FTP from sid.joedog.org in the directory pub/siege.
+.LP
+.SH SEE ALSO
+siege(1) layingsiege(1)

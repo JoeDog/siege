@@ -1,0 +1,70 @@
+.ig \"-*- Siege -*-
+Copyright (C) 2000-2007 %_AUTHOR%
+
+Siege is distributed under the terms of the GNU GPL.
+
+..
+.TH LAYINGSIEGE 7 "%_DATE%" "Siege v%_VERSION%"
+.SH NAME
+.B Siege 
+\- An HTTP/HTTPS stress tester
+was designed orignally as a internet usage simulator.  In short, its role was to simulate the activity of many simultaneous users hitting a HTTP server.  We were debugging some java code and during that process we arrived at a point where the code could withstand an acceptable number of users hitting a single URL but it could not withstand the seemingly random activity that characterizes many users hitting many URLs on a webserver.  
+
+In order to debug the problem in a lab environment, I developed a program that simply read a bunch of URLs ( we used images, scripts, static html, jsps, etc. ) into memory and hit them randomly.  The result was a success.  We were able to break the code in the lab, an occurance which ultimately allowed us to fix it and put it into production.  As the developers code improved, siege improved until we ultimately had good java code and a pretty decent regression tool.  It was helpful for us, I hope it is helpful to you.
+
+In order to feel comfortable putting code into production, you need a way to measure its performance and to determine its threshold for failure.  If you break your database pool at 250 simultaneous users and you average less then one-hundred simultaneous users and the code performs favorably, you can feel good about putting it into production.  At the same time, if you should monitor trends in your site's activity and prepare for the moment when your traffic starts to near your threshold for failure. 
+
+As a webdeveloper or websystems administrator you have little to no control over your user group.  They can visit your site anytime day or night. Your domain name could resemble a popular site, yoohoo.com?  And when was the last time marketing informed you about an approaching advertising blitz?  You must be prepared for anything.  That is why stress and performance testing is so important. I would not recommend putting anything into production until you have a good feel for how it will perform under duress.
+
+.SH LAYING SIEGE
+.LP
+Whenever we add new code to a webserver, we place the server "under siege." First we stressthe new URL(s) and then we pound the server with regression testing with the new URLs added to the configuration file.  We want to see if the new code will stand on its own, plus we want to see if it will break anything else. 
+
+The following statistics were gleaned when I laid siege to a single URL on a http server:
+
+.br 
+Transactions:                  1000 hits
+.br 
+Elapsed time:                617.99 secs
+.br 
+Data transferred:           4848000 bytes
+.br 
+Response time:                59.41 secs
+.br 
+Transaction rate:              1.62 trans/sec
+.br 
+Throughput:                 7844.79 bytes/sec
+.br 
+Concurrency:                  96.14
+.br 
+Status code 200:               1000
+
+In the above example, we simulated 100 users hitting the same URL 10 times, a total of 1000 transactions. The elapsed time is measured from the first transaction to the last, in this case it took 617.99 seconds to hit the http server 1000 times.  During that run, siege recieved a total of 4848000 bytes including headers.  The response time is measured by the duration of each transaction divided by the number of transactions.  The transaction rate is number of transactions divided by elapsed time.  Throughput is the measure of bytes recieved divided by elapsed time.  And the concurrency is the time of each transaction divided by the elapsed time.  The final statistic is Status code 200.  This is the number of pages that were effectively delivered without server errors.
+
+To create this example, I ran siege on my Sun workstation and I pounded a GNU/Linux Intel box, essentially a workstation.  The performance leaves a lot to be desired.  One indication that the server is struggling is the high concurrency.  The longer the transaction, the higher the concurrency.  This server is taking a while to complete the transaction and it continues to open new sockets to handle all the additional requests.  In truth the Linux box is suffering from a lack of RAM, it has about 200MB, hardly enough to be handling one hundred concurrent users. :-)
+
+Now that we've stressed the URL(s) singly, we can add them to our main configuration file and stress them with the rest of the site.  The default URLs file is SIEGE_HOME/etc/urls.txt.
+
+Siege can allow websystems administrators a chance to see how their servers perform under duress.  I recommend running server performance monitoring tools while it is under siege to gage your hardware / software configurations.  The results can be surprising...
+
+.B Siege
+was originally based on Lincoln Stein's torture.pl and if you cannot it on your architecture, it is recommended that you run that excellent perl script instead.  I intentionally modeled my statistics output after his in order to maintain similar reference.
+
+.SH COPYRIGHT
+Copyright \(co 2000 2001 2004 %_AUTHOR% <%_EMAIL%>
+.LP
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Fo
+undation; either version 2 of the License, or (at your option) any later version.
+ 
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave,
+Cambridge, MA 02139, USA.
+.LP
+.SH AVAILABILITY
+The most recent released version of siege is available by
+anonymous FTP from sid.joedog.org in the directory pub/siege.
+.LP
+.SH SEE ALSO
+siege(1) siege.config(1) urls_txt(5)
+

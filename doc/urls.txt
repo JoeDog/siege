@@ -1,0 +1,16 @@
+# URLS file for siege
+# --
+# Format the url entries in any of the following formats:
+# http://www.whoohoo.com/index.html
+# http://www/index.html
+# www/index.html
+# http://www.whoohoo.com/cgi-bin/howto/display.cgi?1013
+# Use the POST directive for pages that require it:
+# http://www.whoohoo.com/cgi-bin/haha.cgi POST ha=1&ho=2
+#      or POST content from a file:
+# http://www.whoohoo.com/melvin.jsp POST </home/jeff/haha
+# http://www.whoohoo.com/melvin.jsp POST <./haha
+# You may also set and reference variables inside this file,
+# for more information, man urls_txt
+# -------------------------------------------------------
+

@@ -1,0 +1,15 @@
+----------------
+SIEGE TEST PAGES 
+----------------
+
+These pages are available to siege developers and users to test its
+functionality. Each test is explained individually on the page itself. 
+Each application is self-contained, i.e., no dependencies. To install, 
+simply drop them inside your webserver's document root. Make sure the 
+server supports the associated language.
+
+Please send language ports of these pages to jeff@joedog.org
+
+
+
+

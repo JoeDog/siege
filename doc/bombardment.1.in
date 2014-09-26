@@ -1,0 +1,49 @@
+.\" Copyright 2001, 2002 Peter J. Hutnick (phutnick@aperian.com)
+.\" May be distributed under the GNU General Public License
+.TH BOMBARDMENT 1 "%_DATE%" "Siege Utility" "bombardment v%_VERSION%"
+.SH NAME
+bombardment \- Run Siege with an ever-increasing number of users
+.SH SYNOPSIS
+.BR "bombardment" " [urlfile] [initial number of clients] [increment value]
+[number of increments] [delay]" 
+.br
+.B "bombardment urlfile.txt 5 10 20 1"
+.SH DESCRIPTION
+.B bombardment
+is part of the Siege package.  It calls siege with an initial number of
+clients.  When that run finishes, it immediately calls siege again with
+that number of clients plus the increment.  It does this the number of
+times specified in the fourth argument.
+.SH OPTIONS
+.TP
+.BR "urlfile"
+The name of the file containing one or more URLs for siege to test.
+.TP
+.BR "initial number of clients"
+The number of clients to be used on the first Siege run.
+.TP
+.BR "increment value"
+The number of clients to add from run to run.
+.TP
+.BR "number of increments"
+The number of times to run siege.
+.TP
+.BR "delay"
+The is the amount of time, in seconds, that each client will wait between
+requests.  The Siege default of 3 is overridden by 
+.B bombardment
+and is 15.
+.SH NOTES
+.B bombardment
+can very easily overcome process and filehandle limits.  Siege DOES give a
+warning if it is going to exceed 600 concurrent processes.  See your
+system documentation (or try ulimit \-a) for information on the limits of
+your system before using a high number of concurrent users.
+.SH "SEE ALSO"
+.BR siege (1),
+.BR urls_txt (5),
+.BR layingsiege (7),
+.BR siege2csv (1)
+.SH AUTHOR
+Written by Peter Hutnick <phutnick@aperian.com>
+

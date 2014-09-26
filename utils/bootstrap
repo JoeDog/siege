@@ -1,0 +1,13 @@
+#!/bin/sh
+# Jeffrey Fulmer <jdfulmer@armstrong.com>
+# Sat Jan  6 11:36:27 EST 2001
+#
+# part of siege distribution
+# automates the autotools
+
+set -x
+aclocal 
+autoheader
+automake --foreign --copy
+autoconf
+

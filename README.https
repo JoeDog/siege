@@ -1,0 +1,63 @@
+                
+                        Siege HTTPS README
+
+Siege 1.10  introduced  https  protocol support.  To enable HTTPS
+you  will  have  to  download  OpenSSL < http://www.openssl.org >
+to  enable  Secure Socket Layers  and  install it on your system. 
+Please consult the  OpenSSL documentation for  configuration  and
+installation instructions. Once it is installed, you are ready to 
+build siege with https support.
+
+
+----------------------------IMPORTANT---------------------------- 
+ATTENTION:  If you already  have  siege  installed on your system 
+and you want to enable https support, you will have to remove the
+previous version  before  continuing.  If you  have  the original 
+source directory, the simplest way to remove siege is:
+ 
+ $ make uninstall
+
+If  not then you will have to remove it manually. It is important
+that  you  removed the siege binary as well as the libraries.  To 
+remove siege: 
+
+ $ cd PREFIX/bin
+
+[ by default /usr/local/bin ] and remove siege:
+
+ $ rm siege
+
+Next you will have to remove the libraries:
+
+ $ cd PREFIX/lib
+
+[ by default /usr/local/lib ] and remove the libraries:
+
+ $ rm libsiege*
+ $ rm libjoedog* 
+
+To build siege with HTTPS protocol support consult the document 
+INSTALL in this directory.  For the impatient: 
+
+ $ ./configure --prefix=/some/dir --with-ssl=/dir/with/ssl 
+ $ make
+ $ make install
+
+If you've installed openssl in the default directory,  then the 
+directory parameter is /usr/local/ssl.  The configure script is
+designed  to scan  several common installation paths if it does
+not find ssl in the directory that you've indicated. 
+
+NO SSL?
+To build siege without ssl support, especially if you have ssl 
+installed on your system, build siege as follows:
+
+ $ ./configure --prefix=/some/dir --with-ssl=no
+ $ make
+ $ make install
+
+
+BUG ALERT: Several problems have been reported with the openssl 
+version which ships with Red Hat 9.x.  We recommend you compile 
+your own ssl rather than use the Red Hat version.
+

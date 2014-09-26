@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+use Pod::Man;
+my $input  = $ARGV[0] or barf();
+my $output = $ARGV[1] or barf();
+
+my $parser = Pod::Man->new (release => $VERSION, section => 8);
+$parser->parse_from_file ($input, $output);
+
+sub barf() {
+  print "usage: $0 <file.pod> <file.1>\n";
+  exit(1);
+}

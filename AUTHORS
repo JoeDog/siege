@@ -1,0 +1,44 @@
+AUTHORS OF SIEGE
+----------------
+
+Jeffrey Fulmer <jeff@joedog.org>
+Designed  and  implemented Siege in  his position as   
+Webmaster for Armstrong World Industries;  he is the   
+primary author and maintainer of the application.
+http://www.joedog.org/
+
+
+
+Major contributors:
+-------------------
+Albert Chin-A-Young <china@thewrittenword.com>
+Submitted  several patches which  contributed to the 
+portability of  the application.  thewrittenword.com
+redistributes siege  for several platforms in binary
+form.
+
+Peter J. Hutnick: <peter@hutnick.com>
+Designed and authored  bombardment and siege2csv.pl,
+auxiliary tools  distributed  with siege.  He is the 
+webmaster of joedog.org, the primary source of siege
+information.
+
+Kai S. Juse <juse@rbg.informatik.tu-darmstadt.de> 
+Incorporated the programmatic logic to handle cookie 
+exprirations, re-architected the client thread entry 
+functions and submitted bug fixes and insight.
+
+Oliver Teuber <teuber@core.devicen.de> 
+Made numerous feature contributions and bug fixes.
+
+Larry D. Weiner <larry@2its.com>
+Wrote  most  of  the code  to support the HTTP  POST 
+method and keep-alive directives.
+
+
+
+----------------------------------------------------
+Other contributions are attributed in the ChangeLog.
+
+
+

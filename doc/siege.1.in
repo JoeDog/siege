@@ -1,0 +1,250 @@
+.ig \"-*- Siege -*-
+Copyright (C) 2000-2010 by %_AUTHOR%
+
+Siege is distributed under the terms of the GNU GPL.
+
+..
+.de TQ
+.br
+.ns
+.TP \\$1
+..
+.\" Like TP, but if specified indent is more than half
+.\" the current line-length - indent, use the default indent.
+.de Tp
+.ie \\n(.$=0:((0\\$1)*2u>(\\n(.lu-\\n(.iu)) .TP
+.el .TP "\\$1"
+..
+.TH SIEGE 1 "%_DATE%" "Siege v%_VERSION%"
+.SH NAME
+.B %_PROGRAM%
+\- An HTTP/HTTPS stress tester
+.SH INTRODUCTION
+Siege is a multi-threaded http load testing and benchmarking utility.  It was designed to let web developers measure the performance of their code under duress.  It allows one to hit a web server with a configurable number of concurrent simulated users.  Those users place the webserver "under siege."  
+\fR\fR
+Performance measures include elapsed time, total data transferred, server response time, its transaction rate, its throughput, its concurrency and the number of times it returned OK.  These measures are quantified and reported at the end of each run.  Their meaning and significance is discussed below.
+\fR\fR
+Siege has essentially three modes of operation: regression (when invoked by bombardment), internet simulation and brute force. 
+.SH INVOCATION
+The format for invoking siege is:   siege [options] \fR
+                                    siege [options] [url]\fR
+                                    siege \-g [url]\fR
+
+Siege supports the following command line options:\fR\fR
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+VERSION, prints the version number
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+HELP, prints the help section which includes a summary of all the command line options.
+.TP
+\fB\-C\fR, \fB\-\-config\fR
+CONFIGURATION, prints the current configuration in the $HOME/.siegerc file.  Edit that file to set flag values for EVERY siege run, a feature which eases runtime invocation. You set an alternative resource file with the SIEGERC environment variable: export SIEGERC=/home/jeff/haha
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+VERBOSE, prints the HTTP return status and the GET request to  the  screen.   Useful when reading  a series of  URLs  from  a configuration file.  This flag allows you to  witness  the  progress  of  the test.
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+QUIET turns off verbose and suppresses most output. This option was added primarily for scripting with \-g/\-\-get. If you run a full siege in quiet mode, you'll still get the opening introduction and the final stats.
+.TP
+\fB\-g\fR, \fB\-\-get\fR
+GET HTTP headers and display the transaction. Siege exits 1 if the transaction doesn't contain at least one HTTP 200 response, otherwise it exits 0. You can limit the transaction to just the headers by setting gmethod=HEAD in $HOME/.siegerc
+.TP
+\fB\-c NUM\fR, \fB\-\-concurrent=NUM\fR
+CONCURRENT, allows you to set the concurrent number of simulated users to num. The number of simulated users is limited to the resources on the computer running siege.
+.TP
+\fB\-i\fR, \fB\-\-internet\fR
+INTERNET, generates user simulation by randomly hitting the URLs read from the urls.txt file.  This option is viable only with the urls.txt file.
+.TP
+\fB\-d NUM\fR, \fB\-\-delay=NUM\fR
+DELAY, each siege simulated users sleeps for a random interval in seconds between 0 and NUM.
+.TP
+\fB\-b\fR, \fB\-\-benchmark\fR
+BENCHMARK, runs the test with NO DELAY for throughput benchmarking. By default each simulated user is invoked with at least a one second delay. This option removes that delay.  It is not recommended that you use this option while load testing.
+.TP
+\fB\-r NUM\fR, \fB\-\-reps=NUM\fR,  \fB\-\-reps=once\fR
+REPS, allows you to run the siege for NUM repetitions. If \-\-reps=once, then siege will run through the urls.txt file and hit each URL in the file exactly once. The list will be divided among each simulated user. So if you run --reps=once -c10 on a file which contains 30 URLs, then each user will run three times. NOTE: \-t/\-\-time takes precedent over \-r/\-\-reps. If you want to use this option, make sure time = x is commented out in your $HOME/.siegerc file.
+.TP
+\fB\-t NUMm\fR, \fB\-\-time=NUMm\fR
+TIME, allows you to run the test for a selected period of time.  The format is "NUMm", where NUM is a time unit and the "m" modifier is either S, M, or H for seconds, minutes and hours.  To run siege for an hour, you could select any one of the following combinations: \-t3600S, \-t60M, \-t1H.  The modifier is not case sensitive, but it does require no space between the number and itself.
+.TP
+\fB\-l [FILE]\fR, \fB\-\-log[=FILE]\fR
+LOG transaction stats to FILE. The argument is optional. If FILE is not specified, then siege logs the transaction to SIEGE_HOME/var/siege.log. If siege is installed in /usr/local, then the default siege.log is /usr/local/var/siege.log. This option logs the final statistics reported when siege successfully completes its test. You can edit $HOME/.siegerc to change the location of the siege.log file.
+.TP
+\fB\-m MESSAGE\fR, \fB\-\-mark=MESSAGE\fR
+MARK, mark the log file with a separator.  This option will allow you to separate your log file entries with header information.  This is especially useful when testing two different servers.  It is not necessary to use both the \-m option and the \-l option.  \-m assumes \-l so it marks and logs the transaction. If the MESSAGE has spaces in it, make sure that you put it in quotes.
+.TP
+\fB\-H HEADER\fR, \fB\-\-header=HEADER\fR 
+HEADER, this option allows you to add additional header information. 
+.TP
+\fB\-R SIEGERC\fR, \fB\-\-rc=SIEGERC\fR
+RC, sets the siegerc file for the run. This option overrides the environment variable SIEGERC and the default resource file, $HOME/.siegerc
+.TP
+\fB\-f FILE\fR, \fB\-\-file=FILE\fR
+FILE, the default URL file is SIEGE_HOME/etc/urls.txt.  To select a different URL file, use this  option,  i.e.,   siege \-f myurls.txt
+.TP
+\fB\-A "User Agent"\fR, \fB\-\-user\-agent="User Agent"\fR
+AGENT, use this option to set the User-Agent in the request.
+.SH URL FORMAT
+Siege understands the following URL formats: \fR
+.br
+(brackets indicate the directive is optional)\fR
+.br 
+ \fR
+.br
+[protocol://] host.domain.xxx [:port] [/path/file] \fR
+.br
+ \fR
+.br
+host.domain.xxx/file POST field=value&field2=value2 \fR
+.br 
+ \fR
+.br
+Or you can POST the contents of a file using the line input operator, the "<"  character: \fR
+.br
+ \fR
+.br
+host/file POST </home/jeff/haha.txt \fR
+.br
+ \fR
+.br 
+The first example above is an implicit GET, the next two are obviously POSTs. You can pass parameters using GET much like you would in a web browser: \fR
+.br
+ \fR
+www.haha.com/form.jsp?first=homer&last=simpson \fR
+.br
+ \fR
+.br
+If you invoke the URL as a command line argument, you should probably place it in quotes.  Currently, it supports two protocols, http and https.  If a protocol is not specified, then siege assumes http.  The minimum URL requirement is this: servername.  That's it.  So if you're in the same domain as a server named shemp and shemp is in your host file or it is in DNS, then: "siege shemp" will stress http://shemp.yourdomain.net/index.html (assuming that "index.html" is the server specified index). To stress the same page using https protocol, the minimum URL requirement is this: https://shemp.  That URL specification will lay siege to https://shemp.yourdomain.net/index.html
+.SH URLS FILE
+To hit multiple URLs, place them in a single file.  The default URLs file is $SIEGE_HOME/etc/urls.txt.  [You may change that file with the \-f option, see above.] In that file list the URLs one per line:\fR 
+.br
+# place all your comments behind hashes\fR 
+.br
+http://homer.whoohoo.com/index.html\fR 
+.br
+http://homer.whoohoo.com/howto.jsp\fR 
+.br
+http://go.whoohoo.com/cgi\-bin/q.cgi?scope=a\fR
+.br
+http://go.whoohoo.com/cgi\-bin/q.cgi POST scope=a\fR
+.br
+http://homer.whoohoo.com/my.jsp POST a=1&b=2\fR
+.br
+# POST the contents of a file... \fR
+.br
+www.haha.com/aha.jsp POST </home/jeff/my.txt\fR
+.br
+www.haha.com/parser.jsp POST <./my.txt\fR
+.br
+\fR
+.br
+When invoked without a URL on the command line, siege looks for URLs in a file.  Normally, it reads them all into memory and runs through them sequentially. If you specify internet mode [\-i], then it randomly selects URLs to hit.\fR 
+.br
+\fR
+.br
+You may set and reference variables in URLs file. It is necessary to set them PRIOR to referencing them. The syntax for defining variables is NAME = VALUE with a single assignment on a single line. If you define several variables in the file, you must place each assignment on a single line. To use the value of the variable, you must reference it inside $() or ${}, i.e., $(NAME). If you reference a variable that doesn't exist, siege will evaluate it to the empty string "".
+\fR
+.br
+# Example using variable assignment\fR
+.br
+# in the urls.txt file.\fR 
+.br
+HOST = homer.whoohoo.com\fR
+.br
+http://${HOST}/index.html\fR 
+.br
+http://${HOST}/howto.jsp\fR 
+.br
+.SH PERFORMANCE STATISTICS
+Performance measures include elapsed time of the test, the amount of data transferred ( including headers ), the response time of the server, its transaction rate, its throughput, its concurrency and the number of times it returned OK.  These measures are quantified and reported at the end of each run.  The reporting format is modeled after Lincoln Stein's torture.pl script:\fR 
+.br
+** Siege 2.60 \fR
+.br
+** Preparing 100 concurrent users for battle.\fR
+.br
+The server is now under siege...done\fR 
+.br 
+Transactions:                    339 hits \fR
+.br
+Availability:                  93.39 % \fR
+.br
+Elapsed time:                  67.47 secs \fR
+.br
+Data transferred:            4273708 bytes \fR
+.br
+Response time:                  8.25 secs \fR
+.br
+Transaction rate:               5.02 trans/sec \fR
+.br
+Throughput:                 63342.34 bytes/sec \fR
+.br
+Concurrency:                   41.47 \fR
+.br
+Successful transactions:         337 \fR
+.br
+Failed transactions:              26  \fR
+.br
+Longest transaction:           17.77 secs \fR
+.br
+Shortest transaction:           0.37 secs \fR
+.br
+.TP 
+.B Transactions 
+The number of server hits.  In the example, 25 simulated users [ \-c25 ] each hit the server 10 times [ \-r10 ], a total of 250 transactions. It is possible for the number of transactions to exceed the number of hits that were scheduled. Siege counts every server hit a transaction, which means redirections and authentication challenges count as two hits, not one. With this regard, siege follows the HTTP specification and it mimics browser behavior.
+.TP
+.B Availability
+This is the percentage of socket connections successfully handled by the server. It is the result of socket failures (including timeouts) divided by the sum of all connection attempts. This number does not include 400 and 500 level server errors which are recorded in "Failed transactions" described below. 
+.TP
+.B Elapsed time 
+The duration of the entire siege test.  This is measured from the time the user invokes siege until the last simulated user completes its transactions.  Shown above, the test took 14.67 seconds to complete.
+.TP
+.B Data transferred 
+The sum of data transferred to every siege simulated user.  It includes the header information as well as content.  Because it includes header information, the number reported by siege will be larger then the number reported by the server. In internet mode, which hits random URLs in a configuration file, this number is expected to vary from run to run.
+.TP
+.B Response time 
+The average time it took to respond to each simulated user's requests. 
+.TP
+.B Transaction rate 
+The average number of transactions the server was able to handle per second, in a nutshell: transactions divided by elapsed time.   
+.TP
+.B Throughput 
+The average number of bytes transferred every second from the server to all the simulated users. 
+.TP
+.B Concurrency 
+The average number of simultaneous connections, a number which rises as server performance decreases. 
+.TP
+.B Successful transactions 
+The number of times the server responded with a return code < 400. 
+.TP
+.B Failed transactions
+The number of times the server responded with a return code >= 400 plus the sum of all failed socket transactions which includes socket timeouts.
+.TP
+.B Longest transaction
+The greatest amount of time that any single transaction took, out of all transactions.
+.TP
+.B Shortest transaction
+The smallest amount of time that any single transaction took, out of all transactions. 
+
+.SH AUTHOR
+%_AUTHOR% <%_EMAIL%>
+.SH BUGS
+Report bugs to %_EMAIL%.
+Give a detailed description of the problem
+and report the version of siege that
+you are using.
+.SH COPYRIGHT
+Copyright \(co 2000 2001 2004 %_AUTHOR%
+.LP
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.LP
+.SH AVAILABILITY
+The most recent released version of siege is available by
+anonymous FTP from ftp.joedog.org in the directory pub/siege.
+.LP
+.SH SEE ALSO
+siege.config(1) urls_txt(5) layingsiege(7) 

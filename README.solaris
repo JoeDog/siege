@@ -1,0 +1,7 @@
+You'll have to set your log file location in $HOME/.siegerc
+Look for the "logfile = " directive in that file...
+
+You should check and edit include/joedog/joepath.h before you
+compile siege on Solaris. Newer versions >= 9.0  seem to work
+without problems, but should check your path just to be safe.
+

@@ -1,0 +1,23 @@
+#!%_SHELL%
+# SCRIPT: siege.config
+# AUTHOR: Jeffrey Fulmer <jeff@joedog.org>
+# DATE:   Mon May 28 11:40:28 EDT 2001
+# SYNOP:  This script generates  an $HOME/.siegerc 
+#         file from the  doc/siegerc.in  template.
+#         Its contents are added to this script by
+#         configure.  The siegerc file template is
+#         maintained once in $(top_srcdir)/doc.
+
+rcfile="$HOME/.siegerc"
+
+if test -f $rcfile; then
+  echo "siege.config"
+  echo "usage: siege.config [no arguments]"
+  echo "----------------------------------"
+  echo "Resource file already install as $rcfile"
+  echo "Use your favorite editor to change your configuration by"
+  echo "editing the values in that file."
+  echo ""
+  exit
+fi
+cat > $rcfile << '_EOF_'

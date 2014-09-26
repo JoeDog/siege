@@ -1,0 +1,105 @@
+#!/bin/sh
+#bombardment is a script that invokes siege with an ever-increasing
+#number of users.
+#Copyright (C) 2001 Peter J. Hutnick
+
+#This program is free software; you can redistribute it and/or
+#modify it under the terms of the GNU General Public License
+#as published by the Free Software Foundation; either version 2
+#of the License, or (at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with this program; if not, write to the Free Software
+#Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, US
+
+#For informaion, write the author, Peter Hutnick at phutnick@aperian.com.
+
+
+# Display help if no options or --help specified.
+if [ -z $1 ] || [ $1 = --help ]
+	then 	
+		echo ""
+		echo "usage:"
+		echo "bombardment [urlfile] [inital # of clients] \
+[inc value] [# of inc] [delay]"
+		echo ""
+#		echo "so \"laysiege foo.com 10 5 3\" would test \
+#http:\\\\foo.com\\index.html with 10 then 15 then 20 clients."
+		echo ""
+		exit
+	fi
+
+# Assign args to useful variables.
+site=$1
+startcl=$2
+inc=$3
+numruns=$4
+delay=$5
+serial=`date --iso-8601=minutes`
+
+# This script can easily be made to overwhelm system resources (processes
+# and filehandles.  This bit calculates how many processes it will spawn
+# on the last run, and warn if it is more than 600.
+
+total=$startcl
+sub=`expr $inc \* $numruns`
+total=$total+$sub
+
+if [ 600 -lt $(($total)) ]
+	then
+		echo "The options you specified will generate more than \
+600 concurrent users.  This causes problems on many systems.  Press \
+<ctrl><c> to abort, unless you are sure your system can handle more than \
+600 processes and more than 2048 open files, AND that your user account \
+is allowed to do so."
+		echo ""
+		echo "Siege will run with the supplied options in 10 sec."
+# I would rather use something like "pause" from DOS than the sleep below,
+# but I don't know of any such thing.
+		sleep 10
+	fi
+
+
+
+# Set a default delay of 15 seconds if none is specified.
+if [ -z $5 ]
+	then
+		delay=15
+	fi
+#echo $delay
+
+
+# Find the number of URLs so we can set -t in siege.  This deviates
+# somewhat from Siege's normal mode of operation.  I assume that each
+# entry in the URL list should be hit once per client.
+
+numurls=`cat $site | grep -v "#" | wc -l`
+# Debug-o-rama
+#echo "the number of URLs is: "
+#echo $numurls
+#echo "\n"
+
+# Now we come to the loop that actually runs Siege.  This sould be
+# self-explainitory.
+
+currentcl=$startcl # set running count of clients to inital value
+
+i=1
+while [ $numruns -ge $i ]
+	do
+		echo "Starting run number" $i
+		%_PREFIX%/siege -f $site -c $currentcl -t $numurls -d $delay >> siege.$serial
+        currentcl=$(($currentcl+$inc))
+		i=$(($i+1))
+		#sleep 30
+	done
+
+# Finally, we call siege2csv.pl to convert all the human-readable Siege
+# output to CSV, for easy spreadsheet usage.
+ 
+siege2csv.pl siege.$serial

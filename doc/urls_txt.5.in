@@ -1,0 +1,102 @@
+.ig \"-*- Siege -*-
+Copyright (C) 2005 %_AUTHOR%
+
+Siege is distributed under the terms of the GNU GPL.
+
+..
+.de TQ
+.br
+.ns
+.TP \\$1
+..
+.\" Like TP, but if specified indent is more than half
+.\" the current line-length - indent, use the default indent.
+.de Tp
+.ie \\n(.$=0:((0\\$1)*2u>(\\n(.lu-\\n(.iu)) .TP
+.el .TP "\\$1"
+..
+.TH URLS.TXT 5 "%_DATE%" "Siege v%_VERSION%"
+.SH NAME
+.B urls.txt
+\- URL database for regression testing
+.SH INTRODUCTION
+.LP
+The urls.txt file is installed by default in SIEGE_HOME/etc/urls.txt.  When siege is invoked without a command line reference to a URL, then by default it looks for urls in that file.  The advantage of using the urls.txt file is two-fold: One, it frees you free retyping a url with every invocation.  And two, it allows you to conduct full site regression testing.
+
+When the urls.txt file is used, siege reads all the urls in that file into memory and runs through the list in one of two ways, sequentially or randomly. The default run is sequential from start to finish and back again until the \-\-reps or the \-\-time option has been satisfied.  With the \-i/\-\-internet option selected, siege runs through the file randomly simulating the stress applied by a community of internet users. \fR
+.br
+ \fR
+The \-f/\-\-file option allows you to select a file other then the default urls.txt file. You may also instruct siege to use a different file with the "file" directive in .siegerc, i.e., "file = /usr/local/etc/urls.txt"\fR
+.br
+\fR
+You may set and reference variables inside the urls.txt file. All variables must be declared BEFORE they are referenced. Variables are declared with the "=" operator, VARIABLE = VALUE. They are then referenced inside $() or ${}, example: $(HOST), ${HOST}\fR
+.br
+\fR
+HOST=joey.joedog.org\fR
+.br
+http://${HOST}/browse.jsp?size=5\fR
+.br
+http://${HOST}/admin.jsp?name=ralph\fR
+.br
+
+.SH EXAMPLE FILE
+This is an exmple urls.txt file.  Lines beginning with a hash (#) are comments and ignored by siege.\fR
+.br
+ \fR
+.br
+# \fR
+.br
+# Example urls.txt file \fR
+.br
+# URLs database for siege\fR
+.br
+# \fR
+.br
+http://www.haha.com/index.html \fR
+.br
+http://www.haha.com/howto/index.html \fR
+.br
+http://www.haha.com/cgi-bin/howto/display.cgi?1013\fR
+.br
+www.haha.com/cgi-bin/fm.cgi?first=j.&last=fulmer \fR
+.br
+https://www.haha.com/index.shtml\fR
+.br
+https://www.whoohoo.com/my_whoohoo.jsp\fR
+.br
+# POST data requires a POST directive\fR
+.br
+www.haha.com/cgi-bin/foo.cgi POST first=bart&last=simpson\fR
+.br
+www.haha.com/hoho.jsp POST name=jeff&pass=secret\fR
+.br
+# POST the contents of a file using the\fR
+.br
+# line input character "<"\fR
+.br
+http://www.haha.com/my.jsp POST </home/jeff/data.txt \fR
+.br
+
+
+.SH AUTHOR
+Jeffrey Fulmer <jeff@joedog.org>, et al.
+.SH BUGS
+Report bugs to jeff@joedog.org.
+Give a detailed description of the problem
+and report the version of siege that
+you are using.
+.SH COPYRIGHT
+Copyright \(co 2007 %_AUTHOR%
+.LP
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.LP
+.SH AVAILABILITY
+The most recent released version of siege is available by
+anonymous FTP from ftp.joedog.org in the directory pub/siege.
+.LP
+.SH SEE ALSO
+siege(1) siege.config(1) layingsiege(7)

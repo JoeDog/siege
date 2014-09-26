@@ -1,0 +1,9 @@
+#!/bin/sh
+# mkstamp by Jeffrey Fulmer
+# Sat Jan 19 16:31:45 EST 2002
+
+# configure helper util which
+# creates a date stamp for .siegerc
+
+exec date +"%B-%d-%Y" 
+

@@ -1,0 +1,30 @@
+.\" Copyright 2001, 2002 Peter J. Hutnick (phutnick@aperian.com)
+.\" May be distributed under the GNU General Public License
+.TH SIEGE2CSV 1 "%_DATE%" "Siege Utility" "siege2csv.pl v%_VERSION%"
+.SH NAME
+siege2csv.pl \- Convert output from
+.B "bombardment(1)"
+to Comma Separated Values (CSV)
+.SH SYNOPSIS
+.BR "siege2csv.pl" " [filename] " 
+.br
+.SH DESCRIPTION
+.B siege2csv.pl
+is part of the Siege package.  It converts the output of
+.B "bombardment(1)"
+to CSV for easy use with spreadsheets.
+.SH OPTIONS
+.TP
+.BR "filename"
+The name of the file containing the output from
+.B "bombardment(1)"
+or from
+.B "siege(1)"
+.SH "SEE ALSO"
+.BR siege (1),
+.BR urls_txt (5),
+.BR layingsiege (7),
+.BR bombardment (1)
+.SH AUTHOR
+Written by Peter Hutnick <phutnick@aperian.com>
+

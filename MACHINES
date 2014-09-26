@@ -1,0 +1,70 @@
+
+--------------------------------------
+MACHINE / PLATFORM RELATED INFORMATION
+--------------------------------------
+
+This file  contains information  and known  issues about the various
+machines and platforms on  which siege has been ported.  Please send 
+information  about  any platform issues currently  NOT  discussed in 
+this file to Jeffrey Fulmer <jeff@joedog.org>. Include your platform 
+information located in the PLATFORM file in this directory
+
+Siege 2.50+ (threaded) has been successfully compiled and installed  
+on the following machines:
+
+Apple 
+  i686-apple-darwin8-gcc-4.0.1 (GCC) 4.0.1 (Apple Computer, Inc. build 5367)
+
+AIX( powerpc-ibm-aix4.2.1.0 )
+ * Native compiler only. Siege has had little luck with gcc on AIX.
+
+GNU/Linux( i[56]86-pc-linux-gnu )
+ * Siege was originally developed on SuSE GNU/Linux with gcc, there
+   are no known issues on this platform.
+
+HP-UX( hp-hppa2.0w-hpux11.00 )
+ * Siege was built with both aCC and gcc.
+
+OpenBSD( i[345]86-openbsd2.5 ) 
+ * Siege was built and tested with gcc
+
+Solaris( sparc-sun-solaris2.[5678]; pc-i386-solaris2.8 )
+ * Siege has been built successfully using gcc.
+
+Windows( pc-i686-cygwin )
+ * Siege was built and tested with gcc on cygwin 1.5.x 
+
+ 
+---
+
+Earlier versions(forked) have been successfully built and installed
+on the following platforms:
+
+AIX( powerpc-ibm-aix4.2.1.0 )
+ * Siege has been built successfully using gcc and GNU make
+ * Siege has been built successfully using xlc version 5
+ * The protocol bug on AIX 4.x has been fixed.
+
+GNU/Linux( i[56]86-pc-linux-gnu )
+ * Siege was originally developed on SuSE GNU/Linux with gcc, there
+   are no known issues on this platform.
+
+HP-UX ( hppa2.0w-hp-hpux11.00 )
+ * Siege has been built successfully using HP ANSI C compiler
+ * Siege has been built successfully using gcc
+ * There are no known issues at this time.
+
+Solaris( sparc-sun-solaris2.[678] )
+ * Siege has been built successfully using gcc.
+ * The protocol bug on Solaris 2.x has been fixed.
+
+OpenBSD( i[345]86-openbsd2.5 )
+ * Siege has been built successfully using gcc.
+ * Currently the compiler complains about struct descrepancies and 
+   BSD doesn't like mktemp.  These problems should be remedied soon.
+
+Tru64 UNIX( 4.0D, 5.0A )
+ * Siege has been built and tested successfully.
+
+Earlier versions of siege are still available for download via FTP:
+ftp://sid.joedog.org/pub/siege/
