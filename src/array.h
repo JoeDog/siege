@@ -23,6 +23,8 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
+#include <stdlib.h>
+
 /**
  * ARRAY object
  */
@@ -37,6 +39,7 @@ void * array_get(ARRAY this, int index);
 void * array_next(ARRAY this);
 void * array_prev(ARRAY this);
 size_t array_length(ARRAY this);
+char * array_to_string(ARRAY this);
 
 #endif/*ARRAY_H*/
 

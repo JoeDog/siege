@@ -38,7 +38,6 @@ struct ARRAY_T
 
 size_t ARRAYSIZE = sizeof(struct ARRAY_T);
 
-
 ARRAY
 new_array(){
   ARRAY this;
@@ -58,6 +57,7 @@ array_destroy(ARRAY this)
     xfree(this->data[i]);  
   } 
   xfree(this->data);
+  xfree(this);
   this = NULL;
   return this; 
 }
@@ -85,7 +85,7 @@ array_npush(ARRAY this, void *thing, size_t len)
     this->data = realloc(this->data,(this->length+1)*sizeof(array)); 
   }
   arr = xmalloc(len+1); 
-  memset(arr, 0, len);
+  memset(arr, '\0', len+1);
   memcpy(arr, thing, len);
   this->data[this->length] = arr;
   this->length += 1;
@@ -120,29 +120,27 @@ array_length(ARRAY this)
   return this->length; 
 }
 
-#if 0
-int
-main (int argc, char *argv[])
+char *
+array_to_string(ARRAY this)
 {
-  int   x;
-  ARRAY A = new_array(30);
+  int  i;
+  int  len = 0;
+  char *str;
 
-  if (argc > 1) {
-    for (x = 1; x < argc; x++)
-      array_npush(A, new_url(argv[x]), sizeof(struct _URL));
-  } else {
-    printf("usage: %s <url> [...]\n", argv[0]);
-    return 0;
+  for (i = 0; i < array_length(this); i++) {
+    len += strlen(array_get(this, i))+3;
   }
+  str = (char*)malloc(len+1);
+  memset(str, '\0', len+1);
 
-  for (x = 0; x < 10; x++) {
-    URL U = (URL)array_next(A);
-    printf("|%s|\n",  U->iface->getParameters(U) );
+  for (i = 0; i < array_length(this); i++) {
+    strcat(str, "[");
+    strcat(str, array_get(this, i));
+    if (i == array_length(this) - 1) {
+      strcat(str, "]");
+    } else {
+      strcat(str, "],");
+    }
   }
-  //for (x = 0; x < 10; x++) {
-  //  printf("|%s|\n", ((char*)array_prev(A)));
-  //}
-
-  return 0;
+  return str;
 }
-#endif
