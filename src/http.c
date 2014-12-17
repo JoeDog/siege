@@ -55,6 +55,7 @@ https_tunnel_request(CONN *C, char *host, int port)
     );    
     rlen = strlen(request); 
     echo ("%s", request);
+    C->encrypt = FALSE;
     if ((n = socket_write(C, request, rlen)) != rlen){
       NOTIFY(ERROR, "HTTP: unable to write to socket." );
       return FALSE;
