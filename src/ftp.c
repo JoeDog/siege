@@ -156,7 +156,9 @@ ftp_stor(CONN *C, URL U)
 
   file = xmalloc(len);
   memset(file, '\0', len);
-  snprintf(file, len, "%s-%u.%s", parts[0], id, (parts[1]==NULL)?"":parts[1]);
+
+  /* NOTE: changed %u to %zu as per C99 */
+  snprintf(file, len, "%s-%zu.%s", parts[0], id, (parts[1]==NULL)?"":parts[1]);
   if (my.unique) {
     C->ftp.code = __request(C, "STOR %s", file);
   } else {

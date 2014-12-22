@@ -291,9 +291,13 @@ urandom()
 #ifdef HAVE_DEV_RANDOM
   int  rand = -1;
   int  fd;
+  int  len;
 
   if ((fd = open("/dev/urandom", O_RDONLY)) >= 0) {
-    read(fd, &rand, sizeof(rand));
+    len = read(fd, &rand, sizeof(rand));
+    if (len == -1) {
+      fprintf(stderr, "ERROR: failed to open /dev/urandom\n"); 
+    }
     close(fd);
   }
   return rand;

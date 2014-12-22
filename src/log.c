@@ -57,7 +57,7 @@ write_to_log(int count, float elapsed, int bytes, float ttime, int code, int fai
 #endif/*HAVE_LOCALTIME_R*/ 
   struct  tm *tmp;  
   time_t  now;
-  size_t  len;
+  size_t  len = 0;
   char    date[65];
 
   now = time(NULL);
@@ -71,7 +71,7 @@ write_to_log(int count, float elapsed, int bytes, float ttime, int code, int fai
   len = strftime(date, sizeof date, "%Y-%m-%d %H:%M:%S", tmp);
 
   /* if the file does NOT exist then we'll create it. */
-  if(my.shlog){ 
+  if (my.shlog) { 
     printf( "FILE: %s\n", my.logfile ); 
     puts("You can disable this annoying message by editing");
     puts("the .siegerc file in your home directory; change");
@@ -94,14 +94,26 @@ write_to_log(int count, float elapsed, int bytes, float ttime, int code, int fai
   );
 
   /* open the log and write to file */
-  if ((fd = open( my.logfile, O_WRONLY | O_APPEND, 0644 )) < 0) {
-    NOTIFY(ERROR, "Unable to write to file: %s", my.logfile);
+  if ((fd = open(my.logfile, O_WRONLY | O_APPEND, 0644)) < 0) {
+    NOTIFY(ERROR, "Unable to open file: %s", my.logfile);
     return;
   }
 
-  write(fd, entry, strlen(entry));
+  len = write(fd, entry, strlen(entry));
+  if (len == (unsigned int)-1) {
+    switch (errno) {
+      case EBADF:
+        NOTIFY(ERROR, "Unable to write to log file (bad file descriptor): %s", my.logfile);
+        break;
+      case EINTR:
+        NOTIFY(ERROR, "Unable to write to log file (system interrupt): %s", my.logfile);
+        break;
+      default:
+        NOTIFY(ERROR, "Unable to write to log file (unknown error): %s", my.logfile);
+        break; 
+    }
+  }
   close(fd);
- 
   return;
 }  
 
@@ -111,8 +123,9 @@ write_to_log(int count, float elapsed, int bytes, float ttime, int code, int fai
 void
 mark_log_file(char *message)
 {
-  int  fd;
-  char entry[512];
+  int    fd;
+  size_t len;
+  char   entry[512];
 
   /* if the file does NOT exist then create it.  */
   if (!file_exists(my.logfile)) {
@@ -129,9 +142,21 @@ mark_log_file(char *message)
     NOTIFY(ERROR, "Unable to write to file: %s", my.logfile);
   }
 
-  write(fd, entry, strlen(entry));
+  len = write(fd, entry, strlen(entry));
+  if (len == (unsigned int)-1) {
+    switch (errno) {
+      case EBADF:
+        NOTIFY(ERROR, "Unable to mark log file (bad file descriptor): %s", my.logfile);
+        break;
+      case EINTR:
+        NOTIFY(ERROR, "Unable to mark log file (system interrupt): %s", my.logfile);
+        break;
+      default:
+        NOTIFY(ERROR, "Unable to mark log file (unknown error): %s", my.logfile);
+        break;
+    }
+  }
   close(fd);
-
   return; 
 }
 
@@ -167,18 +192,33 @@ file_exists(char *file)
 BOOLEAN
 create_logfile(const char *file)
 {
-  int   fd;
-  char *head = (char*)"      Date & Time,  Trans,  Elap Time,  Data Trans,  "
-               "Resp Time,  Trans Rate,  Throughput,  Concurrent,    OKAY,   Failed\n"; 
+  int     fd;
+  size_t  len  = 0;
+  BOOLEAN ret  = TRUE;
+  char   *head = (char*)"      Date & Time,  Trans,  Elap Time,  Data Trans,  "
+         "Resp Time,  Trans Rate,  Throughput,  Concurrent,    OKAY,   Failed\n"; 
  
-  if((fd = open(file, O_CREAT | O_WRONLY, 0644)) < 0){
+  if ((fd = open(file, O_CREAT | O_WRONLY, 0644)) < 0) {
     return FALSE;
   }
 
   /* write the header to the file */
-  write(fd, head, strlen(head));
+  len = write(fd, head, strlen(head));
+  if (len == (unsigned int)-1) {
+    ret = FALSE;
+    switch (errno) {
+      case EBADF:
+        NOTIFY(ERROR, "Unable to create log file (bad file descriptor): %s", my.logfile);
+        break;
+      case EINTR:
+        NOTIFY(ERROR, "Unable to create log file (system interrupt): %s", my.logfile);
+        break;
+      default:
+        NOTIFY(ERROR, "Unable to create log file (unknown error): %s", my.logfile);
+        break;
+    }
+  }
   close(fd);
-  
-  return TRUE;
+  return ret;
 } 
 

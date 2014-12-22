@@ -55,6 +55,7 @@ https_tunnel_request(CONN *C, char *host, int port)
     );    
     rlen = strlen(request); 
     echo ("%s", request);
+    C->encrypt = FALSE;
     if ((n = socket_write(C, request, rlen)) != rlen){
       NOTIFY(ERROR, "HTTP: unable to write to socket." );
       return FALSE;
@@ -108,11 +109,8 @@ http_get(CONN *C, URL U)
   char   portstr[16];
   char   fullpath[4096];
   char   cookie[MAX_COOKIE_SIZE+8];
-  time_t now;
   char * ifmod = url_get_if_modified_since(U);
   char * ifnon = url_get_etag(U);
-
-  now = time(NULL);
 
   memset(hoststr, '\0', sizeof hoststr);
   memset(cookie,  '\0', sizeof cookie);

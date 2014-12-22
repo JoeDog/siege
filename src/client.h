@@ -75,9 +75,9 @@ typedef struct
   } auth;
   int      status;
   float    time;
+  float    himark;
+  float    lomark;
   unsigned int rand_r_SEED;
-  float himark;
-  float lomark;
 } CLIENT;
 
 void * start_routine(CLIENT *client);

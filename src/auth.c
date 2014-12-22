@@ -84,7 +84,7 @@ size_t AUTHSIZE = sizeof(struct AUTH_T);
 
 private BOOLEAN       __basic_header(AUTH this, SCHEME scheme, CREDS creds);
 private DCHLG *       __digest_challenge(const char *challenge);
-private DCRED *       __digest_credentials(CREDS creds, size_t *randseed);
+private DCRED *       __digest_credentials(CREDS creds, unsigned int *randseed);
 private KEY_HEADER_E  __get_keyval(const char *key);
 private char *        __get_random_string(size_t length, unsigned int *randseed);
 private char *        __get_h_a1(const DCHLG *chlg, DCRED *cred, const char *nonce_value);
@@ -260,7 +260,7 @@ auth_get_digest_header(AUTH this, SCHEME scheme, DCHLG *chlg, DCRED *cred, const
 }
 
 BOOLEAN 
-auth_set_digest_header(AUTH this, DCHLG **chlg, DCRED **cred, size_t *rand, char *realm, char *str) {
+auth_set_digest_header(AUTH this, DCHLG **chlg, DCRED **cred, unsigned int *rand, char *realm, char *str) {
   size_t  i;
   for (i = 0; i < array_length(this->creds); i++) {
     CREDS tmp = array_get(this->creds, i);
@@ -466,7 +466,7 @@ __get_random_string(size_t length, unsigned int *randseed)
 #define DIGEST_CNONCE_SIZE 16
 
 private DCRED *
-__digest_credentials(CREDS creds, size_t *randseed)
+__digest_credentials(CREDS creds, unsigned int *randseed)
 {
   DCRED *result;
 

@@ -226,8 +226,15 @@ __http(CONN *C, URL U, CLIENT *client)
 #else
     tmp = localtime(&now);
 #endif/*HAVE_LOCALTIME_R*/
-    if (tmp) len = strftime(fmtime, 64, "%Y-%m-%d %H:%M:%S", tmp);
-    else snprintf(fmtime, 64, "n/a");
+    if (tmp) { 
+      len = strftime(fmtime, 64, "%Y-%m-%d %H:%M:%S", tmp);
+      if (len == 0) {
+        memset(fmtime, '\0', 64);
+        snprintf(fmtime, 64, "n/a");
+      }
+    } else {
+      snprintf(fmtime, 64, "n/a");
+    }
   }
 
   if (url_get_scheme(U) == UNSUPPORTED) { 

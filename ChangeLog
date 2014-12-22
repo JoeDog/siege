@@ -1,6 +1,15 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2014/12/19 Justin Gerace <https://github.com/justintime32> 
+ * src/http.c             Establish a CONNECT tunnel before trying to write into an SSL context
+
+2014/12/19 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * html/cookie-expire.php Replaces cookie-test.php
+ * src/url.c              Fixed memsets so they don't use sizeof
+ * src/ssl.c              SSL_connect error handling
+ * src/log.c              Captured and evaluated return from write
+
 2014/10/09 Jeffrey Fulmer <http://www.joedog.org/support/>
  * src/array.c            Fixed a memory leak; added free(this) in array_destroy
  * src/array.h            Added prototype for array_to_string(ARRAY this);

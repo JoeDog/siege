@@ -22,11 +22,9 @@
 
 bin_PROGRAMS       =   siege
 
-INCLUDES           =   $(SSL_INCLUDE)
-
 WARN_CFLAGS        =   @WARN_CFLAGS@
 
-AM_CFLAGS          =   $(PTHREAD_CFLAGS) $(WARN_CFLAGS) $(SSL_CFLAGS)
+AM_CFLAGS          =   $(SSL_INCLUDE) $(PTHREAD_CFLAGS) $(WARN_CFLAGS) $(SSL_CFLAGS)
 
 AM_LDFLAGS         =   $(SSL_LDFLAGS) $(PTHREAD_LDFLAGS)  
 

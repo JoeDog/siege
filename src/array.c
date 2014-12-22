@@ -123,9 +123,9 @@ array_length(ARRAY this)
 char *
 array_to_string(ARRAY this)
 {
-  int  i;
-  int  len = 0;
-  char *str;
+  size_t i;
+  int    len = 0;
+  char  *str;
 
   for (i = 0; i < array_length(this); i++) {
     len += strlen(array_get(this, i))+3;

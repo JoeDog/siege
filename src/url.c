@@ -139,7 +139,7 @@ url_set_hostname(URL this, char *hostname)
   xfree(this->hostname);
   len = strlen(hostname)+1;
   this->hostname = xmalloc(len);
-  memset(this->hostname, 0, sizeof this->hostname);
+  memset(this->hostname, '\0', len);
   strncpy(this->hostname, hostname, len);
   return;
 }
@@ -160,7 +160,7 @@ url_set_etag(URL this, char *etag)
 
   len = strlen(etag)+1;
   this->etag = xmalloc(len);
-  memset(this->etag, 0, sizeof this->etag);
+  memset(this->etag, '\0', len);
   strncpy(this->etag, etag, len);
   return;
 }
@@ -366,7 +366,7 @@ url_get_etag(URL this)
 
   len = strlen(this->etag) + 18;
   tag = xmalloc(len);
-  memset(tag, 0, sizeof tag);
+  memset(tag, 0, len);
 
   snprintf(tag, len, "If-None-Match: %s\015\012", this->etag);
   return tag;
@@ -424,7 +424,7 @@ url_dump(URL this)
     printf("Params:   %s\n", url_get_parameters(this));
   printf("Query:     %s\n", url_get_query(this));
   printf("Fragment:  %s\n", url_get_fragment(this));
-  printf("Post Len:  %d\n", url_get_postlen(this));
+  printf("Post Len:  %d\n", (int)url_get_postlen(this));
   printf("Post Data: %s\n", url_get_postdata(this));
   printf("Cont Type: %s\n", url_get_conttype(this));
   //time_t    expires;
@@ -587,7 +587,7 @@ __url_set_absolute(URL this, char *url)
   len = strlen(url)+5;
   if (!__url_has_scheme(url)) {
     this->url = xmalloc(len+7);
-    memset(this->url, '\0', sizeof this->url);
+    memset(this->url, '\0', len+7);
     slash = strstr(url, "/");
     if (slash) {
       snprintf(this->url, len+7, "http://%s", url);
@@ -596,7 +596,7 @@ __url_set_absolute(URL this, char *url)
     }
   } else {
     this->url = xmalloc(len);
-    memset(this->url, '\0', sizeof this->url);
+    memset(this->url, '\0', len);
     snprintf(this->url, len, "%s", url);
   }
   return this->url;

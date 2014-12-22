@@ -193,7 +193,7 @@ hash_get_keys(HASH this)
   for (x = 0; x < this->size; x ++) {
     for(node = this->table[x]; node != NULL; node = node->next){
       keys[i] = (char*)malloc(128);
-      memset(keys[i], 0, sizeof(keys[i]));
+      memset(keys[i], 0, 128);
       memcpy(keys[i], (char*)node->key, strlen(node->key));
       keys[i][strlen(node->key)] = 0;
       i++;
@@ -241,7 +241,7 @@ hash_destroy(HASH this)
   }
   if (this->table != NULL) {
     xfree(this->table);
-    memset(this, 0, sizeof(HASH));
+    memset(this, 0, sizeof(struct HASH_T));
   } 
   xfree(this);
   return;

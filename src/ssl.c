@@ -139,6 +139,10 @@ SSL_initialize(CONN *C)
   }
   SSL_set_fd(C->ssl, C->sock);
   serr = SSL_connect(C->ssl);
+  if (serr != 1) {
+    NOTIFY(ERROR, "Failed to make an SSL connection");
+    return FALSE;
+  }
   return TRUE;
 #else
   C->nossl = TRUE;

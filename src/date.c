@@ -259,7 +259,7 @@ strtotime(const char *string){
   int     tzoff = -1;   /* time zone offset */
   int     part  = 0;
   time_t  t     = 0;
-  time_t  now   = 0;
+  //time_t  now   = 0;
   struct  tm     tm;
   const   char   *date;
   const   char   *indate = string;    /* original pointer */
@@ -441,7 +441,7 @@ strtotime(const char *string){
 
     t += delta;
   }
-  now = time(NULL);
+  //now = time(NULL);
   return t;
 }
 

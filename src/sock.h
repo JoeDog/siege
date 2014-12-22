@@ -111,7 +111,7 @@ typedef struct
 #ifdef  HAVE_SSL
   SSL        *ssl;
   SSL_CTX    *ctx;
-  SSL_METHOD *method;
+  const SSL_METHOD *method;
   X509       *cert;
 #else 
   BOOLEAN     nossl;

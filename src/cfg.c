@@ -76,11 +76,12 @@ read_cfg_file(LINES *l, char *filename)
   }
  
   line = xmalloc(BUFSIZE);
+  memset(line, 0, BUFSIZE);
+
   H = new_hash();
 
   l->index = 0;
-  memset(line, 0, sizeof(line));
-  while(fgets(line, BUFSIZE, file) != NULL){
+  while (fgets(line, BUFSIZE, file) != NULL) {
     int  num; char *p = strchr(line, '\n');      
     /**
      * if the line is longer than our buffer, we're 
@@ -115,8 +116,7 @@ read_cfg_file(LINES *l, char *filename)
         tmp++;
       *tmp++=0;
       hash_add(H, option, value); 
-    }
-    else{
+    } else {
     char *tmp = xstrdup(line);
       while(strstr(tmp, "$")){
         tmp = evaluate(H, tmp);
@@ -127,7 +127,7 @@ read_cfg_file(LINES *l, char *filename)
       
       free(tmp);
     }
-    memset(line, 0, sizeof(line));
+    memset(line, 0, BUFSIZE);
   }
 
   fclose(file);
