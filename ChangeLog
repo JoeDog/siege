@@ -9,6 +9,9 @@ To email a contributor remove "DELETE" from the email address.
  * src/url.c              Fixed memsets so they don't use sizeof
  * src/ssl.c              SSL_connect error handling
  * src/log.c              Captured and evaluated return from write
+ * src/md5.c              Updated version from gcc
+ * src/md5.h              Updated version from gcc
+ * src/ansidecl.h         Added to distro (for updated md5.h)
 
 2014/10/09 Jeffrey Fulmer <http://www.joedog.org/support/>
  * src/array.c            Fixed a memory leak; added free(this) in array_destroy
