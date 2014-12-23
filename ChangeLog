@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2014/12/19 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_3-0-9_DEC_23-2014
+
 2014/12/19 Justin Gerace <https://github.com/justintime32> 
  * src/http.c             Establish a CONNECT tunnel before trying to write into an SSL context
 
