@@ -26,7 +26,7 @@ EXTRA_DIST        =    \
 README                 \
 basic.php              \
 cache-control.php      \
-cookie-test.php        \
+cookie-expire.php      \
 etag.php               \
 login.php
 
