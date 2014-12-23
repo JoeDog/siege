@@ -33,5 +33,3 @@ DIST_SUBDIRS      =    $(SUBDIRS)
 EXTRA_DIST        =    KNOWNBUGS MACHINES README.md README.https README.solaris \
                        acspecific.m4 aclocal.m4 acinclude.m4
 
-DISTCLEANFILES    =    libtool config.status PLATFORM
-
