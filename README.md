@@ -66,13 +66,17 @@ that number for your delay when simulating internet activity.
 WHERE IS IT?
 ------------
 The latest version of  siege can be obtained via  anonymous FTP:
-ftp://sid.joedog.org/pub/siege/siege-latest.tar.gz
+http://download.joedog.org/siege/siege-latest.tar.gz
 
-Siege is mirrored at nerf-herder:
-http://nerf-herder.net/siege
+The source repository is located on GitHub:
+git clone https://github.com/JoeDog/siege.git
 
-Updates and announcements are distributed via freshmeat:
-http://freshmeat.net/projects/siege
+YOu can view in your browser here:
+https://github.com/JoeDog/siege
+
+Updates and announcements are distributed via JoeBlog: 
+http://www.joedog.org/blog
+
 
 
 INSTALLATION
