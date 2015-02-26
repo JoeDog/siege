@@ -1,7 +1,7 @@
 /**
  * SIEGE socket library
  *
- * Copyright (C) 2000-2014 by
+ * Copyright (C) 2000-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege 
  *
@@ -443,7 +443,7 @@ socket_read(CONN *C, void *vbuf, size_t len)
 	return -1;
       }
       if ((r = SSL_read(C->ssl, buf, n)) < 0) {
-        if (errno == EINTR)
+        if (errno == EINTR || SSL_get_error(C->ssl, r) == SSL_ERROR_WANT_READ)
           r = 0;
         else
           return -1;
