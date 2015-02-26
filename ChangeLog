@@ -1,20 +1,15 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
-2014/12/19 Jeffrey Fulmer <http://www.joedog.org/support/>
- * SIEGE RELEASE          RELEASE_3-0-9_DEC_23-2014
+2015/02/26 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_3-0-9_FEB_26-2015
+ * src/version.c          Version increment: 3.0.9
 
-2014/12/19 Justin Gerace <https://github.com/justintime32> 
- * src/http.c             Establish a CONNECT tunnel before trying to write into an SSL context
+2015/02/26 Warren Young <warren@NOSPAMetr-usa.com>
+ * src/url.c              Changed first normalize check url.c:449
 
-2014/12/19 Jeffrey Fulmer <http://www.joedog.org/support/>
- * html/cookie-expire.php Replaces cookie-test.php
- * src/url.c              Fixed memsets so they don't use sizeof
- * src/ssl.c              SSL_connect error handling
- * src/log.c              Captured and evaluated return from write
- * src/md5.c              Updated version from gcc
- * src/md5.h              Updated version from gcc
- * src/ansidecl.h         Added to distro (for updated md5.h)
+2015/02/26 Bo Borgerson <https://github.com/gigabo>
+ * src/sock.c             if (errno == EINTR || SSL_get_error(C->ssl, r) == SSL_ERROR_WANT_READ)
 
 2014/10/09 Jeffrey Fulmer <http://www.joedog.org/support/>
  * src/array.c            Fixed a memory leak; added free(this) in array_destroy
