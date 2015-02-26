@@ -1,8 +1,11 @@
 /**
  * URL Support
  *
- * Copyright (C) 2013-2014 by
+ * Copyright (C) 2013-2015 
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
+ * Copyright (C) 1999 by
+ * Jeffrey Fulmer - <jeff@joedog.org>.
+ *
  * This file is distributed as part of Siege
  *
  * This program is free software; you can redistribute it and/or modify
@@ -139,7 +142,7 @@ url_set_hostname(URL this, char *hostname)
   xfree(this->hostname);
   len = strlen(hostname)+1;
   this->hostname = xmalloc(len);
-  memset(this->hostname, '\0', len);
+  memset(this->hostname, 0, sizeof this->hostname);
   strncpy(this->hostname, hostname, len);
   return;
 }
@@ -160,7 +163,7 @@ url_set_etag(URL this, char *etag)
 
   len = strlen(etag)+1;
   this->etag = xmalloc(len);
-  memset(this->etag, '\0', len);
+  memset(this->etag, 0, sizeof this->etag);
   strncpy(this->etag, etag, len);
   return;
 }
@@ -366,7 +369,7 @@ url_get_etag(URL this)
 
   len = strlen(this->etag) + 18;
   tag = xmalloc(len);
-  memset(tag, 0, len);
+  memset(tag, 0, sizeof tag);
 
   snprintf(tag, len, "If-None-Match: %s\015\012", this->etag);
   return tag;
@@ -424,7 +427,7 @@ url_dump(URL this)
     printf("Params:   %s\n", url_get_parameters(this));
   printf("Query:     %s\n", url_get_query(this));
   printf("Fragment:  %s\n", url_get_fragment(this));
-  printf("Post Len:  %d\n", (int)url_get_postlen(this));
+  printf("Post Len:  %d\n", url_get_postlen(this));
   printf("Post Data: %s\n", url_get_postdata(this));
   printf("Cont Type: %s\n", url_get_conttype(this));
   //time_t    expires;
@@ -441,14 +444,16 @@ url_normalize(URL req, char *location)
   URL    ret;
   char * url;
   size_t len = strlen(url_get_absolute(req)) + strlen(location) + 32;
+
   if (strchr(location, ':') != NULL) {
     // it's very likely normalized
     ret = new_url(location);
     // but we better test it...
-    if (strchr(url_get_hostname(ret), '.') != NULL) {
+    if (strlen(url_get_hostname(ret)) > 1) {
       return ret;
     }
   }
+
   if (strchr(location, '.') != NULL) {
     // it's *maybe* host/path
     ret = new_url(location);
@@ -456,7 +461,6 @@ url_normalize(URL req, char *location)
     if (strchr(url_get_hostname(ret), '.') != NULL) {
       return ret;
     }
-    // XXX: do I really need to test for localhost?
   }
 
   // XXX: 8/20/2014 - YES. Yes, I do.
@@ -587,7 +591,7 @@ __url_set_absolute(URL this, char *url)
   len = strlen(url)+5;
   if (!__url_has_scheme(url)) {
     this->url = xmalloc(len+7);
-    memset(this->url, '\0', len+7);
+    memset(this->url, '\0', sizeof this->url);
     slash = strstr(url, "/");
     if (slash) {
       snprintf(this->url, len+7, "http://%s", url);
@@ -596,7 +600,7 @@ __url_set_absolute(URL this, char *url)
     }
   } else {
     this->url = xmalloc(len);
-    memset(this->url, '\0', len);
+    memset(this->url, '\0', sizeof this->url);
     snprintf(this->url, len, "%s", url);
   }
   return this->url;
