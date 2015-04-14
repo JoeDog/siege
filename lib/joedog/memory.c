@@ -59,7 +59,6 @@ xstrcat(const char *arg1, ...)
 {
   const char *argptr;
   char *resptr, *result;
-  int nargs = 0;
   size_t  len = 0;
   va_list valist;
 
@@ -75,7 +74,6 @@ xstrcat(const char *arg1, ...)
 
   va_start(valist, arg1);
 
-  nargs = 0;
   for(argptr = arg1; argptr != NULL; argptr = va_arg(valist, char *)) {
     len = strlen(argptr);
     memcpy(resptr, argptr, len);
