@@ -149,16 +149,32 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   rc  = gethostbyname_r(hn, (struct hostent *)aixbuf,
                        (struct hostent_data *)(aixbuf + sizeof(struct hostent)));
   hp = (struct hostent*)aixbuf;
-#elif ( defined(hpux) || defined(__hpux) || defined(__osf__) )
+#elif (defined(hpux) || defined(__hpux) || defined(__osf__))
   hp = gethostbyname(hn);
   herrno = h_errno;
 #else
-  /* simply hoping that gethostbyname is thread-safe */
+  /**
+   * Let's just hope gethostbyname is tread-safe
+   */
   hp = gethostbyname(hn);
   herrno = h_errno;
 #endif/*OS SPECIFICS*/ 
 
-  if(hp == NULL){ return -1; } 
+  /**
+   * If hp is NULL, then we did not get good information
+   * from the name server. Let's notify the user and bail
+   */
+  if (hp == NULL) {
+    switch(herrno) {
+      case HOST_NOT_FOUND: { NOTIFY(ERROR, "Host not found: %s\n", hostparam);                           break; }
+      case NO_ADDRESS:     { NOTIFY(ERROR, "HOst does not have an IP address: %s\n", hostparam);         break; }
+      case NO_RECOVERY:    { NOTIFY(ERROR, "A non-recoverable resolution error for %s\n", hostparam);    break; }
+      case TRY_AGAIN:      { NOTIFY(ERROR, "A temporary resolution error for %s\n", hostparam);          break; }
+      default:             { NOTIFY(ERROR, "Unknown error code from gethostbyname for %s\n", hostparam); break; }
+    }
+    return -1; 
+  } 
+
   memset((void*) &cli, 0, sizeof(cli));
   memcpy(&cli.sin_addr, hp->h_addr, hp->h_length);
 #if defined(sun)
