@@ -1,6 +1,11 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/04/14 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * src/url.c              Fixed some broken memsets
+ * src/sock.c             Added error handling for unused herrno
+ * lib/memory.c           Removed unused variable from xstrcat
+
 2015/02/26 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_3-0-9_FEB_26-2015
  * src/version.c          Version increment: 3.0.9
