@@ -67,7 +67,7 @@ evaluate(HASH hash_table, char *buf)
     if (getenv(string) != NULL) {
       ENV = 1;
     } else {
-      string = '\0'; /* user botched his config file */
+      string = NULL; /* user botched his config file */
     }
   }
  
