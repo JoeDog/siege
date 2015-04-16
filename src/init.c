@@ -259,10 +259,10 @@ load_conf(char *filename)
     while (*optionptr && !ISSPACE((int)*optionptr) && !ISSEPARATOR(*optionptr)) {
       optionptr++;
     }
-    optionptr++;
     if(!*optionptr) {
 	    continue;
     }
+    optionptr++;
     *optionptr=0;
     while (ISSPACE((int)*optionptr) || ISSEPARATOR(*optionptr)) {
       optionptr++;
