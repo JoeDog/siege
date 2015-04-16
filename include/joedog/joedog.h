@@ -90,7 +90,6 @@ extern int portable_vsnprintf(char *str, size_t str_m, const char *fmt, va_list 
 #endif
 
 #ifndef __CYGWIN__
-extern int asprintf  (char **ptr, const char *fmt, /*args*/ ...);
 extern int vasprintf (char **ptr, const char *fmt, va_list ap);
 extern int asnprintf (char **ptr, size_t str_m, const char *fmt, /*args*/ ...);
 extern int vasnprintf(char **ptr, size_t str_m, const char *fmt, va_list ap);
