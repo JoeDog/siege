@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/04/16 Technion <https://github.com/technion>
+ * src/init.c             Added protective memory handling
+
 2015/04/14 Jeffrey Fulmer <http://www.joedog.org/support/>
  * src/url.c              Fixed some broken memsets
  * src/sock.c             Added error handling for unused herrno
