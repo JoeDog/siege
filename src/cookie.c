@@ -140,54 +140,49 @@ add_cookie(pthread_t id, char *host, char *cookiestr)
   PARSED_COOKIE ck;
 
   parse_cookie(cookiestr, &ck);
-  name = ck.name;
+  name  = ck.name;
   value = ck.value;
 
   if ((name == NULL || value == NULL)) return -1;
 
   pthread_mutex_lock(&(cookie->mutex)); 
   for (cur=pre=cookie->first; cur != NULL; pre=cur, cur=cur->next) {
-    if ((cur->threadID == id )&&(!strcasecmp(cur->name, name))) {
+    if ((cur->threadID == id ) && (!strcasecmp(cur->name, name))) {
       xfree(cur->value);
       cur->value = xstrdup(value);
-      /**
-       XXX: I need to read the RFC in order to 
-            understand the required behavior
-      xfree(cur->name);
-      xfree(cur->domain); 
-      cur->name  = xstrdup(name);
-      cur->expires = ck.expires;
-      if(!ck.domain)
-        cur->domain = xstrdup(host);
-      else
-        cur->domain = xstrdup(ck.domain); 
-      */
       found = TRUE;
       break;
     }
   }
-  if (!found) {
-    fresh = (CNODE*)xmalloc(sizeof(CNODE));
-    if (!fresh) NOTIFY(FATAL, "out of memory!"); 
-    fresh->threadID = id;
-    fresh->name     = xstrdup(name);
-    fresh->value    = xstrdup(value);
-    fresh->expires  = ck.expires; 
-    if (!ck.domain)
-      fresh->domain = xstrdup(host);
-    else
-      fresh->domain = xstrdup(ck.domain);
-    fresh->next = cur;
-    if (cur==cookie->first)
-      cookie->first = fresh;
-    else
-      pre->next = fresh;    
+
+  if (found) {
+    BOOLEAN test = delete_cookie(id, name);
+    if (! test) {
+      NOTIFY(WARNING, "Unable to update cookie");
+      return -1;
+    }
   }
-  if (name  != NULL) xfree(name);
-  if (value != NULL) xfree(value);
+  fresh = (CNODE*)xmalloc(sizeof(CNODE));
+  fresh->threadID = id;
+  fresh->name     = xstrdup(name);
+  fresh->value    = xstrdup(value);
+  fresh->expires  = ck.expires; 
 
+  if (!ck.domain) {
+    fresh->domain = xstrdup(host);
+  } else {
+    fresh->domain = xstrdup(ck.domain);
+  }
+  fresh->next = cur;
+  if (cur==cookie->first) {
+    cookie->first = fresh;
+  } else {
+    pre->next = fresh;    
+  }
+  xfree(name);
+  xfree(value);
   pthread_mutex_unlock(&(cookie->mutex));
-
+  //display_cookies(); /* XXX: still examing */
   return 0;
 }
 
@@ -334,7 +329,11 @@ display_cookies()
  
   printf ("Linked list contains:\n");
   for (cur=cookie->first; cur != NULL; cur=cur->next) {
-    printf ("Index: %ld\tName: %s Value: %s\n", (long)cur->threadID, cur->name, cur->value);
+    char buf[20];
+    struct tm * timeinfo;
+    timeinfo = localtime (&cur->expires);
+    strftime(buf, sizeof(buf), "%b %d %H:%M", timeinfo);
+    printf ("Index: %ld\tName: %s Value: %s, Expires: %s\n", (long)cur->threadID, cur->name, cur->value, buf);
   }
  
   pthread_mutex_unlock(&(cookie->mutex));
