@@ -263,14 +263,14 @@ __http(CONN *C, URL U, CLIENT *client)
   /**
    * write to socket with a GET/POST/PUT/DELETE/HEAD
    */
-  if (url_get_method(U) == GET || url_get_method(U) == HEAD) { 
-    if ((http_get(C, U)) == FALSE) {
+  if (url_get_method(U) == POST) { 
+    if ((http_post(C, U)) == FALSE) {
       C->connection.reuse = 0;
       socket_close(C);
       return FALSE;
     }
   } else { 
-    if ((http_post(C, U)) == FALSE) {
+    if ((http_get(C, U)) == FALSE) {
       C->connection.reuse = 0;
       socket_close(C);
       return FALSE;
