@@ -323,6 +323,14 @@ url_get_posttemp(URL this) {
 
 public char *
 url_get_conttype(URL this) {
+
+  if (this->conttype == NULL) {
+    if (! empty(my.conttype)) {
+      this->conttype = xstrdup(my.conttype);
+    } else {
+      this->conttype = xstrdup("application/x-www-form-urlencoded");
+    }
+  }
   return this->conttype;
 }
 
