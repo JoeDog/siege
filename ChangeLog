@@ -3,6 +3,7 @@ To email a contributor remove "DELETE" from the email address.
 
 2015/04/16 Technion <https://github.com/technion>
  * include/joedog.h       Removed asprintf from the CYGWIN block
+ * src/url.c              Added test for conttype in get_conttype
  * src/init.c             Added protective memory handling
 
 2015/04/14 Jeffrey Fulmer <http://www.joedog.org/support/>
