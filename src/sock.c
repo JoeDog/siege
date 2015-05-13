@@ -95,6 +95,11 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   int  rc;
 #endif/*_AIX*/
 
+  if (hostparam == NULL) {
+    NOTIFY(ERROR, "Unable to resolve host %s:%d",  __FILE__, __LINE__);
+    return -1; 
+  }
+
   C->encrypt  = (C->scheme == HTTPS) ? TRUE: FALSE;
   C->state    = UNDEF;
   C->ftp.pasv = TRUE;
