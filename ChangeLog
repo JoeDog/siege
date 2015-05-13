@@ -1,6 +1,11 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/05/13 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_3-1-0rc1_MAY_13_2015
+ * src/sock.c             Checked integrity of incoming host param 
+ * src/version.c          Release candidate: 3.1.0-rc1
+
 2015/04/16 Technion <https://github.com/technion>
  * include/joedog.h       Removed asprintf from the CYGWIN block
  * src/url.c              Added test for conttype in get_conttype
