@@ -266,6 +266,7 @@ AC_CHECK_FUNCS(localtime_r)
 AC_CHECK_FUNCS(getipnodebyname)
 AC_CHECK_FUNCS(freehostent)
 AC_CHECK_FUNCS(getopt_long)
+AC_CHECK_FUNCS(poll)
 
 dnl
 dnl Check for socket library
