@@ -33,6 +33,10 @@
 #include <pthread.h>
 #include <fcntl.h>
 
+#ifdef HAVE_POLL
+# include <poll.h>
+#endif/*HAVE_POLL*/
+
 #ifdef  HAVE_UNISTD_H
 # include <unistd.h>
 #endif/*HAVE_UNISTD_H*/
@@ -226,20 +230,9 @@ new_socket(CONN *C, const char *hostparam, int portparam)
       default:            {NOTIFY(ERROR, "socket: %d unknown network error.",  pthread_self()); break;}
     } socket_close(C); return -1;
   } else {
-    struct timeval timeout;
-    fd_set rs;
-    fd_set ws; 
-    FD_ZERO(&rs);
-    FD_ZERO(&ws);
-    FD_SET(C->sock, &rs);
-    FD_SET(C->sock, &ws);
-    memset((void *)&timeout, '\0', sizeof(struct timeval));
-    timeout.tv_sec  = (my.timeout > 0)?my.timeout:30;
-    timeout.tv_usec = 0;
-    res = select(C->sock+1, &rs, &ws, NULL, &timeout);
-    if ((res == -1) && (errno == EINTR)) {
+    if (__socket_check(C, READ) == FALSE) {
       pthread_testcancel();
-      fprintf(stderr, "socket: connection timed out\n");
+      NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", __FILE__, __LINE__);
       socket_close(C);
       return -1; 
     } else { 
@@ -265,12 +258,51 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   return(C->sock);
 }
 
+/**
+ * Conditionally determines whether or not a socket is ready.
+ * This function calls __socket_poll if HAVE_POLL is defined in
+ * config.h, else it uses __socket_select
+ */
 private BOOLEAN 
 __socket_check(CONN *C, SDSET mode)
 {
+#ifdef HAVE_POLL
+  int res;
+  struct pollfd pfd;
+  int timo = (my.timeout) ? my.timeout * 1000 : 15000;
+
+  pfd.fd     = C->sock + 1;
+  pfd.events = POLLIN;
+
+  if (mode==WRITE) {
+    __socket_block(C->sock, FALSE);
+  }
+
+  do {
+    res = poll(&pfd, 1, timo);
+    pthread_testcancel();
+  } while (res < 0 && errno == EINTR);
+
+  if (mode==WRITE) {
+    __socket_block(C->sock, TRUE);
+  }
+
+  if (res == 0) {
+    errno = ETIMEDOUT;
+  }
+
+  if (res <= 0) {
+    C->state = UNDEF;
+    NOTIFY(WARNING, "socket: polled(%d) and discovered it's not ready %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
+    return FALSE;
+  } else {
+    C->state = mode;
+    return TRUE;
+  }
+#else /**** USE SELECT INSTEAD ****/
   int    res;
   fd_set fds;
-  fd_set *rs = NULL; 
+  fd_set *rs = NULL;
   fd_set *ws = NULL;
   double timo;
   struct timeval timeout;
@@ -299,7 +331,7 @@ __socket_check(CONN *C, SDSET mode)
     res = select(C->sock + 1, rs, ws, NULL, &timeout);
     pthread_testcancel();
   } while (res < 0 && errno == EINTR);
-  
+
   if (mode==WRITE) {
     __socket_block(C->sock, TRUE);
   }
@@ -308,18 +340,15 @@ __socket_check(CONN *C, SDSET mode)
     errno = ETIMEDOUT;
   }
 
-  if (res < 1) {
-    NOTIFY(WARNING, "socket: %d select timed out", pthread_self());
-  }
-
   if (res <= 0) {
     C->state = UNDEF;
+    NOTIFY(WARNING, "socket: select and discovered it's not ready %s:%d", __FILE__, __LINE__);
     return FALSE;
   } else {
     C->state = mode;
     return TRUE;
   }
-  //return (res <= 0) ? FALSE : TRUE;
+#endif/*HAVE_POLL*/
 }
 
 /**
@@ -329,6 +358,9 @@ __socket_check(CONN *C, SDSET mode)
 private int
 __socket_block(int sock, BOOLEAN block)
 {
+#if HAVE_POLL
+  return 0;
+#endif
 #if HAVE_FCNTL_H 
   int flags;
   int retval;
@@ -461,6 +493,7 @@ socket_read(CONN *C, void *vbuf, size_t len)
   #ifdef HAVE_SSL
     while (n > 0) {
       if (__socket_check(C, READ) == FALSE) {
+        NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
 	return -1;
       }
       if ((r = SSL_read(C->ssl, buf, n)) < 0) {
@@ -478,6 +511,7 @@ socket_read(CONN *C, void *vbuf, size_t len)
     while (n > 0) {
       if (C->inbuffer < len) {
         if (__socket_check(C, READ) == FALSE) {
+          NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
           return -1;
         }
       }
@@ -486,6 +520,7 @@ socket_read(CONN *C, void *vbuf, size_t len)
         memmove(C->buffer,&C->buffer[C->pos_ini],C->inbuffer);
         C->pos_ini = 0;
 	if (__socket_check(C, READ) == FALSE) {
+          NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
 	  return -1;
 	}
         lidos = read(C->sock, &C->buffer[C->inbuffer], sizeof(C->buffer)-C->inbuffer);
@@ -571,11 +606,7 @@ socket_write(CONN *C, const void *buf, size_t len)
   size_t bytes;
 
   pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type); 
-#if 0
-  if(__socket_check(C, READ) == WRITE){
-    return -1;
-  }
-#endif
+
   if (C->encrypt == TRUE) {
     /* handle HTTPS protocol */
     #ifdef HAVE_SSL
