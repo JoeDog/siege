@@ -1,6 +1,12 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/05/15 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_3-1-0rc2_MAY_15_2015
+ * src/sock.c             Added poll in __socket_check for those who have it
+ * src/version.c          Release candidate: 3.1.0-rc2
+ * configure.ac           Added func_check for poll (HAVE_POLL in config.h)
+
 2015/05/13 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_3-1-0rc1_MAY_13_2015
  * src/sock.c             Checked integrity of incoming host param 
