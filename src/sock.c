@@ -506,20 +506,20 @@ socket_read(CONN *C, void *vbuf, size_t len)
   #endif/*HAVE_SSL*/
   } else { 
     while (n > 0) {
-      /*if (C->inbuffer < len) {
+      if (C->inbuffer < len) {
         if (__socket_check(C, READ) == FALSE) {
           NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
           return -1;
         }
-      }*/
+      }
       if (C->inbuffer <  n) {
         int lidos;
         memmove(C->buffer,&C->buffer[C->pos_ini],C->inbuffer);
         C->pos_ini = 0;
-	/*if (__socket_check(C, READ) == FALSE) {
+	if (__socket_check(C, READ) == FALSE) {
           NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
 	  return -1;
-	}*/
+	}
         lidos = read(C->sock, &C->buffer[C->inbuffer], sizeof(C->buffer)-C->inbuffer);
         if (lidos == 0)
           ret_eof = 1;
