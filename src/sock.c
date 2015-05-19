@@ -67,6 +67,10 @@
 private int     __socket_block(int socket, BOOLEAN block);
 private ssize_t __socket_write(int sock, const void *vbuf, size_t len);  
 private BOOLEAN __socket_check(CONN *C, SDSET mode);
+private BOOLEAN __socket_select(CONN *C, SDSET mode);
+#ifdef  HAVE_POLL
+private BOOLEAN __socket_poll(CONN *C, SDSET mode);
+#endif/*HAVE_POLL*/
 #ifdef  HAVE_SSL
 private ssize_t __ssl_socket_write(CONN *C, const void *vbuf, size_t len);
 #endif/*HAVE_SSL*/
@@ -232,7 +236,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   } else {
     if (__socket_check(C, READ) == FALSE) {
       pthread_testcancel();
-      NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", __FILE__, __LINE__);
+      NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", my.timeout, __FILE__, __LINE__);
       socket_close(C);
       return -1; 
     } else { 
@@ -267,74 +271,71 @@ private BOOLEAN
 __socket_check(CONN *C, SDSET mode)
 {
 #ifdef HAVE_POLL
+ if (my.cusers < 900) {
+   return __socket_select(C, mode);
+ } else {
+   return __socket_poll(C, mode);
+ } 
+#else 
+ return __socket_select(C, mode);
+#endif/*HAVE_POLL*/
+}
+
+#ifdef HAVE_POLL
+private BOOLEAN
+__socket_poll(CONN *C, SDSET mode)
+{
   int res;
-  struct pollfd pfd;
   int timo = (my.timeout) ? my.timeout * 1000 : 15000;
+  __socket_block(C->sock, FALSE);
 
-  pfd.fd     = C->sock + 1;
-  pfd.events = POLLIN;
-
-  if (mode==WRITE) {
-    __socket_block(C->sock, FALSE);
-  }
+  C->pfd[0].fd     = C->sock + 1;
+  C->pfd[0].events |= POLLIN;
 
   do {
-    res = poll(&pfd, 1, timo);
+    res = poll(C->pfd, 1, timo);
     pthread_testcancel();
-  } while (res < 0 && errno == EINTR);
-
-  if (mode==WRITE) {
-    __socket_block(C->sock, TRUE);
-  }
+  } while (res < 0); // && errno == EINTR);
 
   if (res == 0) {
     errno = ETIMEDOUT;
   }
-
+ 
   if (res <= 0) {
     C->state = UNDEF;
-    NOTIFY(WARNING, "socket: polled(%d) and discovered it's not ready %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
+    NOTIFY(WARNING, 
+      "socket: polled(%d) and discovered it's not ready %s:%d", 
+      (my.timeout)?my.timeout:15, __FILE__, __LINE__
+    );
     return FALSE;
   } else {
     C->state = mode;
     return TRUE;
   }
-#else /**** USE SELECT INSTEAD ****/
-  int    res;
-  fd_set fds;
-  fd_set *rs = NULL;
-  fd_set *ws = NULL;
-  double timo;
+}
+#endif/*HAVE_POLL*/
+
+private BOOLEAN
+__socket_select(CONN *C, SDSET mode)
+{
   struct timeval timeout;
+  int    res;
+  fd_set rs;
+  fd_set ws;
+  memset((void *)&timeout, '\0', sizeof(struct timeval));
+  timeout.tv_sec  = (my.timeout > 0)?my.timeout:30;
+  timeout.tv_usec = 0;
 
-  if (C->state == mode) {
-    return TRUE;
-  }
-
-  FD_ZERO(&fds);
-  FD_SET (C->sock, &fds);
-  if (mode==WRITE) {
-    *(&ws) = &fds;
-  } else {
-    *(&rs) = &fds;
-  }
-
-  timo = (my.timeout)?my.timeout:15;
-  timeout.tv_sec  = (long)timo;
-  timeout.tv_usec = 1000000L * (timo - (long)timo);
-
-  if (mode==WRITE) {
-    __socket_block(C->sock, FALSE);
-  }
+  if (C->sock >= 1024) return FALSE; // FD_SET can't handle it
 
   do {
-    res = select(C->sock + 1, rs, ws, NULL, &timeout);
+    FD_ZERO(&rs);
+    FD_ZERO(&ws);
+    FD_SET(C->sock, &rs);
+    FD_SET(C->sock, &ws);
+    res = select(C->sock+1, &rs, &ws, NULL, &timeout);
     pthread_testcancel();
   } while (res < 0 && errno == EINTR);
-
-  if (mode==WRITE) {
-    __socket_block(C->sock, TRUE);
-  }
 
   if (res == 0) {
     errno = ETIMEDOUT;
@@ -348,7 +349,6 @@ __socket_check(CONN *C, SDSET mode)
     C->state = mode;
     return TRUE;
   }
-#endif/*HAVE_POLL*/
 }
 
 /**
@@ -358,9 +358,6 @@ __socket_check(CONN *C, SDSET mode)
 private int
 __socket_block(int sock, BOOLEAN block)
 {
-#if HAVE_POLL
-  return 0;
-#endif
 #if HAVE_FCNTL_H 
   int flags;
   int retval;
@@ -509,20 +506,20 @@ socket_read(CONN *C, void *vbuf, size_t len)
   #endif/*HAVE_SSL*/
   } else { 
     while (n > 0) {
-      if (C->inbuffer < len) {
+      /*if (C->inbuffer < len) {
         if (__socket_check(C, READ) == FALSE) {
           NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
           return -1;
         }
-      }
+      }*/
       if (C->inbuffer <  n) {
         int lidos;
         memmove(C->buffer,&C->buffer[C->pos_ini],C->inbuffer);
         C->pos_ini = 0;
-	if (__socket_check(C, READ) == FALSE) {
+	/*if (__socket_check(C, READ) == FALSE) {
           NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
 	  return -1;
-	}
+	}*/
         lidos = read(C->sock, &C->buffer[C->inbuffer], sizeof(C->buffer)-C->inbuffer);
         if (lidos == 0)
           ret_eof = 1;

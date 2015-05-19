@@ -38,6 +38,10 @@
 # include <netdb.h>
 #endif/*HAVE_NETDB_H*/ 
 
+#ifdef  HAVE_POLL
+# include <poll.h>
+#endif/*HAVE_POLL*/
+
 #ifdef  HAVE_SSL
 # include <openssl/ssl.h>
 # include <openssl/err.h>
@@ -120,6 +124,9 @@ typedef struct
   int      pos_ini;
   char     buffer[4096];
   char     chkbuf[1024];
+#ifdef  HAVE_POLL
+  struct   pollfd pfd[1];
+#endif/*HAVE_POLL*/
   fd_set   *ws;
   fd_set   *rs;
   SDSET    state;  
