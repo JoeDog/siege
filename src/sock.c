@@ -271,10 +271,10 @@ private BOOLEAN
 __socket_check(CONN *C, SDSET mode)
 {
 #ifdef HAVE_POLL
- if (my.cusers < 900) {
-   return __socket_select(C, mode);
- } else {
+ if (C->sock >= FD_SETSIZE) {
    return __socket_poll(C, mode);
+ } else {
+   return __socket_select(C, mode);
  } 
 #else 
  return __socket_select(C, mode);
@@ -295,6 +295,7 @@ __socket_poll(CONN *C, SDSET mode)
   do {
     res = poll(C->pfd, 1, timo);
     pthread_testcancel();
+    if (res < 0) puts("LESS THAN ZERO!");
   } while (res < 0); // && errno == EINTR);
 
   if (res == 0) {
@@ -326,7 +327,10 @@ __socket_select(CONN *C, SDSET mode)
   timeout.tv_sec  = (my.timeout > 0)?my.timeout:30;
   timeout.tv_usec = 0;
 
-  if (C->sock >= 1024) return FALSE; // FD_SET can't handle it
+  if ((C->sock < 0) || (C->sock >= FD_SETSIZE)) {
+    // FD_SET can't handle it
+    return FALSE;
+  }
 
   do {
     FD_ZERO(&rs);
