@@ -70,20 +70,26 @@ new_crew(int size, int maxsize, BOOLEAN block)
   this->closed   = FALSE;  
   this->shutdown = FALSE; 
 
-  if((c = pthread_mutex_init(&(this->lock), NULL)) != 0)
+  if ((c = pthread_mutex_init(&(this->lock), NULL)) != 0)
     return NULL;
-  if((c = pthread_cond_init(&(this->not_empty), NULL )) != 0)
+  if ((c = pthread_cond_init(&(this->not_empty), NULL )) != 0)
     return NULL;
-  if((c = pthread_cond_init(&(this->not_full), NULL )) != 0)
+  if ((c = pthread_cond_init(&(this->not_full), NULL )) != 0)
     return NULL;
-  if((c = pthread_cond_init(&(this->empty), NULL)) != 0)
+  if ((c = pthread_cond_init(&(this->empty), NULL)) != 0)
     return NULL;
 
-  for(x = 0; x != size; x++){
-    if((c = pthread_create(&(this->threads[x]), NULL, crew_thread, (void *)this)) != 0)
-      return NULL;
+  for (x = 0; x != size; x++) {
+    if ((c = pthread_create(&(this->threads[x]), NULL, crew_thread, (void *)this)) != 0) {
+      switch (errno) {
+        case EINVAL: { NOTIFY(ERROR, "Error creating additional threads %s:%d",     __FILE__, __LINE__);  break; }
+        case EPERM:  { NOTIFY(ERROR, "Inadequate permission to create pool %s:%d",  __FILE__, __LINE__);  break; }
+        case EAGAIN: { NOTIFY(ERROR, "Inadequate resources to create pool %s:%d",   __FILE__, __LINE__);  break; }
+        case ENOMEM: { NOTIFY(ERROR, "Exceeded thread limit for this system %s:%d", __FILE__, __LINE__);  break; }
+        default:     { NOTIFY(ERROR, "Unknown error building thread pool %s:%d",    __FILE__, __LINE__);  break; }
+      } return NULL;
+    } 
   }
-
   return this;
 }
 
