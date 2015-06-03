@@ -5,6 +5,15 @@ To email a contributor remove "DELETE" from the email address.
  * SIEGE RELEASE          RELEASE_3-1-0_JUN_03_2015
  * src/version.c          Version increment: 3.1.0
 
+2015/06/03 Eric Abbott <eabbott@hubspotNOSPAM.com>
+ * src/setup.h            Changed delay to float
+ * src/client.c           Changed delay handling for float
+ * src/main.c             Changed delay handling for float
+ * src/init.c             Changed delay handling for float
+
+2015/06/03 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * src/init.c             XXX backed out 04/16 protective mem handling
+
 2015/05/19 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_3-1-0rc3_MAY_19_2015
  * src/sock.h             Added struct for poll
