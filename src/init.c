@@ -172,7 +172,7 @@ show_config(int EXIT)
     printf( "repetitions:                    n/a\n" );
   printf( "socket timeout:                 %d\n", my.timeout );
   printf( "accept-encoding:                %s\n", my.encoding);
-  printf( "delay:                          %d sec%s\n", my.delay,my.delay>1?"s":"" );
+  printf( "delay:                          %.3f sec%s\n", my.delay,my.delay>1?"s":"" );
   printf( "internet simulation:            %s\n", my.internet?"true":"false"  );
   printf( "benchmark mode:                 %s\n", my.bench?"true":"false"  );
   printf( "failures until abort:           %d\n", my.failures );
@@ -350,7 +350,7 @@ load_conf(char *filename)
     }
     else if (strmatch(option, "delay")) {
       if (value != NULL) {
-        my.delay = atoi(value);
+        my.delay = atof(value);
       } else {
         my.delay = 1;
       }

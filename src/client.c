@@ -248,10 +248,15 @@ __http(CONN *C, URL U, CLIENT *client)
     return FALSE;
   }
 
-  if (my.delay) {
+  if (my.delay >= 1) {
     pthread_sleep_np(
      (unsigned int) (((double)pthread_rand_np(&(client->rand_r_SEED)) /
                      ((double)RAND_MAX + 1) * my.delay ) + .5) 
+    );
+  } else if (my.delay >= .001) {
+    pthread_usleep_np(
+     (unsigned int) (((double)pthread_rand_np(&(client->rand_r_SEED)) /
+                     ((double)RAND_MAX + 1) * my.delay * 1000000 ) + .0005) 
     );
   }
 
