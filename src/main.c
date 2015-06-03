@@ -147,7 +147,7 @@ display_help()
   printf("                            default is used: PREFIX/var/%s.log\n", program_name);
   puts("  -m, --mark=\"text\"         MARK, mark the log file with a string." );
   puts("  -d, --delay=NUM           Time DELAY, random delay before each requst");
-  puts("                            between 1 and NUM. (NOT COUNTED IN STATS)");
+  puts("                            between .001 and NUM. (NOT COUNTED IN STATS)");
   puts("  -H, --header=\"text\"       Add a header to request (can be many)" ); 
   puts("  -A, --user-agent=\"text\"   Sets User-Agent in request" ); 
   puts("  -T, --content-type=\"text\" Sets Content-Type in request" ); 
@@ -216,7 +216,7 @@ parse_cmdline(int argc, char *argv[])
         break;
       case 'd':
 	/* XXX range checking? use strtol? */
-        my.delay   = atoi(optarg);
+        my.delay   = atof(optarg);
 	if(my.delay < 0){
 	  my.delay = 0; 
 	}
@@ -321,11 +321,13 @@ main(int argc, char *argv[])
   memset(&my, 0, sizeof(struct CONFIG));
 
   parse_rc_cmdline(argc, argv); 
-  if (init_config() < 0) {      /* defined in init.h   */
-    exit( EXIT_FAILURE );       /* polly was a girl... */
+  if (init_config() < 0) { 
+    exit(EXIT_FAILURE); 
   } 
-  parse_cmdline(argc, argv);    /* defined above       */
-  ds_module_check();            /* check config integ  */
+  parse_cmdline(argc, argv);
+printf("MY.DELAY: %.3f\n", my.delay);
+  ds_module_check(); 
+printf("MY.DELAY: %.3f\n", my.delay);
 
   /**
    * XXX: we should consider moving the following
