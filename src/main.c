@@ -325,9 +325,7 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE); 
   } 
   parse_cmdline(argc, argv);
-printf("MY.DELAY: %.3f\n", my.delay);
   ds_module_check(); 
-printf("MY.DELAY: %.3f\n", my.delay);
 
   /**
    * XXX: we should consider moving the following
