@@ -534,8 +534,10 @@ http_read_headers(CONN *C, URL U)
         h->auth.type.www      = DIGEST;
         h->auth.challenge.www = xstrdup(line+18);
       } else {
-        newline += 23;
-        h->auth.type.www = BASIC;
+        if (h->auth.type.www != DIGEST) {
+          newline += 23;
+          h->auth.type.www = BASIC;
+        }
       }
       while ((tmp = __parse_pair(&newline)) != NULL) {
         option = tmp; 
