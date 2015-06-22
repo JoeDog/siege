@@ -312,6 +312,7 @@ main(int argc, char *argv[])
   sigaddset(&sigs, SIGINT);
   sigaddset(&sigs, SIGALRM);
   sigaddset(&sigs, SIGTERM);
+  sigaddset(&sigs, SIGPIPE);
   sigprocmask(SIG_BLOCK, &sigs, NULL);
 
   lines = xcalloc(1, sizeof *lines);
