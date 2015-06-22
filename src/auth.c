@@ -265,6 +265,7 @@ auth_set_digest_header(AUTH this, DCHLG **chlg, DCRED **cred, unsigned int *rand
   size_t  i;
   for (i = 0; i < array_length(this->creds); i++) {
     CREDS tmp = array_get(this->creds, i);
+    if (realm == NULL) break;
     if (strmatch(creds_get_realm(tmp), realm)) {
       *chlg = __digest_challenge(str);
       *cred = __digest_credentials(tmp, rand);
