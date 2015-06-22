@@ -183,12 +183,8 @@ void
 url_set_postdata(URL this, char *postdata, size_t postlen)
 {
   this->postlen = postlen;
-
-  if (strlen(postdata) > 0) {
-    this->postdata = malloc(this->postlen);
-    memcpy(this->postdata, postdata, this->postlen);
-    this->postdata[this->postlen] = 0;
-  }
+  this->postdata = malloc(this->postlen);
+  memcpy(this->postdata, postdata, this->postlen);
   return;
 }
 
