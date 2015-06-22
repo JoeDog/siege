@@ -666,8 +666,16 @@ socket_close(CONN *C)
     if (!C->connection.reuse || C->connection.max == 1){
       if (C->ssl != NULL) {
         do {
-          if ((ret = SSL_shutdown(C->ssl))==1) 
+          ret = SSL_get_shutdown(C->ssl);
+          if (ret < 0) { 
+            NOTIFY(WARNING, "socket: SSL Socket closed by server: %s:%d", __FILE__, __LINE__);
+            break; //what an asshole; is this IIS? 
+          }
+
+          ret = SSL_shutdown(C->ssl);
+          if (ret == 1) {
             break;
+          }
           tries++;
         } while(tries < 5);
       }
