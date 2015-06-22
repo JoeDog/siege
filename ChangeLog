@@ -4,6 +4,12 @@ To email a contributor remove "DELETE" from the email address.
 2015/06/22 Kaspar Fischer <kaspar.fischer@apple.com>
  * src/url.c              Rewrote url_set_postdata to fix POST issue
 
+2015/06/21 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * src/auth.c             Fixed issue in which a realm isn't set
+ * src/http.c             Refined auth type parsing
+ * src/sock.c             Added condition checks around SSL sock close
+ * src/main.c             Added SIGPIPE to mask since IIS closes sockets because...
+
 2015/06/03 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_3-1-0_JUN_03_2015
  * src/version.c          Version increment: 3.1.0
