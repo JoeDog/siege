@@ -1,5 +1,5 @@
 # Updated by Siege %_VERSION%, %_DATE%
-# Copyright 2000-2013 by %_AUTHOR%
+# Copyright 2000-2015 by %_AUTHOR%
 # 
 # Siege configuration file -- edit as necessary
 # For more information about configuring and running
@@ -209,10 +209,12 @@ concurrent = 15
 # url =
 
 #
-# Default delay value, see the siege(1) man page.  
-# This value is used for load testing, it is not used 
-# for benchmarking.
-# ex: delay = 3
+# Default delay between each request by a single thread. This 
+# value is not included in the request time. If a thread sleeps 
+# for two seconds then completes a 0.5 second request, the time
+# of the request is 0.5 seconds, not 2.5 seconds.
+#
+# ex: delay = 0.5
 #
 delay = 1
 
