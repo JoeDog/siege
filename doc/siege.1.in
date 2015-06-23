@@ -1,5 +1,5 @@
 .ig \"-*- Siege -*-
-Copyright (C) 2000-2010 by %_AUTHOR%
+Copyright (C) 2000-2015 by %_AUTHOR%
 
 Siege is distributed under the terms of the GNU GPL.
 
@@ -20,11 +20,11 @@ Siege is distributed under the terms of the GNU GPL.
 .B %_PROGRAM%
 \- An HTTP/HTTPS stress tester
 .SH INTRODUCTION
-Siege is a multi-threaded http load testing and benchmarking utility.  It was designed to let web developers measure the performance of their code under duress.  It allows one to hit a web server with a configurable number of concurrent simulated users.  Those users place the webserver "under siege."  
+Siege is a multi-threaded HTTP/FTP load testing and benchmarking utility.  It was designed to let developers and administrators measure application performance under duress. It lets you to hit a server with a configurable number of simulated users. Those users place the server "under siege."  
 \fR\fR
-Performance measures include elapsed time, total data transferred, server response time, its transaction rate, its throughput, its concurrency and the number of times it returned OK.  These measures are quantified and reported at the end of each run.  Their meaning and significance is discussed below.
+.TP
+Performance measures include elapsed time, total data transferred, response time, transaction rate, throughput, concurrency and the number of times it returned OK. These measures are quantified and reported at the end of each run.  Their meaning and significance is discussed below.
 \fR\fR
-Siege has essentially three modes of operation: regression (when invoked by bombardment), internet simulation and brute force. 
 .SH INVOCATION
 The format for invoking siege is:   siege [options] \fR
                                     siege [options] [url]\fR
@@ -57,7 +57,7 @@ CONCURRENT, allows you to set the concurrent number of simulated users to num. T
 INTERNET, generates user simulation by randomly hitting the URLs read from the urls.txt file.  This option is viable only with the urls.txt file.
 .TP
 \fB\-d NUM\fR, \fB\-\-delay=NUM\fR
-DELAY, each siege simulated users sleeps for a random interval in seconds between 0 and NUM.
+DELAY, each siege simulated users sleeps for a random interval in seconds between 0 and NUM. The delay can be expressed as a decimal, i.e., 1.5 or 0.05
 .TP
 \fB\-b\fR, \fB\-\-benchmark\fR
 BENCHMARK, runs the test with NO DELAY for throughput benchmarking. By default each simulated user is invoked with at least a one second delay. This option removes that delay.  It is not recommended that you use this option while load testing.
@@ -206,13 +206,13 @@ The sum of data transferred to every siege simulated user.  It includes the head
 The average time it took to respond to each simulated user's requests. 
 .TP
 .B Transaction rate 
-The average number of transactions the server was able to handle per second, in a nutshell: transactions divided by elapsed time.   
+The average number of transactions the server was able to handle per second, in a nutshell: it is the count of all transactions divided by elapsed time.   
 .TP
 .B Throughput 
 The average number of bytes transferred every second from the server to all the simulated users. 
 .TP
 .B Concurrency 
-The average number of simultaneous connections, a number which rises as server performance decreases. 
+This is the average number of simultaneous connections. The metric is calculated like this: the sum of all transaction times divided by elapsed time (how long siege ran) 
 .TP
 .B Successful transactions 
 The number of times the server responded with a return code < 400. 
