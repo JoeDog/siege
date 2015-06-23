@@ -9,6 +9,8 @@ To email a contributor remove "DELETE" from the email address.
  * src/http.c             Refined auth type parsing
  * src/sock.c             Added condition checks around SSL sock close
  * src/main.c             Added SIGPIPE to mask since IIS closes sockets because...
+ * MACHINES               Removed from the distribution
+ * README.solaris         Remvoed from the distribution (dropping support)
 
 2015/06/03 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_3-1-0_JUN_03_2015
