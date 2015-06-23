@@ -1,7 +1,7 @@
 ##
 ## Makefile.am
 ##
-## Copyright (C) 2000-2014 by 
+## Copyright (C) 2000-2015 by 
 ## Jeffrey Fulmer - <jeff@joedog.org>, et al.
 ## This file is distributed as part of Siege
 ##
@@ -30,6 +30,6 @@ SUBDIRS           =    . include lib src utils doc html
 
 DIST_SUBDIRS      =    $(SUBDIRS)
 
-EXTRA_DIST        =    KNOWNBUGS MACHINES README.md README.https README.solaris \
+EXTRA_DIST        =    KNOWNBUGS README.md README.https \
                        acspecific.m4 aclocal.m4 acinclude.m4
 
