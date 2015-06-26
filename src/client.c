@@ -348,9 +348,8 @@ __http(CONN *C, URL U, CLIENT *client)
     } else {
       if (my.display)
         DISPLAY(
-          color, "%s%4d: %s %d %6.2f secs: %7lu bytes ==> %-4s %s", client->id,
-          time_str, head->head, head->code, etime, bytes, url_get_method_name(U), 
-		  url_get_display(U)
+          color, "%4d) %s %d %6.2f secs: %7lu bytes ==> %-4s %s", 
+          client->id, head->head, head->code, etime, bytes, url_get_method_name(U), url_get_display(U)
         ); 
       else
         DISPLAY ( 
@@ -421,6 +420,10 @@ __http(CONN *C, URL U, CLIENT *client)
 	    NOTIFY(ERROR, "unable to set digest header");
 	    return FALSE;
 	  }
+        }
+        if (head->auth.type.www == NTLM) {
+          client->auth.type.www =  NTLM;
+          auth_set_ntlm_header(my.auth, HTTP, head->auth.realm.www);
         }
         if (head->auth.type.www == BASIC) {
           client->auth.type.www =  BASIC;
