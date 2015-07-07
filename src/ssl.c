@@ -90,7 +90,7 @@ SSL_initialize(CONN *C)
     my.ssl_ciphers = stralloc(SSL_DEFAULT_CIPHER_LIST);
   } 
 
-  C->method = SSLv23_client_method();
+  C->method = (SSL_METHOD *)SSLv23_client_method();
   if(C->method==NULL){
     SSL_error_stack();
     return FALSE;
@@ -102,6 +102,7 @@ SSL_initialize(CONN *C)
   } 
 
   SSL_CTX_set_mode(C->ctx, SSL_MODE_ENABLE_PARTIAL_WRITE|SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+  SSL_CTX_set_options(C->ctx, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3);
   SSL_CTX_set_session_cache_mode(C->ctx, SSL_SESS_CACHE_BOTH);
   SSL_CTX_set_timeout(C->ctx, my.ssl_timeout);
   if(my.ssl_ciphers){
@@ -140,7 +141,8 @@ SSL_initialize(CONN *C)
   SSL_set_fd(C->ssl, C->sock);
   serr = SSL_connect(C->ssl);
   if (serr != 1) {
-    NOTIFY(ERROR, "Failed to make an SSL connection");
+    SSL_error_stack();
+    NOTIFY(ERROR, "Failed to make an SSL connection: %d", SSL_get_error(C->ssl, serr));
     return FALSE;
   }
   return TRUE;
