@@ -1,9 +1,11 @@
 /**
  * HTTP Authentication
  *
- * Copyright (C) 2002-2014 by
+ * Copyright (C) 2002-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege
+ *
+ * Additional copyright information is noted below
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +34,33 @@
 #include <setup.h>
 #include <joedog/joedog.h>
 
+#ifdef HAVE_SSL
+#include <openssl/des.h>
+#include <openssl/md4.h>
+#include <openssl/opensslv.h>
+# if OPENSSL_VERSION_NUMBER < 0x00907001L
+#  define DES_key_schedule des_key_schedule
+#  define DES_cblock des_cblock
+#  define DES_set_odd_parity des_set_odd_parity
+#  define DES_set_key des_set_key
+#  define DES_ecb_encrypt des_ecb_encrypt
+#  define DESKEY(x) x
+#  define DESKEYARG(x) x
+# else
+#  define DESKEYARG(x) *x
+#  define DESKEY(x) &x
+# endif
+#endif
+
+typedef enum 
+{
+  TYPE_N = 0,
+  TYPE_1 = 1,
+  TYPE_2 = 2,
+  TYPE_3 = 3,
+  TYPE_L = 4
+} STATE;
+
 struct AUTH_T {
   ARRAY   creds;
   BOOLEAN okay;
@@ -41,6 +70,12 @@ struct AUTH_T {
   struct {
     char *encode;
   } digest;
+  struct {
+    STATE state;
+    char *encode;
+    BOOLEAN  ready;
+    unsigned char nonce[8];
+  } ntlm;
   struct {
     BOOLEAN required;   /* boolean, TRUE == use a proxy server.    */
     char *hostname;     /* hostname for the proxy server.          */
@@ -80,9 +115,19 @@ typedef enum {
   UNKNOWN
 } KEY_HEADER_E;
 
+/**
+ * Flag bits definitions available at on
+ * http://davenport.sourceforge.net/ntlm.html
+ */
+#define NTLMFLAG_NEGOTIATE_OEM                   (1<<1)
+#define NTLMFLAG_NEGOTIATE_NTLM_KEY              (1<<9)
+#define BASE64_LENGTH(len) (4 * (((len) + 2) / 3))
+
 size_t AUTHSIZE = sizeof(struct AUTH_T);
 
 private BOOLEAN       __basic_header(AUTH this, SCHEME scheme, CREDS creds);
+private BOOLEAN       __ntlm_header(AUTH this, SCHEME scheme, const char *header, CREDS creds);
+private void          __mkhash(const char *pass, unsigned char *nonce, unsigned char *lmresp, unsigned char *ntresp);
 private DCHLG *       __digest_challenge(const char *challenge);
 private DCRED *       __digest_credentials(CREDS creds, unsigned int *randseed);
 private KEY_HEADER_E  __get_keyval(const char *key);
@@ -100,6 +145,8 @@ new_auth()
   this->creds  = new_array();
   this->basic.encode  = xstrdup("");
   this->digest.encode = xstrdup("");
+  this->ntlm.encode   = xstrdup("");
+  this->ntlm.state    = TYPE_N;
   this->proxy.encode  = xstrdup("");
   return this;
 }
@@ -167,6 +214,43 @@ auth_set_basic_header(AUTH this, SCHEME scheme, char *realm)
     }
   }
   return FALSE; 
+}
+
+BOOLEAN
+auth_set_ntlm_header(AUTH this, SCHEME scheme, char *header, char *realm) 
+{
+  size_t i;
+  for (i = 0; i < array_length(this->creds); i++) {
+    CREDS tmp = array_get(this->creds, i);
+    if (realm == NULL) break;
+    if (strmatch(creds_get_realm(tmp), realm)) {
+      if (creds_get_scheme(tmp) == HTTP || creds_get_scheme(tmp) == HTTPS) {
+        return __ntlm_header(this, scheme, header, tmp);
+      }
+    }
+  }
+  /**
+   * didn't match a realm, trying 'any'
+   */
+  for (i = 0; i < array_length(this->creds); i++) {
+    CREDS tmp = array_get(this->creds, i);
+    if (strmatch(creds_get_realm(tmp), "any")) {
+      if (creds_get_scheme(tmp) == HTTP || creds_get_scheme(tmp) == HTTPS) {
+        return __ntlm_header(this, scheme, header, tmp);
+      }
+    }
+  }
+  return FALSE;
+}
+
+char *
+auth_get_ntlm_header(AUTH this, SCHEME scheme)
+{
+  if (scheme == PROXY) {
+    return this->proxy.encode;
+  } else {
+    return this->ntlm.encode;
+  }
 }
 
 //digest_generate_authorization(C->auth.wwwchlg, C->auth.wwwcred, "GET", fullpath);
@@ -412,6 +496,408 @@ __basic_header(AUTH this, SCHEME scheme, CREDS creds)
   pthread_mutex_unlock(&(this->lock));
   return ret; 
 }
+
+/**
+ * NTLM authentication is based on Daniel Stenberg's 
+ * implementation from libcurl and contribution to wget. 
+ * See: http://curl.haxx.se and http://www.gnu.org/software/wget/
+ * Copyright (c) 1996 - 2015, Daniel Stenberg, daniel@haxx.se.
+ * MIT (or Modified BSD)-style license. 
+ * Copyright (C) 2011 by Free Software Foundation 
+ * Modified for Siege by J. Fulmer
+ * Copyright (C) 2015 GNU Public License v3
+ */
+#define SHORTPAIR(x) (char) ((x) & 0xff), (char) ((x) >> 8)
+#define LONGQUARTET(x) ((x) & 0xff), (((x) >> 8)&0xff), \
+  (((x) >>16)&0xff), ((x)>>24)
+
+private BOOLEAN
+__ntlm_header(AUTH this, SCHEME scheme, const char *header, CREDS creds)
+{
+#ifndef HAVE_SSL
+  NOTIFY(
+    ERROR, "NTLM authentication requires libssl: %d, %d, %s, %s", 
+    this->okay, scheme, header, creds_get_username(creds)
+  ); // this message is mainly intended to silence the compiler
+  return FALSE;
+#else
+  size_t size        = 0;
+  size_t final       = 0;
+  const char *domstr = "";
+  const char *srvstr = ""; 
+  size_t domlen      = strlen(domstr);
+  size_t srvlen      = strlen(srvstr);
+  size_t srvoff; 
+  size_t domoff; 
+  char *hdr;
+  char  tmp[BUFSIZ];
+  char  buf[256]; 
+
+  /**
+   * The header is head->auth.challenge.www which was set in client.c
+   * It includes everything after 'WWW-Authenticate: ' which means it
+   * must begin NTLM for this authentication mechanism. Let's check it
+   */
+  if (strncasecmp(header, "NTLM", 4)) {
+    return FALSE;
+  }
+
+  header += 4; // Step past NTLM
+  while (*header && ISSPACE(*header)) {
+    header++;
+  }
+
+  if (*header) {
+    /**
+     * We got a type-2 message here:
+     *
+     *  Index   Description         Content
+     *    0     NTLMSSP Signature   Null-terminated ASCII "NTLMSSP"
+     *                                (0x4e544c4d53535000)
+     *    8     NTLM Message Type   long (0x02000000)
+     *   12     Target Name         security buffer(*)
+     *   20     Flags               long
+     *   24     Challenge           8 bytes
+     *  (32)    Context (optional)  8 bytes (two consecutive longs)
+     *  (40)    Target Information  (optional) security buffer(*)
+     *   32 (48) start of data block
+     */
+    ssize_t size;
+    memset(tmp, '\0', strlen(header));
+    if ((size = base64_decode(header, &tmp)) < 0) {
+      return FALSE;
+    }
+
+    if (size >= 48) {
+      /* the nonce of interest is index [24 .. 31], 8 bytes */
+      memcpy (this->ntlm.nonce, &tmp[24], 8);
+    }
+    this->ntlm.state = TYPE_2;
+  } else {
+    if (this->ntlm.state >= TYPE_1) {
+      return FALSE; /* this is an error */
+    }
+    this->ntlm.state = TYPE_1; /* we should send type-1 */
+  }
+
+  switch (this->ntlm.state) {
+    case TYPE_1:
+    case TYPE_N:
+    case TYPE_L:
+      srvoff = 32;
+      domoff = srvoff + srvlen;
+      /** 
+       * Create and send a type-1 message:
+       * Index Description          Content
+       *  0    NTLMSSP Signature    Null-terminated ASCII "NTLMSSP"
+       *                            (0x4e544c4d53535000)
+       *  8    NTLM Message Type    long (0x01000000)
+       * 12    Flags                long
+       * 16    Supplied Domain      security buffer(*)
+       * 24    Supplied Workstation security buffer(*)
+       * 32    start of data block
+       */
+      snprintf (
+        buf, sizeof(buf), "NTLMSSP%c"
+        "\x01%c%c%c" /* 32-bit type = 1 */
+        "%c%c%c%c"   /* 32-bit NTLM flag field */
+        "%c%c"       /* domain length */
+        "%c%c"       /* domain allocated space */
+        "%c%c"       /* domain name offset */
+        "%c%c"       /* 2 zeroes */
+        "%c%c"       /* host length */
+        "%c%c"       /* host allocated space */
+        "%c%c"       /* host name offset */
+        "%c%c"       /* 2 zeroes */
+        "%s"         /* host name */
+        "%s",        /* domain string */
+        0,           /* trailing zero */
+        0,0,0,       /* part of type-1 long */
+        LONGQUARTET(
+          /* equals 0x0202 */
+          NTLMFLAG_NEGOTIATE_OEM|      /*   2 */
+          NTLMFLAG_NEGOTIATE_NTLM_KEY  /* 200 */
+        ),
+        SHORTPAIR(domlen),
+        SHORTPAIR(domlen),
+        SHORTPAIR(domoff),
+        0,0,
+        SHORTPAIR(srvlen),
+        SHORTPAIR(srvlen),
+        SHORTPAIR(srvoff),
+        0,0,
+        srvstr, domstr
+      );
+      size   = 32 + srvlen + domlen;
+      if ((base64_encode(buf, size, &hdr) < 0 )) {
+        return FALSE;
+      }
+
+      final  =  strlen(hdr) + 23;
+      this->ntlm.encode = xmalloc(final);
+      this->ntlm.state = TYPE_2; /* we sent type one */
+      memset(this->ntlm.encode, '\0', final);
+      snprintf(this->ntlm.encode, final, "Authorization: NTLM %s\015\012", hdr);
+      break;
+    case  TYPE_2:
+      /**
+       * We have type-2; need to create a type-3 message:
+       *
+       * Index    Description            Content
+       *   0      NTLMSSP Signature      Null-terminated ASCII "NTLMSSP"
+       *                                 (0x4e544c4d53535000)
+       *   8      NTLM Message Type      long (0x03000000)
+       *  12      LM/LMv2 Response       security buffer(*)
+       *  20      NTLM/NTLMv2 Response   security buffer(*)
+       *  28      Domain Name            security buffer(*)
+       *  36      User Name              security buffer(*)
+       *  44      Workstation Name       security buffer(*)
+       * (52)     Session Key (optional) security buffer(*)
+       * (60)     Flags (optional)       long
+       *  52 (64) start of data block
+       */
+      {
+        size_t lmrespoff;
+        size_t ntrespoff;
+        size_t usroff;
+        unsigned char lmresp[0x18]; /* fixed-size */
+        unsigned char ntresp[0x18]; /* fixed-size */
+        size_t usrlen;
+        const  char *usr;
+
+        usr = strchr(creds_get_username(creds), '\\');
+        if (!usr) {
+          usr = strchr(creds_get_username(creds), '/');
+        }
+
+        if (usr) {
+          domstr = creds_get_username(creds);
+          domlen = (size_t) (usr - domstr);
+          usr++;
+        } else {
+          usr = creds_get_username(creds);
+        }
+        usrlen = strlen(usr);
+        __mkhash(creds_get_password(creds), &this->ntlm.nonce[0], lmresp, ntresp);
+        domoff = 64; 
+        usroff = domoff + domlen;
+        srvoff = usroff + usrlen;
+        lmrespoff = srvoff + srvlen;
+        ntrespoff = lmrespoff + 0x18;
+        size = (size_t) snprintf (
+          buf, sizeof(buf),
+          "NTLMSSP%c"
+          "\x03%c%c%c"     /* type-3, 32 bits */
+          "%c%c%c%c"       /* LanManager length + allocated space */
+          "%c%c"           /* LanManager offset */
+          "%c%c"           /* 2 zeroes */
+          "%c%c"           /* NT-response length */
+          "%c%c"           /* NT-response allocated space */
+          "%c%c"           /* NT-response offset */
+          "%c%c"           /* 2 zeroes */
+          "%c%c"           /* domain length */
+          "%c%c"           /* domain allocated space */
+          "%c%c"           /* domain name offset */
+          "%c%c"           /* 2 zeroes */
+          "%c%c"           /* user length */
+          "%c%c"           /* user allocated space */
+          "%c%c"           /* user offset */
+          "%c%c"           /* 2 zeroes */
+          "%c%c"           /* host length */
+          "%c%c"           /* host allocated space */
+          "%c%c"           /* host offset */
+          "%c%c%c%c%c%c"   /* 6 zeroes */
+          "\xff\xff"       /* message length */
+          "%c%c"           /* 2 zeroes */
+          "\x01\x82"       /* flags */
+          "%c%c"           /* 2 zeroes */
+                           /* domain string */
+                           /* user string */
+                           /* host string */
+                           /* LanManager response */
+                           /* NT response */
+          ,
+          0,               /* zero termination */
+          0,0,0,           /* type-3 long, the 24 upper bits */
+          SHORTPAIR(0x18), /* LanManager response length, twice */
+          SHORTPAIR(0x18),
+          SHORTPAIR(lmrespoff),
+          0x0, 0x0,
+          SHORTPAIR(0x18), 
+          SHORTPAIR(0x18),
+          SHORTPAIR(ntrespoff),
+          0x0, 0x0,
+          SHORTPAIR(domlen),
+          SHORTPAIR(domlen),
+          SHORTPAIR(domoff),
+          0x0, 0x0,
+          SHORTPAIR(usrlen),
+          SHORTPAIR(usrlen),
+          SHORTPAIR(usroff),
+          0x0, 0x0,
+          SHORTPAIR(srvlen),
+          SHORTPAIR(srvlen),
+          SHORTPAIR(srvoff),
+          0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+          0x0, 0x0,
+          0x0, 0x0
+        );
+        
+        size=64;
+        buf[62]=buf[63]=0;
+
+       if ((size + usrlen + domlen) >= sizeof(buf))
+         return FALSE;
+
+       memcpy(&buf[size], domstr, domlen);
+       size += domlen;
+
+       memcpy(&buf[size], usr, usrlen);
+       size += usrlen;
+
+       /* we append the binary hashes to the end of the blob */
+       if (size < (sizeof(buf) - 0x18)) {
+         memcpy(&buf[size], lmresp, 0x18);
+         size += 0x18;
+       }
+
+       if (size < (sizeof(buf) - 0x18)) {
+         memcpy(&buf[size], ntresp, 0x18);
+         size += 0x18;
+       }
+
+       buf[56] = (char) (size & 0xff);
+       buf[57] = (char) (size >> 8);
+       if ((base64_encode(buf, size, &hdr) < 0)) {
+         return FALSE;
+       }
+       
+       this->ntlm.state = TYPE_3; /* we sent a type-3 */
+       this->ntlm.ready = TRUE;
+       final  =  strlen(hdr) + 23;
+       this->ntlm.encode = (char*)xrealloc(this->ntlm.encode, final);
+       memset(this->ntlm.encode, '\0', final);
+       snprintf(this->ntlm.encode, final, "Authorization: NTLM %s\015\012", hdr);
+       break;
+     }
+     case TYPE_3:
+       this->ntlm.ready = TRUE;
+       break;
+     default: 
+       break;
+  }
+  return TRUE;
+#endif/*HAVE_SSL*/
+}
+
+/**
+ * Copyright (C) 2011 by Free Software Foundation, Inc.
+ * Contributed by Daniel Stenberg.
+ * This code is part of wget and based on mk_lm_hash from libcurl
+ * Modified by J. Fulmer for siege
+ */
+#ifdef HAVE_SSL
+static void
+setup_des_key(unsigned char *key_56, DES_key_schedule DESKEYARG(ks))
+{
+  DES_cblock key;
+
+  key[0] = key_56[0];
+  key[1] = ((key_56[0] << 7) & 0xFF) | (key_56[1] >> 1);
+  key[2] = ((key_56[1] << 6) & 0xFF) | (key_56[2] >> 2);
+  key[3] = ((key_56[2] << 5) & 0xFF) | (key_56[3] >> 3);
+  key[4] = ((key_56[3] << 4) & 0xFF) | (key_56[4] >> 4);
+  key[5] = ((key_56[4] << 3) & 0xFF) | (key_56[5] >> 5);
+  key[6] = ((key_56[5] << 2) & 0xFF) | (key_56[6] >> 6);
+  key[7] =  (key_56[6] << 1) & 0xFF;
+
+  DES_set_odd_parity(&key);
+  DES_set_key(&key, ks);
+}
+#endif/*HAVE_SSL*/
+
+/**
+ * Copyright (C) 2011 by Free Software Foundation, Inc.
+ * Contributed by Daniel Stenberg.
+ * This code is part of wget and based on mk_lm_hash from libcurl
+ * Modified by J. Fulmer for siege
+ */
+#ifdef HAVE_SSL
+static void
+calc_resp(unsigned char *keys, unsigned char *plaintext, unsigned char *results)
+{
+  DES_key_schedule ks;
+
+  setup_des_key(keys, DESKEY(ks));
+  DES_ecb_encrypt((DES_cblock*) plaintext, (DES_cblock*) results, DESKEY(ks), DES_ENCRYPT);
+
+  setup_des_key(keys+7, DESKEY(ks));
+  DES_ecb_encrypt((DES_cblock*) plaintext, (DES_cblock*) (results+8), DESKEY(ks), DES_ENCRYPT);
+
+  setup_des_key(keys+14, DESKEY(ks));
+  DES_ecb_encrypt((DES_cblock*) plaintext, (DES_cblock*) (results+16), DESKEY(ks), DES_ENCRYPT);
+}
+#endif/*HAVE_SSL*/
+
+/**
+ * Copyright (C) 2011 by Free Software Foundation, Inc.
+ * Contributed by Daniel Stenberg.
+ * This code is part of wget and based on mk_lm_hash from libcurl
+ * Modified by J. Fulmer for siege
+ */
+#ifdef HAVE_SSL
+private void
+__mkhash(const char *password, unsigned char *nonce, unsigned char *lmresp, unsigned char *ntresp)
+{
+  unsigned char *pw;
+  unsigned char lmbuffer[21];
+  unsigned char ntbuffer[21];
+  static const unsigned char magic[] = {
+    0x4B, 0x47, 0x53, 0x21, 0x40, 0x23, 0x24, 0x25
+  };
+  size_t i, len = strlen(password);
+
+  pw = (unsigned char *) alloca (len < 7 ? 14 : len * 2);
+
+  if (len > 14)
+    len = 14;
+
+  for (i=0; i<len; i++)
+    pw[i] = (unsigned char) TOUPPER(password[i]);
+
+  for (; i<14; i++)
+    pw[i] = 0;
+  {
+    DES_key_schedule ks;
+
+    setup_des_key(pw, DESKEY(ks));
+    DES_ecb_encrypt((DES_cblock *)magic, (DES_cblock *)lmbuffer, DESKEY(ks), DES_ENCRYPT);
+
+    setup_des_key(pw+7, DESKEY(ks));
+    DES_ecb_encrypt((DES_cblock *)magic, (DES_cblock *)(lmbuffer+8), DESKEY(ks), DES_ENCRYPT);
+    memset(lmbuffer+16, 0, 5);
+  }
+  calc_resp(lmbuffer, nonce, lmresp);
+
+  {
+    MD4_CTX MD4;
+    len = strlen(password);
+
+    for (i=0; i<len; i++) {
+      pw[2*i]   = (unsigned char) password[i];
+      pw[2*i+1] = 0;
+    }
+
+    MD4_Init(&MD4);
+    MD4_Update(&MD4, pw, 2*len);
+    MD4_Final(ntbuffer, &MD4);
+
+    memset(ntbuffer+16, 0, 5);
+  }
+  calc_resp(ntbuffer, nonce, ntresp);
+}
+#endif/*HAVE_SSL*/
+
 
 typedef struct
 {
