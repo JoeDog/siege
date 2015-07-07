@@ -32,7 +32,7 @@ extern  size_t AUTHSIZE;
 
 typedef struct DIGEST_CRED DCRED;
 typedef struct DIGEST_CHLG DCHLG;
-typedef enum { BASIC, DIGEST } TYPE;
+typedef enum { BASIC, DIGEST, NTLM } TYPE;
 
 AUTH    new_auth();
 AUTH    auth_destroy(AUTH this);
@@ -40,6 +40,8 @@ void    auth_add(AUTH this, CREDS creds);
 void    auth_display(AUTH this, SCHEME scheme);
 char *  auth_get_basic_header(AUTH this, SCHEME scheme);
 BOOLEAN auth_set_basic_header(AUTH this, SCHEME scheme, char *realm);
+char *  auth_get_ntlm_header(AUTH this, SCHEME scheme);
+BOOLEAN auth_set_ntlm_header(AUTH this, SCHEME scheme, char *header, char *realm);
 char *  auth_get_digest_header(AUTH this, SCHEME scheme, DCHLG *chlg, DCRED *cred, const char *meth, const char *uri);
 BOOLEAN auth_set_digest_header(AUTH this, DCHLG **ch, DCRED **cr, unsigned int *rand, char *realm, char *str);
 BOOLEAN auth_get_proxy_required(AUTH this);
