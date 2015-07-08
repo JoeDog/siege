@@ -179,12 +179,17 @@ url_set_method(URL this, METHOD method) {
   this->method = method;
 }
 
+/**
+ * invoked when post data is read from a file.
+ * see load.c 
+ */
 void
 url_set_postdata(URL this, char *postdata, size_t postlen)
 {
-  this->postlen = postlen;
-  this->postdata = malloc(this->postlen);
+  this->postlen   = postlen;
+  this->postdata = xmalloc(this->postlen+1);
   memcpy(this->postdata, postdata, this->postlen);
+  this->postdata[this->postlen] = '\0';
   return;
 }
 
