@@ -423,7 +423,7 @@ __http(CONN *C, URL U, CLIENT *client)
         }
         if (head->auth.type.www == NTLM) {
           client->auth.type.www =  NTLM;
-          auth_set_ntlm_header(my.auth, HTTP, head->auth.realm.www);
+          b = auth_set_ntlm_header(my.auth, HTTP, head->auth.challenge.www, head->auth.realm.www);
         }
         if (head->auth.type.www == BASIC) {
           client->auth.type.www =  BASIC;
