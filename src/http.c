@@ -1,7 +1,7 @@
 /**
  * HTTP/HTTPS protocol support 
  *
- * Copyright (C) 2000-2014 by
+ * Copyright (C) 2000-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege 
  *
@@ -153,6 +153,8 @@ http_get(CONN *C, URL U)
         authwww, sizeof(authwww), "%s", 
         auth_get_digest_header(my.auth, HTTP, C->auth.wchlg, C->auth.wcred, url_get_method_name(U), fullpath)
       );
+    } else if (C->auth.type.www=NTLM) {
+      snprintf(authwww, sizeof(authwww), "%s", auth_get_ntlm_header(my.auth, HTTP));
     } else {
       snprintf(authwww, sizeof(authwww), "%s", auth_get_basic_header(my.auth, HTTP));
     }
@@ -311,6 +313,8 @@ http_post(CONN *C, URL U)
         authwww, sizeof(authwww), "%s", 
         auth_get_digest_header(my.auth, HTTP, C->auth.wchlg, C->auth.wcred, url_get_method_name(U), fullpath)
       );
+    } else if(C->auth.type.www==NTLM) {
+      snprintf(authwww, sizeof(authwww), "%s", auth_get_ntlm_header(my.auth, HTTP));
     } else {
       snprintf(authwww, sizeof(authwww), "%s", auth_get_basic_header(my.auth, HTTP));
     }
@@ -527,14 +531,23 @@ http_read_headers(CONN *C, URL U)
     }
     if (strncasecmp(line, "www-authenticate: ", 18) == 0) {
       char *tmp     = ""; 
-      char *option  = "", *value = "";
+      char *option  = ""; 
+      char *value   = "";
       char *newline = (char*)line;
       if (strncasecmp(line+18, "digest", 6) == 0) {
         newline += 24;
         h->auth.type.www      = DIGEST;
         h->auth.challenge.www = xstrdup(line+18);
+      } else if (strncasecmp(line+18, "ntlm", 4) == 0) {
+        newline += 22;
+        h->auth.type.www = NTLM;
+        h->auth.challenge.www = xstrdup(line+18);
       } else {
-        if (h->auth.type.www != DIGEST) {
+        /** 
+         * XXX: If a server sends more than one www-authenticate header
+         *      then we want to use one we've already parsed. 
+         */
+        if (h->auth.type.www != DIGEST && h->auth.type.www != NTLM) {
           newline += 23;
           h->auth.type.www = BASIC;
         }
