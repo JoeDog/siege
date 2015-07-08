@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2002-2013 by
+ * Copyright (C) 2002-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege
  *
@@ -24,6 +24,8 @@
 #define public 
 
 #define  ISSEPARATOR(x) (('='==(x))||(':'==(x)))
+#define  ISUPPER(x)     ((unsigned)(x)-'A'<='Z'-'A')
+#define  ISLOWER(x)     ((unsigned)(x)-'a'<='z'-'a')
 #define  ISSPACE(x)     isspace((unsigned char)(x))
 #define  ISOPERAND(x) ('<'==(x)||'>'==(x)||'='==(x))
 #define  ISDIGIT(x)     isdigit ((unsigned char)(x)) 
