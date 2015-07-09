@@ -313,23 +313,39 @@ url-escaping = true
 # TURN OFF THAT ANNOYING SPINNER!
 # Siege spawns a thread and runs a spinner to entertain you
 # as it collects and computes its stats. If you don't like 
-# this feature, you may turn it off here.
+# this feature, you may turn it off here. Your JoeDog loves 
+# this feature but he understands that it may not render well
+# in your particular terminal.  It's on by default because who
+# doesn't love a good spinner! 
+#
 # ex: spinner = false 
 #
 spinner = true
 
 #
-# WWW-Authenticate login. When siege hits a webpage
-# that requires basic authentication, it will search its 
-# logins for authentication which matches the specific realm 
-# requested by the server. If it finds a match, it will send 
-# that login information. If it fails to match the realm, it 
-# will send the default login information. (Default is "all"). 
-# You may configure siege with several logins as long as no
-# two realms match. The format for logins is:
-# username:password[:realm] where "realm" is optional.
+# WWW-Authenticate. Currently siege supports two types
+# of HTTP authentication: digest and basic. It has partial 
+# support for Microsoft's NTLM but in practice that only 
+# works with the -g/--get option. (as of siege 3.1.1)
+# 
+# When siege makes a request for a page that requires user
+# authentication, it will search its logins for a matching
+# realm. If it finds credentials for a realm, it will attempt
+# to login with that username and password.
+#
+# If it fails to match the realm, it will use its default login
+# credentials (which are designated with the keyword "all" or no
+# specified realm. 
+#
 # If you do not supply a realm, then it will default to "all"
+# which instructs siege to send as default.
+# 
+# You may enter many logins with each on its own separate line. 
+# The only limitation is memory and realm name. You can't use the
+# same realm name more than once.  
+#
 # ex: login = jdfulmer:topsecret:Admin
+#     login = jeff:supersecret:all 
 #     login = jeff:supersecret
 #
 # login = 
