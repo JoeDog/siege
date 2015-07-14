@@ -655,7 +655,6 @@ socket_close(CONN *C)
 #ifdef  HAVE_SSL
   int tries = 0;
 #endif/*HAVE_SSL*/
-
   if (C==NULL) return;
 
   /* XXX Is this necessary? */ 
