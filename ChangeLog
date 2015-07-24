@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/07/24 Wander Lairson Costa <https://github.com/walac>
+ * src/load.c             Null terminated the buffer for POST data 
+
 2015/06/22 Kaspar Fischer <kaspar.fischer@apple.com>
  * src/url.c              Rewrote url_set_postdata to fix POST issue
 
