@@ -266,6 +266,7 @@ load_file(URL U, char *file)
 
   if ((fread(buf, 1, len, fp )) == len) {
     if (is_ascii(filename)) {
+      buf[len] = '\0';
       trim(buf);
       len = strlen(buf);
     }
