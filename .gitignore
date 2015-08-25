@@ -1,0 +1,36 @@
+# Autotools Related
+PLATFORM
+aclocal.m4
+autom4te.cache/
+*Makefile.in
+config.status
+config.log
+include/config.h
+include/config.h.in
+include/joedog/joepath.h
+include/stamp-h1
+lib/joedog/.libs/
+lib/joedog/libjoedog.la
+libtool
+
+# Compile Related
+*.o
+*.lo
+*Makefile
+configure
+src/siege
+
+# Generated
+doc/bombardment.1
+doc/layingsiege.7
+doc/siege.1
+doc/siege.config.1
+doc/siege2csv.1
+doc/siegerc
+doc/urls_txt.5
+utils/bombardment
+utils/siege.config
+utils/siege2csv.pl
+
+# Others
+tags
