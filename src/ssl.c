@@ -47,6 +47,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <joedog/defs.h>
+#include <tls1.h>
 
 /**
  * local variables and prototypes
@@ -63,7 +64,7 @@ private  void SSL_pthreads_locking_callback(int m, int t, char *f, int l);
 #endif/*HAVE_SSL*/
 
 BOOLEAN
-SSL_initialize(CONN *C)
+SSL_initialize(CONN *C, const char *servername)
 {
 #ifdef HAVE_SSL
   int  i;
@@ -138,6 +139,12 @@ SSL_initialize(CONN *C)
     SSL_error_stack();
     return FALSE;
   }
+
+# ifdef SSL_set_tlsext_host_name
+  // Enable TLS Extension SNI Support
+  SSL_set_tlsext_host_name(C->ssl, servername);
+# endif
+
   SSL_set_fd(C->ssl, C->sock);
   serr = SSL_connect(C->ssl);
   if (serr != 1) {
