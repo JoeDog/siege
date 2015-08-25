@@ -701,7 +701,7 @@ __init_connection(CONN *C, URL U, CLIENT *client)
       https_tunnel_response(C);
     }
     C->encrypt = TRUE;
-    if (SSL_initialize(C)==FALSE) {
+    if (SSL_initialize(C, U->hostname)==FALSE) {
       return FALSE;
     }
   }

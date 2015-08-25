@@ -49,7 +49,7 @@
 
 #endif/*HAVE_SSL*/
 
-BOOLEAN SSL_initialize(CONN *C);
+BOOLEAN SSL_initialize(CONN *C, const char *servername);
 void    SSL_thread_setup(void);
 void    SSL_thread_cleanup(void);
 

@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <joedog/defs.h>
 #include <joedog/boolean.h>
+#include <date.h>
 
 /** 
  * a URL object 
@@ -139,5 +140,33 @@ void     url_set_realm(URL this, char *realm);
 void     url_set_username(URL this, char *username);
 void     url_set_password(URL this, char *password);
 URL      url_normalize(URL req, char *location);
+
+struct URL_T
+{
+  int       ID;
+  char *    url;
+  SCHEME    scheme;
+  METHOD    method;
+  char *    username;
+  char *    password;
+  char *    hostname;
+  int       port;
+  char *    path;
+  char *    file;
+  char *    params;
+  BOOLEAN   hasparams;
+  char *    query;
+  char *    frag;
+  char *    request;
+  size_t    postlen;
+  char *    postdata;
+  char *    posttemp;
+  char *    conttype;
+  time_t    expires;
+  time_t    modified;
+  BOOLEAN   cached;
+  char *    etag;
+  char *    realm;
+};
 
 #endif/*__URL_H*/
