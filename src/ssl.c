@@ -47,6 +47,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <joedog/defs.h>
+#include <tls1.h>
 
 /**
  * local variables and prototypes
@@ -63,7 +64,7 @@ private  void SSL_pthreads_locking_callback(int m, int t, char *f, int l);
 #endif/*HAVE_SSL*/
 
 BOOLEAN
-SSL_initialize(CONN *C)
+SSL_initialize(CONN *C, const char *servername)
 {
 #ifdef HAVE_SSL
   int  i;
@@ -134,6 +135,8 @@ SSL_initialize(CONN *C)
   }  
 
   C->ssl = SSL_new(C->ctx);
+  SSL_ctrl(C->ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME,
+           TLSEXT_NAMETYPE_host_name, servername);
   if(C->ssl==NULL){
     SSL_error_stack();
     return FALSE;

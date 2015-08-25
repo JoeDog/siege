@@ -34,34 +34,6 @@
 #include <joedog/boolean.h>
 #include <joedog/defs.h>
 
-struct URL_T
-{
-  int       ID;
-  char *    url;
-  SCHEME    scheme;
-  METHOD    method;
-  char *    username;
-  char *    password;
-  char *    hostname;
-  int       port;
-  char *    path;
-  char *    file;
-  char *    params;
-  BOOLEAN   hasparams;
-  char *    query;
-  char *    frag;
-  char *    request;
-  size_t    postlen;
-  char *    postdata;
-  char *    posttemp;
-  char *    conttype;
-  time_t    expires;
-  time_t    modified;
-  BOOLEAN   cached;
-  char *    etag;
-  char *    realm;
-};
-
 size_t URLSIZE = sizeof(struct URL_T);
 
 private void    __url_parse(URL this, char *url);
