@@ -40,6 +40,7 @@
 
 #include <setup.h>
 #include <ssl.h>
+#include <tls1.h>
 #include <util.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,8 +63,8 @@ private  void SSL_error_stack(void);
 private  void SSL_pthreads_locking_callback(int m, int t, char *f, int l);
 #endif/*HAVE_SSL*/
 
-BOOLEAN
-SSL_initialize(CONN *C)
+BOOLEAN 
+SSL_initialize(CONN *C, const char *servername)
 {
 #ifdef HAVE_SSL
   int  i;
@@ -138,6 +139,7 @@ SSL_initialize(CONN *C)
     SSL_error_stack();
     return FALSE;
   }
+  SSL_ctrl(C->ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, TLSEXT_NAMETYPE_host_name, servername);
   SSL_set_fd(C->ssl, C->sock);
   serr = SSL_connect(C->ssl);
   if (serr != 1) {
