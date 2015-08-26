@@ -1,7 +1,7 @@
 /**
  * SSL Thread Safe Setup Functions.
  *
- * Copyright (C) 2002-2014 by
+ * Copyright (C) 2002-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege
  *
@@ -47,6 +47,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <joedog/defs.h>
+#include <tls1.h>
 
 /**
  * local variables and prototypes
@@ -63,7 +64,7 @@ private  void SSL_pthreads_locking_callback(int m, int t, char *f, int l);
 #endif/*HAVE_SSL*/
 
 BOOLEAN
-SSL_initialize(CONN *C)
+SSL_initialize(CONN *C, const char *servername)
 {
 #ifdef HAVE_SSL
   int  i;
@@ -112,32 +113,37 @@ SSL_initialize(CONN *C)
     }
   }
 
-  if(my.ssl_cert){
-    if(!SSL_CTX_use_certificate_chain_file(C->ctx, my.ssl_cert)){
+  if (my.ssl_cert) {
+    if (!SSL_CTX_use_certificate_chain_file(C->ctx, my.ssl_cert)) {
       SSL_error_stack(); /* dump the error stack */
       NOTIFY(ERROR, "Error reading certificate file: %s", my.ssl_cert);
     }
-    for(i=0; i<3; i++){
-      if(SSL_CTX_use_PrivateKey_file(C->ctx, my.ssl_key, SSL_FILETYPE_PEM))
+    for (i=0; i<3; i++) {
+      if (SSL_CTX_use_PrivateKey_file(C->ctx, my.ssl_key, SSL_FILETYPE_PEM))
         break;
-      if(i<2 && ERR_GET_REASON(ERR_peek_error())==EVP_R_BAD_DECRYPT){
+      if (i<2 && ERR_GET_REASON(ERR_peek_error())==EVP_R_BAD_DECRYPT) {
         SSL_error_stack(); /* dump the error stack */
         NOTIFY(WARNING, "Wrong pass phrase: retrying");
         continue;
       }
     }
 
-    if(!SSL_CTX_check_private_key(C->ctx)){
+    if (!SSL_CTX_check_private_key(C->ctx)) {
       NOTIFY(ERROR, "Private key does not match the certificate");
       return FALSE;
     }
   }  
 
   C->ssl = SSL_new(C->ctx);
-  if(C->ssl==NULL){
+#if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME)
+  SSL_ctrl(C->ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, TLSEXT_NAMETYPE_host_name, (char *)servername);
+#endif/*SSL_CTRL_SET_TLSEXT_HOSTNAME*/
+
+  if (C->ssl==NULL) {
     SSL_error_stack();
     return FALSE;
   }
+
   SSL_set_fd(C->ssl, C->sock);
   serr = SSL_connect(C->ssl);
   if (serr != 1) {
