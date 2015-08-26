@@ -1,6 +1,13 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/08/25 Aaron Peschel <https://github.com/apeschel>
+2015/08/25 Ilya          <https://github.com/ilyakalinin>
+ * .gitignore             Added to the distribution
+ * src/client.c           Updated with new SSL_initialize
+ * src/ssl.c              Call SSL_ctrl for Server Name Indication (SNI)
+ * src/ssh.h              Updated prototype and added tls1.h
+
 2015/07/24 Wander Lairson Costa <https://github.com/walac>
  * src/load.c             Null terminated the buffer for POST data 
 
