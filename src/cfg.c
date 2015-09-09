@@ -1,7 +1,7 @@
 /**
  * Configuration file support
  *
- * Copyright (C) 2000-2014 by
+ * Copyright (C) 2000-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege 
  *
@@ -24,8 +24,9 @@
 #include <setup.h>
 #include <hash.h>
 #include <eval.h>
-#include <joedog/boolean.h>
 #include <joedog/defs.h>
+#include <joedog/joedog.h>
+#include <joedog/boolean.h>
 
 BOOLEAN is_variable_line(char *line);
 
@@ -38,10 +39,16 @@ void
 parse(char *str)
 {
   char *ch;
-  ch = (char *)strstr(str, "#"); 
-  if ( ch ){ *ch = 0; }
+  char *sp = strchr(str, ' ');
+  char *sl = strchr(str, '/');
+  if (sl==NULL && sp != NULL) {
+    ch = (char *)strstr(str, "#"); 
+    if (ch) {*ch = '\0';}
+  }
   ch = (char *)strstr(str, "\n"); 
-  if ( ch ){ *ch = 0; }
+  if (ch) {*ch = '\0';}
+
+  trim(str);
 }
 
 /** 
