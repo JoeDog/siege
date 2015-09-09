@@ -1,6 +1,13 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/09/09 Michal Babuska <https://github.com/Neotronic>
+ * src/http.c             Fixed boolean eval that was actually assignment
+
+2015/09/02 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * src/cfg.c              Added better detection for fragments in parse
+ * src/url.c              Added fragments to the request
+
 2015/08/25 Aaron Peschel <https://github.com/apeschel>
 2015/08/25 Ilya          <https://github.com/ilyakalinin>
  * .gitignore             Added to the distribution
