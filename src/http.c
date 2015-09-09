@@ -153,7 +153,7 @@ http_get(CONN *C, URL U)
         authwww, sizeof(authwww), "%s", 
         auth_get_digest_header(my.auth, HTTP, C->auth.wchlg, C->auth.wcred, url_get_method_name(U), fullpath)
       );
-    } else if (C->auth.type.www=NTLM) {
+    } else if (C->auth.type.www==NTLM) {
       snprintf(authwww, sizeof(authwww), "%s", auth_get_ntlm_header(my.auth, HTTP));
     } else {
       snprintf(authwww, sizeof(authwww), "%s", auth_get_basic_header(my.auth, HTTP));
