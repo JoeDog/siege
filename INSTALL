@@ -1,5 +1,5 @@
 
-            INSTALLATION PROCEDURE & PLATFORM INFORMATION
+          INSTALLATION PROCEDURE & PLATFORM INFORMATION
 
 
 Siege was originally built and tested on GNU/Linux. It has been ported
@@ -18,6 +18,14 @@ run "make install", run "make uninstall" first.
 
 "Hey! I'm impatient, I only read these things when things go wrong!"
 If that is the case, then follow the steps in item #1 below...
+
+   XXX: If you pulled this code from github.com then you won't have a 
+   configure script. You'll need to build one. How do you do that? In 
+   the top level source directory run this:
+   $ utils/bootstrap
+
+   NOTE: the bootstrap requires GNU autotools in order to run. You'll 
+   need autoconf, automake and libtool installed on your computer
 
 1. In a nutshell, to install the application in the default directory,
    ( /usr/local ), run the following commands:
