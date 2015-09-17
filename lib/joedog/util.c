@@ -73,7 +73,7 @@ my_random( int max, int seed )
 }
 
 void 
-itoa( int n, char s[] )
+my_itoa( int n, char s[] )
 {
   int i, sign;
   if(( sign = n ) < 0 )
