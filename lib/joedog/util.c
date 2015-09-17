@@ -2,7 +2,7 @@
  * Utility functions
  * Library: joedog
  *
- * Copyright (C) 2000-2009 by
+ * Copyright (C) 2000-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>
  * This file is distributed as part of Siege 
  *
@@ -70,23 +70,6 @@ my_random( int max, int seed )
 {
   srand( (unsigned)time( NULL ) * seed ); 
   return (int)((double)rand() / ((double)RAND_MAX + 1) * max ); 
-}
-
-void 
-itoa( int n, char s[] )
-{
-  int i, sign;
-  if(( sign = n ) < 0 )
-    n = -n;
-  i = 0;
-  do{
-    s[i++] = n % 10 + '0';
-  } while(( n /= 10 ) > 0 );
-  if( sign < 0  )
-    s[i++] = '-';
-  s[i] = '\0';
- 
-  reverse( s );
 }
 
 void 

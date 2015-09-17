@@ -2,7 +2,7 @@
  * Utility functions
  * Library: joedog
  *
- * Copyright (C) 2000-2007 by
+ * Copyright (C) 2000-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege 
  *
@@ -63,7 +63,6 @@ char *strchr (), *strrchr ();
 #include <unistd.h>
 #include "memory.h"
 
-void   itoa(int, char []);
 void   reverse(char []);
 int    my_random(int, int);
 char   *substring(char *, int, int);
