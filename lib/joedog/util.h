@@ -63,7 +63,7 @@ char *strchr (), *strrchr ();
 #include <unistd.h>
 #include "memory.h"
 
-void   itoa(int, char []);
+void   my_itoa(int, char []);
 void   reverse(char []);
 int    my_random(int, int);
 char   *substring(char *, int, int);
