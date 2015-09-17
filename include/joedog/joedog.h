@@ -3,7 +3,7 @@
 /**
  * JOEDOG HEADER 
  *
- * Copyright (C) 2000-2006 Jeffrey Fulmer <jeff@joedog.org>
+ * Copyright (C) 2000-2015 Jeffrey Fulmer <jeff@joedog.org>
  * This file is part of Siege
  *
  * This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,6 @@ void xfree(void *ptr);
 /**
  * Utility functions
  */
-void  itoa(int, char []);
 void  reverse(char []);
 int   my_random(int, int);
 char  *substring(char *, int, int);
