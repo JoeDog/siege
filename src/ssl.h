@@ -46,7 +46,7 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 #include <openssl/pem.h>
-
+#include <openssl/tls1.h>
 #endif/*HAVE_SSL*/
 
 BOOLEAN SSL_initialize(CONN *C, const char *servername);
