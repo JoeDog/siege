@@ -1,7 +1,7 @@
 /**
  * Siege environment initialization.
  *
- * Copyright (C) 2000-2014 by
+ * Copyright (C) 2000-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege 
  *
@@ -66,6 +66,7 @@ init_config( void )
   my.fullurl        = FALSE;
   my.escape         = TRUE;
   my.secs           = -1;
+  my.limit          = 255;
   my.reps           = MAXREPS; 
   my.bids           = 5;
   my.login          = FALSE;
@@ -88,9 +89,9 @@ init_config( void )
   my.ssl_ciphers    = NULL; 
   my.lurl           = new_array();
 
-  if((res = pthread_mutex_init(&(my.lock), NULL)) != 0)
+  if ((res = pthread_mutex_init(&(my.lock), NULL)) != 0)
     NOTIFY(FATAL, "unable to initiate lock");
-  if((res = pthread_cond_init(&(my.cond), NULL )) != 0)
+  if ((res = pthread_cond_init(&(my.cond), NULL )) != 0)
     NOTIFY(FATAL, "unable to initiate condition");
 
   if (load_conf(my.rc) < 0) {
@@ -178,6 +179,7 @@ show_config(int EXIT)
   printf("failures until abort:           %d\n", my.failures);
   printf("named URL:                      %s\n", my.url==NULL||strlen(my.url) < 2 ? "none" : my.url);
   printf("URLs file:                      %s\n", strlen(my.file) > 1 ? my.file : URL_FILE);
+  printf("thread limit:                   %d\n", (my.limit < 1) ? 255 : my.limit);
   printf("logging:                        %s\n", my.logging ? "true" : "false");
   printf("log file:                       %s\n", (my.logfile == NULL) ? LOG_FILE : my.logfile);
   printf("resource file:                  %s\n", my.rc);
@@ -335,6 +337,13 @@ load_conf(char *filename)
         my.reps = atoi(value);
       } else {
         my.reps = 5;
+      }
+    }
+    else if (strmatch(option, "limit")) {
+      if (value != NULL) {
+        my.limit = atoi(value);
+      } else {
+        my.limit = 255;
       }
     }
     else if (strmatch(option, "time")) {
