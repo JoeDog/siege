@@ -1,6 +1,15 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/09/23 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_3-1-3_SEP_23_2015
+
+2015/09/23 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * doc/siegerc.in         Added limit and it's description in comments
+ * src/setup.h            Added my.limit to limit the thread count
+ * src/init.c             Parsing siegerc for limit
+ * src/main.c             Capped my.users at my.limit
+
 2015/09/09 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_3-1-2_SEP_16_2015
  * src/ssl.c              Moved tls1.h to ssl.h insided detection block
