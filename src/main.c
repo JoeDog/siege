@@ -1,7 +1,7 @@
 /**
  * Siege, http regression tester / benchmark utility
  *
- * Copyright (C) 2000-2014 by  
+ * Copyright (C) 2000-2015 by  
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege
  *
@@ -328,13 +328,22 @@ main(int argc, char *argv[])
   parse_cmdline(argc, argv);
   ds_module_check(); 
 
-  /**
-   * XXX: we should consider moving the following
-   * if-checks into the ds_module_check
-   */
-
   if (my.config) {
     show_config(TRUE);    
+  }
+
+  /** 
+   * Let's tap the brakes and make sure the user knows what they're doing...
+   */ 
+  if (my.cusers > my.limit) {
+    printf("\n");
+    printf("================================================================\n");
+    printf("WARNING: The number of users is capped at %d. To increase this\n", my.limit);
+    printf("         limit, search your .siegerc file for 'limit' and change\n");
+    printf("         its value. Make sure you read the instructions there...\n");
+    printf("================================================================\n");
+    sleep(10);
+    my.cusers = my.limit;
   }
 
   if (my.url != NULL) {
@@ -342,10 +351,6 @@ main(int argc, char *argv[])
   } else { 
     my.length = read_cfg_file(lines, my.file); 
   }
-
-  //if (my.reps < 0) {
-  //  my.reps = my.length;
-  //}
 
   if (my.length == 0) { 
     display_help();
