@@ -85,6 +85,18 @@ gmethod = HEAD
 # display-id = 
 
 #
+# Limit: This directive places a cap on the number of
+# threads siege will generate. The default value is 255 
+# because out of the box apache is configured to handle
+# 256 clients. If you schedule more clients than apache
+# can handle, requests will back up and you'll make a 
+# mess. DO NOT INCREASE THIS NUMBER UNLESS YOU CONFIGURED
+# APACHE TO HANLDE MORE THAN 256 SIMULTANEOUS REQUESTS
+# ex: limit = 1023 (default is 255)
+# 
+limit = 255
+
+#
 # Show logfile location.  By default, siege displays the
 # logfile location at the end of every run when logging
 # You can turn this message off with this directive.
