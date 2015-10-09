@@ -827,7 +827,6 @@ __url_set_path(URL this, char *str)
   } else {
     this->path    = xmalloc(i+2);
     memcpy(this->path, str, i+1);
-    memcpy(this->request, str, j+1);
     this->path[i] = '/';
     this->path[i + 1]    = '\0';
   }
