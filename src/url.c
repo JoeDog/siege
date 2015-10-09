@@ -529,9 +529,11 @@ __url_parse(URL this, char *url)
   if (post != NULL){
     if (!strncasecmp(post," PUT", 4)) {
       this->method = PUT;
+      *post = '\0';
       post += 4;
     } else {
       this->method = POST;
+      *post = '\0';
       post += 5;
     }
     __parse_post_data(this, post);
