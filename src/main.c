@@ -338,7 +338,7 @@ main(int argc, char *argv[])
   if (my.cusers > my.limit) {
     printf("\n");
     printf("================================================================\n");
-    printf("WARNING: The number of users is capped at %d. To increase this\n", my.limit);
+    printf("WARNING: The number of users is capped at %d.%sTo increase this\n", my.limit, (my.limit>999)?" ":"  ");
     printf("         limit, search your .siegerc file for 'limit' and change\n");
     printf("         its value. Make sure you read the instructions there...\n");
     printf("================================================================\n");
