@@ -1,8 +1,12 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
-2015/09/23 Jeffrey Fulmer <http://www.joedog.org/support/>
- * SIEGE RELEASE          RELEASE_3-1-3_SEP_23_2015
+2015/11/02 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_3-1-3_NOV_2_2015
+
+2015/11/02 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * src/sock.c             Fixed typo in error message
+ * src/url.c              Fixed post bug with null termination
 
 2015/09/23 Jeffrey Fulmer <http://www.joedog.org/support/>
  * doc/siegerc.in         Added limit and it's description in comments
