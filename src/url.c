@@ -529,9 +529,11 @@ __url_parse(URL this, char *url)
   if (post != NULL){
     if (!strncasecmp(post," PUT", 4)) {
       this->method = PUT;
+      *post = '\0';
       post += 4;
     } else {
       this->method = POST;
+      *post = '\0';
       post += 5;
     }
     __parse_post_data(this, post);
@@ -827,7 +829,6 @@ __url_set_path(URL this, char *str)
   } else {
     this->path    = xmalloc(i+2);
     memcpy(this->path, str, i+1);
-    memcpy(this->request, str, j+1);
     this->path[i] = '/';
     this->path[i + 1]    = '\0';
   }
