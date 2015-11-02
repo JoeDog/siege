@@ -180,7 +180,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   if (hp == NULL) {
     switch(herrno) {
       case HOST_NOT_FOUND: { NOTIFY(ERROR, "Host not found: %s\n", hostparam);                           break; }
-      case NO_ADDRESS:     { NOTIFY(ERROR, "HOst does not have an IP address: %s\n", hostparam);         break; }
+      case NO_ADDRESS:     { NOTIFY(ERROR, "Host does not have an IP address: %s\n", hostparam);         break; }
       case NO_RECOVERY:    { NOTIFY(ERROR, "A non-recoverable resolution error for %s\n", hostparam);    break; }
       case TRY_AGAIN:      { NOTIFY(ERROR, "A temporary resolution error for %s\n", hostparam);          break; }
       default:             { NOTIFY(ERROR, "Unknown error code from gethostbyname for %s\n", hostparam); break; }
