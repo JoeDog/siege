@@ -71,7 +71,7 @@ http://download.joedog.org/siege/siege-latest.tar.gz
 The source repository is located on GitHub:
 git clone https://github.com/JoeDog/siege.git
 
-YOu can view in your browser here:
+You can view in your browser here:
 https://github.com/JoeDog/siege
 
 Updates and announcements are distributed via JoeBlog: 
