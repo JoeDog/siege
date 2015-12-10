@@ -37,6 +37,7 @@
 #endif /* HAVE_SSL */
 
 #include <auth.h>
+#include <hash.h>
 
 struct trans
 {
@@ -51,12 +52,14 @@ struct trans
 typedef struct
 {
   int      id;
+  size_t   tid;
   unsigned long  hits;
   unsigned long  bytes;
   unsigned int   code;
   unsigned int   fail;
   unsigned int   ok200;
   ARRAY  urls;
+  HASH   cookies;
   struct {
     DCHLG *wchlg;
     DCRED *wcred;
