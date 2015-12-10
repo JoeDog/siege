@@ -44,7 +44,7 @@ spin_doctor(CREW crew)
     return;
   }
 
-  for(x = 0; crew_get_total(crew) > 1 || x < 55; x++){
+  for (x = 0; crew_get_total(crew) > 1 || x < 55; x++) {
     fflush(stderr);
     fprintf(stderr,"%c", h[x%4]);
     pthread_usleep_np(20000);
@@ -58,11 +58,6 @@ sig_handler(CREW crew)
 {
   int gotsig = 0; 
   sigset_t  sigs;
-#if defined (hpux) || defined(__hpux)
-#else
-  int result;
-  pthread_t spinner;
-#endif 
  
   sigemptyset(&sigs);
   sigaddset(&sigs, SIGHUP);
@@ -76,16 +71,7 @@ sig_handler(CREW crew)
   sigwait(&sigs, &gotsig);
   my.verbose = FALSE;
   fprintf(stderr, "\nLifting the server siege..."); 
-//  crew_set_shutdown(crew, TRUE);
   crew_cancel(crew);
-
-
-#if defined (hpux) || defined(__hpux)
-#else
-  if((result = pthread_create(&spinner, NULL, (void*)spin_doctor, crew)) < 0){
-    NOTIFY(ERROR, "failed to create handler: %d\n", result);
-  }   
-#endif
 
   /**
    * The signal consistently arrives early,
@@ -93,14 +79,6 @@ sig_handler(CREW crew)
    * the siege to make up the discrepancy. 
    */
   pthread_usleep_np(501125); 
-
-//  crew_cancel(crew);
-
-#if defined(hpux) || defined(__hpux)
-#else
-  pthread_join(spinner, NULL);
-#endif
-
   pthread_exit(NULL);
 }
 
