@@ -1,6 +1,22 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/12/01 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE BETA             RELEASE_3-1-4b1_DEC_12_2015
+
+2015/12/01 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * lib/joedog/perl.c      Expanded split capacity
+ * src/cookies.c          Added to distribution
+ * src/cookies.h          Added to distribution
+ * src/cookie.c           Completely overhauled
+ * src/cookie.h           Re-prototyped
+ * src/hash.c             Added support for hash of hashes / bug fix
+ * src/hash.h             Updated prototypes
+ * src/init.c             Moved .siegerc to .siege/siege.conf
+ * src/main.c             Updated for cookies object
+ * src/http.c             Calls cookies_get_header now
+ * src/version.c          Version increment 3.1.4-beta1
+
 2015/11/02 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_3-1-3_NOV_2_2015
 
