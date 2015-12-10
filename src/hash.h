@@ -39,5 +39,7 @@ BOOLEAN  hash_lookup(HASH this, char *key);
 void     hash_destroy(HASH this);
 void     hash_free_keys(HASH this, char **keys);
 int      hash_get_entries(HASH this);
+void     hoh_add(HASH this, char *key, char *k, char *v);
+HASH     hoh_get(HASH this, char *key);
 
 #endif/*HASH_H*/
