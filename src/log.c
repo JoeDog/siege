@@ -72,10 +72,10 @@ write_to_log(int count, float elapsed, int bytes, float ttime, int code, int fai
 
   /* if the file does NOT exist then we'll create it. */
   if (my.shlog) { 
-    printf( "FILE: %s\n", my.logfile ); 
-    puts("You can disable this annoying message by editing");
-    puts("the .siegerc file in your home directory; change");
-    puts("the directive \'show-logfile\' to false." );
+    printf("LOG FILE: %s\n", my.logfile ); 
+    printf("You can disable this log file notification by editing\n");
+    printf("%s/.siege/siege.conf ", getenv("HOME"));
+    puts("and changing \'show-logfile\' to false." );
   }
 
   if (!file_exists(my.logfile)) {
