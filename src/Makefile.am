@@ -41,6 +41,7 @@ auth.c     auth.h      \
 base64.c   base64.h    \
 client.c   client.h    \
 cookie.c   cookie.h    \
+cookies.c  cookies.h   \
 cfg.c      cfg.h       \
 creds.c    creds.h     \
 crew.c     crew.h      \
