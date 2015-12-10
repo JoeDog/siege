@@ -30,7 +30,7 @@
 #include <url.h>
 #include <util.h>
 #include <auth.h>
-#include <cookie.h>
+#include <cookies.h>
 #include <date.h>
 #include <joedog/boolean.h>
 #include <joedog/defs.h>
@@ -80,6 +80,7 @@ float lomark = -1;
 void *
 start_routine(CLIENT *client)
 {
+  int i;
   int       x, y;    // loop counters, indices 
   int       ret;     //function return value  
   int       len;     // main loop length 
@@ -93,6 +94,22 @@ start_routine(CLIENT *client)
 
   C = xcalloc(sizeof(CONN), 1);
   C->sock = -1;
+
+  if (client->cookies != NULL) {
+    char **keys = hash_get_keys(client->cookies);
+    for (i = 0; i < hash_get_entries(client->cookies); i ++){
+      /** 
+       * We need a local copy of the variable to pass to cookies_add
+       */
+      char *tmp;
+      int   len = strlen(hash_get(client->cookies, keys[i]));
+      tmp = xmalloc(len+2);
+      memset(tmp, '\0', len+2);
+      snprintf(tmp, len+1, "%s", hash_get(client->cookies, keys[i]));
+      cookies_add(my.cookies, tmp, ".");
+      xfree(tmp);
+    }
+  }
 
 #ifdef SIGNAL_CLIENT_PLATFORM
   pthread_once(&once, signal_init);
@@ -144,7 +161,7 @@ start_routine(CLIENT *client)
       if (y >= my.length) {
         y = 0;
         if (my.expire) {
-          delete_all_cookies(pthread_self());
+          cookies_delete_all(my.cookies);
         }
       }
     }
