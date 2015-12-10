@@ -40,17 +40,50 @@ int
 init_config( void )
 {
   char *e;
+  char dir[256];
   int  res;
   struct stat buf;
+  BOOLEAN needed = FALSE;
 
-  /* Check if we were passed the -R switch to use a different siegerc file.
+  /**
+   * Beginning with siege-3.1.4 the local configuration was 
+   * moved to $HOME/.siege/siege.conf Let's configure ourselves
+   */
+  memset(dir, '\0', sizeof(dir));
+  snprintf(dir, sizeof(dir), "%s/.siege", getenv("HOME"));
+  if (stat(dir, &buf) < 0 && ENOENT == errno) {
+    needed = TRUE;
+  } else {
+    if (! S_ISDIR(buf.st_mode)) {
+      if (unlink(dir) == 0) needed = TRUE;
+    }
+  } 
+
+  /**
+   * We need to create a $HOME/.siege dir and configur ourselves.
+   * NOTE: We're going to assume siege.config is installed and in
+   * the PATH. If this is not the case, then blame the distributor
+   */  
+  while (needed) {
+    int ret; 
+
+    mkdir(dir, 0750);
+    ret = system("siege.config");
+    if (WIFSIGNALED(ret) && (WTERMSIG(ret) == SIGINT || WTERMSIG(ret) == SIGQUIT))
+      break;
+    needed = FALSE;
+  }
+
+  /** 
+   * Check if we were passed the -R switch to use a different siegerc file.
    * If not, check for the presence of the SIEGERC variable, otherwise
-   * use default of ~/.siegerc */
+   * use default of ~/.siege/siege.conf 
+   */
   if(strcmp(my.rc, "") == 0){
     if((e = getenv("SIEGERC")) != NULL){
       snprintf(my.rc, sizeof(my.rc), "%s", e);
     } else {
-      snprintf(my.rc, sizeof(my.rc), "%s/.siegerc", getenv("HOME"));
+      snprintf(my.rc, sizeof(my.rc), "%s/.siege/siege.conf", getenv("HOME"));
       if (stat(my.rc, &buf) < 0 && errno == ENOENT) {
         snprintf(my.rc, sizeof(my.rc), CNF_FILE);
       }
@@ -61,7 +94,6 @@ init_config( void )
   my.quiet          = FALSE;
   my.internet       = FALSE;
   my.config         = FALSE;
-  my.cookies        = TRUE;
   my.csv            = FALSE;
   my.fullurl        = FALSE;
   my.escape         = TRUE;
@@ -88,6 +120,7 @@ init_config( void )
   my.ssl_key        = NULL;
   my.ssl_ciphers    = NULL; 
   my.lurl           = new_array();
+  my.cookies        = new_cookies();
 
   if ((res = pthread_mutex_init(&(my.lock), NULL)) != 0)
     NOTIFY(FATAL, "unable to initiate lock");
@@ -95,10 +128,11 @@ init_config( void )
     NOTIFY(FATAL, "unable to initiate condition");
 
   if (load_conf(my.rc) < 0) {
-    fprintf( stderr, "****************************************************\n" );
+    /** Beginning with siege-3.1.4 we should never get here (in theory) **/
+    fprintf( stderr, "**************************************************\n" );
     fprintf( stderr, "siege: could not open %s\n", my.rc );
-    fprintf( stderr, "run \'siege.config\' to generate a new .siegerc file\n" );
-    fprintf( stderr, "****************************************************\n" );
+    fprintf( stderr, "run \'siege.config\' to generate a new config file\n" );
+    fprintf( stderr, "**************************************************\n" );
     return -1;
   }
   
@@ -204,7 +238,7 @@ get_line(FILE *fp)
   char *newline;
   char tmp[256];
 
-  memset( tmp, 0, sizeof(tmp)); 
+  memset(tmp, '\0', sizeof(tmp)); 
   do {
     if((fgets(tmp, sizeof(tmp), fp)) == NULL) return(NULL);
     if(ptr == NULL) {
@@ -319,12 +353,6 @@ load_conf(char *filename)
     else if (strmatch(option, "logfile")) {
       strncpy(my.logfile, value, sizeof(my.logfile)); 
     } 
-    else if (strmatch(option, "cookies")) {
-      if (strmatch(value, "true"))
-        my.cookies = TRUE;
-      else
-        my.cookies = FALSE;
-    }
     else if (strmatch(option, "concurrent")) {
       if (value != NULL) {
         my.cusers = atoi(value);
@@ -430,12 +458,6 @@ load_conf(char *filename)
       } else { 
         my.bids = 3;
       }
-    }
-    else if (strmatch(option, "username")) {
-      my.username = stralloc(trim(value));
-    }
-    else if (strmatch(option, "password")) {
-      my.password = stralloc(trim(value));
     }
     else if (strmatch(option, "connection")) {
       if (!strncasecmp(value, "keep-alive", 10))
