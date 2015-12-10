@@ -1,7 +1,10 @@
 #!%_SHELL%
 # SCRIPT: siege.config
 # AUTHOR: Jeffrey Fulmer <jeff@joedog.org>
+# DATE:   Wed Nov 11 11:13:38 EST 2015
+#         Moved $HOME/.siegerc to .siege/siege.conf
 # DATE:   Mon May 28 11:40:28 EDT 2001
+#         Orignal file
 # SYNOP:  This script generates  an $HOME/.siegerc 
 #         file from the  doc/siegerc.in  template.
 #         Its contents are added to this script by
@@ -9,15 +12,21 @@
 #         maintained once in $(top_srcdir)/doc.
 
 rcfile="$HOME/.siegerc"
+config="$HOME/.siege/siege.conf"
 
 if test -f $rcfile; then
+  rm -f $rcfile
+fi
+
+if test -f $config; then
   echo "siege.config"
   echo "usage: siege.config [no arguments]"
   echo "----------------------------------"
-  echo "Resource file already install as $rcfile"
-  echo "Use your favorite editor to change your configuration by"
-  echo "editing the values in that file."
+  echo "Resource file already install as $config"
+  echo "Use your favorite editor to change  your configuration by"
+  echo "editing the values in that file or remove it and run this"
+  echo "program again."
   echo ""
   exit
 fi
-cat > $rcfile << '_EOF_'
+cat > $config << '_EOF_'
