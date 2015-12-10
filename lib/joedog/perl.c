@@ -32,7 +32,7 @@
 #include <perl.h>
 #include <ctype.h>
 
-#define SPLITSZ 256
+#define SPLITSZ 4096 
 
 /**
  * not quite perl chomp, this function
@@ -180,7 +180,7 @@ split(char pattern, char *s, int *n_words)
        i--; 
     } else {
       words[i] = (char*)xmalloc(SPLITSZ);
-      memset(words[i], '\0', SPLITSZ ); 
+      memset(words[i], '\0', SPLITSZ); 
       memcpy(words[i], (char*)str0, SPLITSZ); 
       words[i][len] = '\0';
     }
