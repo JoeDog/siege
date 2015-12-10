@@ -1,7 +1,7 @@
 /**
  * Thread pool
  *
- * Copyright (C) 2000-2014 by
+ * Copyright (C) 2000-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege
  *
@@ -54,10 +54,10 @@ new_crew(int size, int maxsize, BOOLEAN block)
   int    c;
   CREW this;
   
-  if((this = calloc(sizeof(*this),1)) == NULL)
+  if ((this = calloc(sizeof(*this),1)) == NULL)
     return NULL;
   
-  if((this->threads = (pthread_t *)malloc(sizeof(pthread_t)*size)) == NULL)
+  if ((this->threads = (pthread_t *)malloc(sizeof(pthread_t)*size)) == NULL)
     return NULL;
 
   this->size     = size;
@@ -72,9 +72,9 @@ new_crew(int size, int maxsize, BOOLEAN block)
 
   if ((c = pthread_mutex_init(&(this->lock), NULL)) != 0)
     return NULL;
-  if ((c = pthread_cond_init(&(this->not_empty), NULL )) != 0)
+  if ((c = pthread_cond_init(&(this->not_empty), NULL)) != 0)
     return NULL;
-  if ((c = pthread_cond_init(&(this->not_full), NULL )) != 0)
+  if ((c = pthread_cond_init(&(this->not_full), NULL)) != 0)
     return NULL;
   if ((c = pthread_cond_init(&(this->empty), NULL)) != 0)
     return NULL;
@@ -100,40 +100,40 @@ private void
   WORK *workptr;
   CREW this = (CREW)crew;
 
-  while(TRUE){
-    if((c = pthread_mutex_lock(&(this->lock))) != 0){
+  while (TRUE) {
+    if ((c = pthread_mutex_lock(&(this->lock))) != 0) {
       NOTIFY(FATAL, "mutex lock"); 
     }
-    while((this->cursize == 0) && (!this->shutdown)){
-      if((c = pthread_cond_wait(&(this->not_empty), &(this->lock))) != 0)
+    while ((this->cursize == 0) && (!this->shutdown)) {
+      if ((c = pthread_cond_wait(&(this->not_empty), &(this->lock))) != 0)
         NOTIFY(FATAL, "pthread wait");
     }
 
-    if(this->shutdown == TRUE){
-      if((c = pthread_mutex_unlock(&(this->lock))) != 0){
+    if (this->shutdown == TRUE) {
+      if ((c = pthread_mutex_unlock(&(this->lock))) != 0) {
         NOTIFY(FATAL, "mutex unlock");
       }
       pthread_exit(NULL);
     }
     workptr = this->head;
+
     this->cursize--;
-    if(this->cursize == 0){
+    if (this->cursize == 0) {
       this->head = this->tail = NULL;
-    }
-    else{
+    } else {
       this->head = workptr->next;
     }
-    if((this->block) && (this->cursize == (this->maxsize - 1))){
-      if((c = pthread_cond_broadcast(&(this->not_full))) != 0){
+    if ((this->block) && (this->cursize == (this->maxsize - 1))) {
+      if ((c = pthread_cond_broadcast(&(this->not_full))) != 0) {
         NOTIFY(FATAL, "pthread broadcast");
       }
     }
-    if(this->cursize == 0){
-      if((c = pthread_cond_signal(&(this->empty))) != 0){
+    if (this->cursize == 0) {
+      if ((c = pthread_cond_signal(&(this->empty))) != 0){
         NOTIFY(FATAL, "pthread signal");
       }
     }
-    if((c = pthread_mutex_unlock(&(this->lock))) != 0){
+    if ((c = pthread_mutex_unlock(&(this->lock))) != 0) {
       NOTIFY(FATAL, "pthread unlock");
     }
 
@@ -151,37 +151,37 @@ crew_add(CREW crew, void (*routine)(), void *arg)
   int c;
   WORK *workptr;
 
-  if((c = pthread_mutex_lock(&(crew->lock))) != 0){
+  if ((c = pthread_mutex_lock(&(crew->lock))) != 0) {
     NOTIFY(FATAL, "pthread lock");
   }
-  if((crew->cursize == crew->maxsize) && !crew->block ){
-    if((c = pthread_mutex_unlock(&(crew->lock))) != 0){
+  if ((crew->cursize == crew->maxsize) && !crew->block) {
+    if ((c = pthread_mutex_unlock(&(crew->lock))) != 0) {
       NOTIFY(FATAL, "pthread unlock");
     }
     return FALSE;
   }
 
-  while((crew->cursize == crew->maxsize ) && (!(crew->shutdown || crew->closed))){
-    if((c = pthread_cond_wait(&(crew->not_full), &(crew->lock))) != 0){
+  while ((crew->cursize == crew->maxsize ) && (!(crew->shutdown || crew->closed))) {
+    if ((c = pthread_cond_wait(&(crew->not_full), &(crew->lock))) != 0) {
       NOTIFY(FATAL, "pthread wait");
     }
   }
-  if(crew->shutdown || crew->closed){
-    if((c = pthread_mutex_unlock(&(crew->lock))) != 0){
+  if (crew->shutdown || crew->closed) {
+    if ((c = pthread_mutex_unlock(&(crew->lock))) != 0) {
       NOTIFY(FATAL, "pthread unlock");
     } 
     return FALSE;
   }
-  if((workptr = (WORK *)malloc(sizeof(WORK))) == NULL){
+  if ((workptr = (WORK *)malloc(sizeof(WORK))) == NULL) {
     NOTIFY(FATAL, "out of memory");
   }
   workptr->routine = routine;
   workptr->arg     = arg;
   workptr->next    = NULL;
 
-  if(crew->cursize == 0){
+  if (crew->cursize == 0) {
     crew->tail = crew->head = workptr;
-    if((c = pthread_cond_broadcast(&(crew->not_empty))) != 0){
+    if ((c = pthread_cond_broadcast(&(crew->not_empty))) != 0) {
       NOTIFY(FATAL, "pthread signal");
     }
   } else {
@@ -191,7 +191,7 @@ crew_add(CREW crew, void (*routine)(), void *arg)
 
   crew->cursize++; 
   crew->total  ++;
-  if((c = pthread_mutex_unlock(&(crew->lock))) != 0){
+  if ((c = pthread_mutex_unlock(&(crew->lock))) != 0) {
     NOTIFY(FATAL, "pthread unlock");
   }
   
@@ -210,7 +210,7 @@ crew_cancel(CREW this)
   size = this->size;
 
   crew_set_shutdown(this, TRUE);
-  for(x = 0; x < size; x++){
+  for (x = 0; x < size; x++) {
 #if defined(hpux) || defined(__hpux)
     pthread_kill(this->threads[x], SIGUSR1); 
 #else
@@ -226,12 +226,12 @@ crew_join(CREW crew, BOOLEAN finish, void **payload)
   int    x; 
   int    c;
 
-  if((c = pthread_mutex_lock(&(crew->lock))) != 0){
+  if ((c = pthread_mutex_lock(&(crew->lock))) != 0) {
     NOTIFY(FATAL, "pthread lock");
   }
 
-  if(crew->closed || crew->shutdown){
-    if((c = pthread_mutex_unlock(&(crew->lock))) != 0){
+  if (crew->closed || crew->shutdown) {
+    if ((c = pthread_mutex_unlock(&(crew->lock))) != 0) {
       NOTIFY(FATAL, "pthread unlock");
     }
     return FALSE;
@@ -239,8 +239,8 @@ crew_join(CREW crew, BOOLEAN finish, void **payload)
   
   crew->closed = TRUE;
 
-  if(finish == TRUE){
-    while((crew->cursize != 0) && (!crew->shutdown)){
+  if (finish == TRUE) {
+    while ((crew->cursize != 0) && (!crew->shutdown)) {
       int rc;
       struct timespec ts;
       struct timeval tp;
@@ -250,12 +250,12 @@ crew_join(CREW crew, BOOLEAN finish, void **payload)
         perror("gettimeofday");
       ts.tv_sec = tp.tv_sec+60;
       ts.tv_nsec = tp.tv_usec*1000;
-      rc = pthread_cond_timedwait(&(crew->empty), &(crew->lock), &ts );
-      if(rc==ETIMEDOUT) {
+      rc = pthread_cond_timedwait(&(crew->empty), &(crew->lock), &ts);
+      if (rc==ETIMEDOUT) {
         pthread_mutex_unlock(&crew->lock);
       }
 
-      if( rc != 0){
+      if (rc != 0) {
 	NOTIFY(FATAL, "pthread wait");
       }
     }
@@ -263,20 +263,20 @@ crew_join(CREW crew, BOOLEAN finish, void **payload)
 
   crew->shutdown = TRUE;
 
-  if((c = pthread_mutex_unlock(&(crew->lock))) != 0){
+  if ((c = pthread_mutex_unlock(&(crew->lock))) != 0) {
     NOTIFY(FATAL, "pthread_mutex_unlock");
   }
 
-  if((c = pthread_cond_broadcast(&(crew->not_empty))) != 0){
+  if ((c = pthread_cond_broadcast(&(crew->not_empty))) != 0) {
     NOTIFY(FATAL, "pthread broadcast");
   }
   
-  if((c = pthread_cond_broadcast(&(crew->not_full))) != 0){
+  if ((c = pthread_cond_broadcast(&(crew->not_full))) != 0) {
     NOTIFY(FATAL, "pthread broadcast");
   }
 
-  for(x = 0; x < crew->size; x++){
-    if((c = pthread_join(crew->threads[x], payload)) != 0){
+  for (x = 0; x < crew->size; x++) {
+    if ((c = pthread_join(crew->threads[x], payload)) != 0) {
       NOTIFY(FATAL, "pthread_join");
     }
   }
@@ -288,7 +288,7 @@ void crew_destroy(CREW crew) {
   WORK  *workptr;
 
   xfree(crew->threads);
-  while(crew->head != NULL){
+  while (crew->head != NULL) {
     workptr  = crew->head; 
     crew->head = crew->head->next;
     xfree(workptr);
