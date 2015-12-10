@@ -116,6 +116,7 @@ int strlen();
 #include <url.h>
 #include <auth.h>
 #include <array.h>
+#include <cookies.h>
 #include <joedog/joedog.h>
 #include <joedog/boolean.h>
 #include <joedog/joepath.h>
@@ -180,12 +181,10 @@ struct CONFIG
   BOOLEAN mark;         /* signifies a log file mark req.          */ 
   char    *markstr;     /* user defined string value to mark file  */
   int     protocol;     /* 0=HTTP/1.0; 1=HTTP/1.1                  */
-  BOOLEAN cookies;      /* to use cookies or not to use cookies    */
+  COOKIES cookies;      /* cookies    */
   char uagent[256];     /* user defined User-Agent string.         */
   char encoding[256];   /* user defined Accept-Encoding string.    */
   char conttype[256];   /* user defined default content type.      */
-  char *username;       /* DEPRECATED!! */
-  char *password;       /* DEPRECATED!! */ 
   int  bids;            /* W & P authorization bids before failure */
   AUTH auth;
   BOOLEAN keepalive;    /* boolean, connection keep-alive value    */
