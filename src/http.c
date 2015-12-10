@@ -24,7 +24,7 @@
 #include <http.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <cookie.h>
+#include <cookies.h>
 #include <string.h>
 #include <util.h>
 #include <load.h>
@@ -146,7 +146,7 @@ http_get(CONN *C, URL U)
     snprintf(keepalive, sizeof(keepalive), "close");
   }
 
-  get_cookie_header(pthread_self(), url_get_hostname(U), cookie); 
+  cookies_header(my.cookies, url_get_hostname(U), cookie);
   if (C->auth.www) {
     if (C->auth.type.www==DIGEST) {
       snprintf (
@@ -306,7 +306,7 @@ http_post(CONN *C, URL U)
     snprintf(keepalive, sizeof(keepalive), "close");
   }
 
-  get_cookie_header(pthread_self(), url_get_hostname(U), cookie);
+  cookies_header(my.cookies, url_get_hostname(U), cookie);
   if (C->auth.www) {
     if (C->auth.type.www==DIGEST) {
       snprintf (
@@ -462,7 +462,7 @@ http_read_headers(CONN *C, URL U)
       if (my.cookies) {
         memset(h->cookie, '\0', sizeof(h->cookie));
         strncpy(h->cookie, line+12, strlen(line));
-        add_cookie(pthread_self(), url_get_hostname(U), h->cookie);
+        cookies_add(my.cookies, h->cookie, url_get_hostname(U));
       }
     }
     if (strncasecmp(line, "connection: ", 12 ) == 0) {
