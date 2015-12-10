@@ -1,7 +1,7 @@
 /**
  * Hash Table
  *
- * Copyright (C) 2003-2014 by
+ * Copyright (C) 2003-2015 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,8 @@
 typedef struct NODE
 {
   char  *key;
-  char  *value;
+  char  *val;
+  HASH   hash;
   struct NODE *next;
 } NODE;
 
@@ -133,7 +134,7 @@ __resize(HASH this)
  * len is the size of void pointer.
  */
 void
-hash_add(HASH this, char *key, char *value)
+hash_add(HASH this, char *key, char *val)
 {
   int  x;
   NODE *node;
@@ -147,15 +148,47 @@ hash_add(HASH this, char *key, char *value)
   x = __genkey(this->size, key);
   node           = xmalloc(sizeof(NODE));
   node->key      = strdup(key);
-  node->value    = strdup(value);
+  node->val      = strdup(val);
   node->next     = this->table[x]; 
+  node->hash     = new_hash();
   this->table[x] = node;
   this->entries++;
   return;
 }
 
+void 
+hoh_add(HASH this, char *key, char *k, char *v) 
+{
+  int  x;
+  NODE *node;
+
+  if (__lookup(this, key) == FALSE) {
+    // we don't have a corresponding hash
+    if (this->entries >= this->size/4)
+      __resize(this);
+    x = __genkey(this->size, key); 
+    node           = xmalloc(sizeof(NODE));
+    node->key      = strdup(key);
+    node->val      = strdup("HOH");
+    node->hash     = new_hash();
+    node->next     = this->table[x]; 
+    hash_add(node->hash, k, v);
+    this->table[x] = node;
+    this->entries++;
+  } else {
+    // we already have a hash; we can just add an entry
+    x = __genkey(this->size, key);
+    for (node = this->table[x]; node != NULL; node = node->next) {
+      if (!strcmp(node->key, key)) {
+        hash_add(node->hash, k, v);
+      } 
+    }
+  } 
+  return;
+}
+
 /**
- * returns a void NODE->value element
+ * returns a void NODE->val element
  * in the table corresponding to key.
  */
 char *
@@ -166,13 +199,28 @@ hash_get(HASH this, char *key)
 
   x = __genkey(this->size, key);
   for (node = this->table[x]; node != NULL; node = node->next) {
-    if (!strcmp( node->key, key)) {
-      return(node->value);
+    if (!strcmp(node->key, key)) {
+      return(node->val);
     }
   }
 
  return NULL;
 } 
+
+HASH
+hoh_get(HASH this, char *key) 
+{
+  int  x;
+  NODE *node;
+  
+  x = __genkey(this->size, key);
+  for (node = this->table[x]; node != NULL; node = node->next) {
+    if (!strcmp(node->key, key)) {
+      return(node->hash);
+    }
+  }
+  return NULL;
+}
 
 BOOLEAN 
 hash_lookup(HASH this, char *key) 
@@ -192,10 +240,10 @@ hash_get_keys(HASH this)
   keys = (char**)malloc(sizeof( char*) * this->entries);
   for (x = 0; x < this->size; x ++) {
     for(node = this->table[x]; node != NULL; node = node->next){
-      keys[i] = (char*)malloc(128);
-      memset(keys[i], 0, 128);
+      size_t len = strlen(node->key)+1;
+      keys[i] = (char*)malloc(len);
+      memset(keys[i], '\0', len);
       memcpy(keys[i], (char*)node->key, strlen(node->key));
-      keys[i][strlen(node->key)] = 0;
       i++;
     }
   }
@@ -226,14 +274,18 @@ hash_destroy(HASH this)
   int x;
   NODE *t1, *t2;
 
+  if (this == NULL) return;
+
   for (x = 0; x < this->size; x++) {
     t1 = this->table[x];
     while (t1 != NULL) {
       t2 = t1->next;
       if (t1->key != NULL)
         xfree(t1->key);
-      if (t1->value != NULL)
-        xfree(t1->value);
+      if (t1->val != NULL)
+        xfree(t1->val);
+      if (t1->hash != NULL) 
+        hash_destroy(t1->hash);
       xfree(t1);
       t1 = t2;      
     } 
@@ -306,6 +358,52 @@ __lookup(HASH this, char *key)
   }
   return FALSE;
 }
+
+#if 0
+int 
+main()
+{
+  int    i, j;
+  char **keys;
+  HASH HOH = new_hash();
+  hoh_add(HOH,
+    "139804567041792",
+    "1", "haha=Whoo+hoo%21; domain=.armstrong.com; path=/; expires=1449261008"
+  );
+  hoh_add(HOH, 
+    "139804567041792",
+    "2", "exes=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX; domain=.armstrong.com; path=/; expires=1449253423"
+  );
+  hoh_add(HOH,
+    "139804577531648", 
+    "3", "haha=Whoo+hoo%21; domain=.armstrong.com; path=/; expires=1449261009"
+  );
+  hoh_add(HOH, 
+    "139804577531648", 
+    "4", "exes=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX; domain=.armstrong.com; path=/; expires=1449253423"
+  );
+  hoh_add(HOH,
+    "139804588021504",
+    "5", "haha=Whoo+hoo%21; domain=.armstrong.com; path=/; expires=1449261009"
+  );
+  hoh_add(HOH,
+    "139804588021504",
+    "6", "exes=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX; domain=.armstrong.com; path=/; expires=1449253423"
+  );
+
+  keys = hash_get_keys(HOH);
+  for (i = 0; i < hash_get_entries(HOH); i ++){
+    char **k;
+    HASH hash = hoh_get(HOH, keys[i]);
+    k = hash_get_keys(hash);
+    for (j = 0; j < hash_get_entries(hash); j ++){
+      char *tmp = (char*)hash_get(hash, k[j]);
+      printf("%s: %s => %s\n", keys[i], k[j], (tmp==NULL)?"NULL":tmp);
+    }
+    hash_destroy(hash);
+  }
+}
+#endif
 
 #if 0
 int
