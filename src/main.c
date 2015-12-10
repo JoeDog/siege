@@ -42,7 +42,7 @@
 #include <cfg.h>
 #include <url.h>
 #include <ssl.h>
-#include <cookie.h>
+#include <cookies.h>
 #include <crew.h>
 #include <data.h>
 #include <version.h>
@@ -299,6 +299,7 @@ main(int argc, char *argv[])
   DATA           D    = new_data();
   ARRAY          urls = new_array();
   CREW           crew;  
+  HASH           cookies;
   LINES          *lines;   
   CLIENT         *client; 
   pthread_t      cease; 
@@ -355,13 +356,6 @@ main(int argc, char *argv[])
   if (my.length == 0) { 
     display_help();
   }
-
-  /* cookie is an EXTERN, defined in setup */ 
-  cookie = xcalloc(sizeof(COOKIE), 1); 
-  cookie->first = NULL;
-  if ((result = pthread_mutex_init( &(cookie->mutex), NULL)) !=0) {
-    NOTIFY(FATAL, "pthread_mutex_init" );
-  } 
 
   /* memory allocation for threads and clients */
   client = xcalloc(my.cusers, sizeof(CLIENT));
@@ -448,7 +442,10 @@ main(int argc, char *argv[])
   /**
    * loop until my.cusers and create a corresponding thread...
    */  
+  cookies = load_cookies(my.cookies);
   for (x = 0; x < my.cusers && crew_get_shutdown(crew) != TRUE; x++) {
+    char tmp[4096];
+    snprintf(tmp, 4096, "%d", x);
     client[x].id              = x; 
     client[x].bytes           = 0;
     client[x].time            = 0.0;
@@ -456,6 +453,11 @@ main(int argc, char *argv[])
     client[x].code            = 0;
     client[x].ok200           = 0;   
     client[x].fail            = 0; 
+    if (cookies != NULL) {
+      if (hash_get(cookies, tmp) != NULL) {
+        client[x].cookies = hoh_get(cookies, tmp);
+      } 
+    }
     if (my.reps > 0 ) {
       /** 
        * Traditional -r/--reps where each user
@@ -491,6 +493,23 @@ main(int argc, char *argv[])
       NOTIFY(FATAL, "system resources exhausted"); 
     }
   } /* end of for pthread_create */
+#if 0
+  if (cookies != NULL) {
+    int i, j;
+    char **keys = hash_get_keys(cookies);
+    for (i = 0; i < hash_get_entries(cookies) || i < my.cusers; i ++){
+      char **k;
+      HASH hash = hoh_get(cookies, keys[i]);
+      k = hash_get_keys(hash);
+      printf("%s HAS %d ENTRIES\n", keys[i], hash_get_entries(hash));
+      for (j = 0; j < hash_get_entries(hash); j ++){
+        char *tmp = (char*)hash_get(hash, k[j]);
+        printf("%s: %s => %s\n", keys[i], k[j], (tmp==NULL)?"NULL":tmp);
+      }
+      hash_destroy(hash);
+    }
+  }
+#endif
 
   crew_join(crew, TRUE, &statusp);
 
@@ -537,7 +556,7 @@ main(int argc, char *argv[])
 
   if (my.get) {
     if (data_get_ok200(D) > 0) {
-       exit(EXIT_SUCCESS);
+      exit(EXIT_SUCCESS);
     } else {
       if (!my.quiet) echo("[done]\n");
       exit(EXIT_FAILURE);
@@ -584,6 +603,7 @@ main(int argc, char *argv[])
   if(my.mark)    mark_log_file(my.markstr);
   if(my.logging) log_transaction(D);
 
+  my.cookies = cookies_destroy(my.cookies);
   data_destroy(D);
   if (my.url == NULL) {
     for (x = 0; x < my.length; x++)
@@ -595,15 +615,12 @@ main(int argc, char *argv[])
     xfree(lines);
   }
 
-  pthread_mutex_destroy( &(cookie->mutex));
-
   /** 
    * I should probably take a deeper look 
    * at cookie content to free it but at 
    * this point we're two lines from exit
    */
-  xfree (cookie);
   xfree (my.url);
-
+  
   exit(EXIT_SUCCESS);  
 } /* end of int main **/
