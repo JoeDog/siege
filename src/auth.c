@@ -375,6 +375,8 @@ auth_set_digest_header(AUTH this, DCHLG **chlg, DCRED **cred, unsigned int *rand
 BOOLEAN
 auth_get_proxy_required(AUTH this)
 {
+  if (this == NULL) 
+    return FALSE;
   return this->proxy.required;
 }
 
