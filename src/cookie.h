@@ -1,70 +1,33 @@
-/**
- * Cookie support
- *
- * Copyright (C) 2001-2014 Jeffrey Fulmer <jeff@joedog.org>, et al
- * This file is part of Siege
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *--
- */
-#ifndef COOKIES_H
-#define COOKIES_H
+#ifndef __COOKIE_H
+#define __COOKIE_H
 
-#ifdef  HAVE_CONFIG_H
-# include <config.h>
-#endif/*HAVE_CONFIG_H*/
-
-#include <stdlib.h>
 #include <joedog/joedog.h>
+#include <joedog/defs.h>
 #include <joedog/boolean.h>
 
-#define MAX_COOKIE_SIZE 8192
+#define MAX_COOKIE_SIZE  4096
 
-/**
- * cookie node
- */
-typedef struct CNODE
-{
-  int    index;
-  pthread_t threadID;
-  char   *name;
-  char   *value;
-  char   *path;
-  char   *domain;
-  time_t expires;
-  char   *expirestr;
-  char   *version;
-  char   *max;
-  int    secure;
-  struct CNODE  *next;
-} CNODE;
+typedef struct COOKIE_T *COOKIE;
+extern  size_t COOKIESIZE;
 
-typedef struct
-{
-  CNODE *first;
-  pthread_mutex_t mutex;
-} COOKIE;
+COOKIE  new_cookie(char *str, char *host);
+COOKIE  cookie_destroy(COOKIE this);
 
-int      add_cookie(pthread_t id, char *host, char *value);
-BOOLEAN  delete_cookie(pthread_t id, char *name); 
-int      delete_all_cookies(pthread_t id);
-int      check_cookie(char *domain, char *value);
-char     *get_cookie_header(pthread_t id, char *domain, char *cookie);
-void     display_cookies();
+void    cookie_set_name(COOKIE this, char *str);
+void    cookie_set_value(COOKIE this, char *str);
+void    cookie_reset_value(COOKIE this, char *str);
+void    cookie_set_path(COOKIE this, char *str);
+void    cookie_set_domain(COOKIE this, char *str);
+void    cookie_set_expires(COOKIE this, time_t expires);
+char *  cookie_get_name(COOKIE this);
+char *  cookie_get_value(COOKIE this);
+char *  cookie_get_domain(COOKIE this);
+char *  cookie_get_path(COOKIE this);
+time_t  cookie_get_expires(COOKIE this);
+BOOLEAN cookie_get_session(COOKIE this);
+char *  cookie_expires_string(COOKIE this);
+char *  cookie_to_string(COOKIE this);
+COOKIE  cookie_clone(COOKIE this, COOKIE that);
 
-extern COOKIE *cookie;
-
-#endif/*COOKIES_H*/
+#endif/*__COOKIE_H*/
 
