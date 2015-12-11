@@ -4,6 +4,12 @@ To email a contributor remove "DELETE" from the email address.
 2015/12/01 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE BETA             RELEASE_3-1-4b1_DEC_12_2015
 
+2015/12/05 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * utils/compile          Updated to v1.4
+ * utils/missing          Updated to v1.4
+ * configure.ac           Modernized AM_INIT \
+   http://www.gnu.org/software/automake/manual/automake.html#Modernize-AM_005fINIT_005fAUTOMAKE-invocation
+
 2015/12/01 Jeffrey Fulmer <http://www.joedog.org/support/>
  * lib/joedog/perl.c      Expanded split capacity
  * src/cookies.c          Added to distribution
