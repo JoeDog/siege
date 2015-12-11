@@ -1,24 +1,22 @@
 dnl REQUIRE AUTOCONF 2.50 OR HIGHER...
-AC_PREREQ(2.50) 
+AC_PREREQ(2.68) 
 
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT
-AC_CONFIG_SRCDIR([src/setup.h]) 
-AC_CONFIG_HEADERS(include/config.h)
-
-dnl
-dnl Define the utils directory
-dnl
-AC_CONFIG_AUX_DIR(utils)  
-
-dnl VERSION=`sed -e 's/^.*"\(.*\)";$/\1/' ${srcdir}/src/version.c`
+VERSION=`sed -e 's/^.*"\(.*\)";$/\1/' ${srcdir}/src/version.c`
 VERSION=`sed -ne 's/.*version_string.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
 PROGRAM=`sed -ne 's/.*program_name.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
 AUTHOR=`sed -ne 's/.*author_name.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
 EMAIL=`sed -ne 's/.*email_address.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
-AM_INIT_AUTOMAKE($PROGRAM, $VERSION)
+AC_INIT(
+  m4_esyscmd_s([sed -ne 's/.*program_name.*"\(.*\)"\;/\1/p' src/version.c]), 
+  m4_esyscmd_s([sed -ne 's/.*version_string.*"\(.*\)"\;/\1/p' src/version.c]),
+) 
+AC_CONFIG_AUX_DIR(utils)  
+AM_INIT_AUTOMAKE
+AC_CONFIG_SRCDIR([src/setup.h])
+AC_CONFIG_HEADERS(include/config.h)
 DATE=`${CONFIG_SHELL} ${srcdir}/utils/mkstamp`
 AC_SUBST(DATE)
 AC_SUBST(PROGRAM)
