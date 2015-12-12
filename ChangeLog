@@ -1,6 +1,12 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2015/12/12 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE BETA             RELEASE_3-1-4b2_DEC_12_2015
+ * configure.ac           Added check for sys/types.h
+ * src/hash.c             Added conditional #include <sys/types>
+ * src/version.c          Routine update: 3.1.4-beta2
+
 2015/12/01 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE BETA             RELEASE_3-1-4b1_DEC_12_2015
 
