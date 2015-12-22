@@ -544,6 +544,11 @@ __ntlm_header(AUTH this, SCHEME scheme, const char *header, CREDS creds)
     return FALSE;
   }
 
+  NOTIFY( // honestly this is here to silence the compiler...
+    DEBUG, "Parsing NTLM header:  %d, %d, %s, %s",
+    this->okay, scheme, header, creds_get_username(creds)
+  );
+
   header += 4; // Step past NTLM
   while (*header && ISSPACE(*header)) {
     header++;
