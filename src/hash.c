@@ -26,9 +26,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef  HAVE_SYS_TYPES_H
-# include <sys/types.h>
-#endif/*HAVE_SYS_TYPES_H*/
 #include <hash.h>
 #include <joedog/joedog.h>
 #include <joedog/defs.h>
