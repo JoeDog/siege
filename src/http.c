@@ -24,16 +24,23 @@
 #include <http.h>
 #include <stdio.h>
 #include <stdarg.h>
+#ifdef  HAVE_ZLIB
+# include <zlib.h>
+#endif/*HAVE_ZLIB*/
 #include <cookies.h>
 #include <string.h>
 #include <util.h>
 #include <load.h>
+#include <page.h>
 #include <joedog/defs.h>
 
 #define MAXFILE 10240
+pthread_mutex_t __mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  __cond  = PTHREAD_COND_INITIALIZER;
 
 private char *__parse_pair(char **str);
 private char *__dequote(char *str);
+private int   __inflate(const char *src, int srcLen, const char *dst, int dstLen);
 
 /**
  * HTTPS tunnel; set up a secure tunnel with the
@@ -432,6 +439,7 @@ http_read_headers(CONN *C, URL U)
   char line[MAX_COOKIE_SIZE];  /* assign chars read     */
   
   h = xcalloc(sizeof(HEADERS), 1);
+  h->page = FALSE;
   
   while (TRUE) {
     x = 0;
@@ -454,6 +462,11 @@ http_read_headers(CONN *C, URL U)
     if (strncasecmp(line, "http", 4) == 0) {
       strncpy( h->head, line, 8);
       h->code = atoi(line + 9); 
+    }
+    if (strncasecmp(line, "content-type: ", 14) == 0) {
+      if (strncasecmp(line+14, "text/html", 9) == 0) {
+        h->page = TRUE;
+      }
     }
     if (strncasecmp(line, "content-length: ", 16) == 0) { 
       C->content.length = atoi(line + 16); 
@@ -658,9 +671,6 @@ http_chunk_size(CONN *C)
   return -1;
 }
   
-/**
- * returns ssize_t
- */
 ssize_t
 http_read(CONN *C)
 { 
@@ -670,6 +680,9 @@ http_read(CONN *C)
   size_t bytes  = 0;
   size_t length = 0;
   static char body[MAXFILE];
+  char dst[102400];
+  memset(dst, '\0', sizeof(dst));
+  pthread_mutex_lock(&__mutex);
 
   if (C == NULL) NOTIFY(FATAL, "Connection is NULL! Unable to proceed"); 
 
@@ -703,6 +716,7 @@ http_read(CONN *C)
         memset(body, '\0', sizeof(body));
         if ((n = socket_read(C, body, length)) == 0)
           break;
+        page_concat(C->page, body, length);
         bytes += n;
         length = (C->content.length - bytes < MAXFILE)?C->content.length-bytes:MAXFILE; 
       } while (bytes < C->content.length); 
@@ -720,9 +734,15 @@ http_read(CONN *C)
           int n;
           memset(body, '\0', MAXFILE);
           n = socket_read(C, body, (chunk>MAXFILE)?MAXFILE:chunk);
+          __inflate(body, MAXFILE, dst, 202400);
+          if (strlen(dst) > 0) {
+            page_concat(C->page, dst, strlen(dst));
+          } else {
+            page_concat(C->page, body, strlen(body));
+          }
           chunk -= n;
           bytes += n;
-        } while(chunk > 0);
+        } while (chunk > 0);
       }
     } else {
       do {
@@ -730,21 +750,57 @@ http_read(CONN *C)
         if ((n = socket_read(C, body, sizeof(body))) == 0)
           break;
         bytes += n;
-      } while(TRUE);
+        page_concat(C->page, body, n);
+      } while (TRUE);
     }
   }
-      
-  //if (my.debug||my.get) { printf("\n"); fflush(stdout); }
-  echo ("\n"); 
-  
+  echo ("\n");
+  pthread_mutex_unlock(&__mutex);
   return bytes;
 }
 
+private int
+__inflate(const char *src, int srcLen, const char *dst, int dstLen)
+{
+  int err=-1;
+
+#ifndef HAVE_ZLIB
+  dst = strdup(src);
+  err = Z_OK;
+  return err;
+#else
+  z_stream strm;
+  int ret        = -1;
+  strm.zalloc    = Z_NULL;
+  strm.zfree     = Z_NULL;
+  strm.opaque    = Z_NULL;
+  strm.avail_in  = srcLen;
+  strm.avail_out = dstLen;
+  strm.next_in   = (Bytef *)src;
+  strm.next_out  = (Bytef *)dst;
+
+  err = inflateInit2(&strm, MAX_WBITS+16);
+  if (err == Z_OK){
+    err = inflate(&strm, Z_FINISH);
+    if (err == Z_STREAM_END){
+      ret = strm.total_out;
+    } else {
+      inflateEnd(&strm);
+      return err;
+    }
+  } else {
+    inflateEnd(&strm);
+    return err;
+  }
+  inflateEnd(&strm);
+  return ret;
+#endif/*HAVE_ZLIB*/
+}
 
 /**
  * parses option=value pairs from an
  * http header, see keep-alive: above
- * while(( tmp = __parse_pair( &newline )) != NULL ){
+ * while ((tmp = __parse_pair(&newline)) != NULL) {
  *   do_something( tmp );
  * }
  */

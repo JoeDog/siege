@@ -50,6 +50,7 @@ typedef
 struct headers
 {
   char                head[64];                /* http response         */
+  BOOLEAN             page;
   int                 code;                    /* http return code      */
   unsigned long int   length;
   char                cookie[MAX_COOKIE_SIZE]; /* set-cookie data       */
