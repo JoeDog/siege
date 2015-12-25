@@ -155,6 +155,10 @@ AUTH
 auth_destroy(AUTH this)
 {
   this->creds = array_destroy(this->creds);
+  xfree(this->basic.encode);
+  xfree(this->digest.encode);
+  xfree(this->ntlm.encode);
+  xfree(this->proxy.encode);
   xfree(this);
   return NULL;
 }
@@ -543,6 +547,11 @@ __ntlm_header(AUTH this, SCHEME scheme, const char *header, CREDS creds)
   if (strncasecmp(header, "NTLM", 4)) {
     return FALSE;
   }
+
+  NOTIFY( // honestly this is here to silence the compiler...
+    DEBUG, "Parsing NTLM header:  %d, %d, %s, %s",
+    this->okay, scheme, header, creds_get_username(creds)
+  );
 
   header += 4; // Step past NTLM
   while (*header && ISSPACE(*header)) {
