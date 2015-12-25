@@ -86,6 +86,14 @@ strmatch(char *option, char *param)
     return FALSE;
 }
 
+BOOLEAN
+startswith(const char *pre, const char *str)
+{
+  size_t lenpre = strlen(pre);
+  size_t lenstr = strlen(str);
+  return lenstr < lenpre ? FALSE : strncmp(pre, str, lenpre) == 0;
+}
+
 char *
 uppercase(char *s, size_t len){
   unsigned char *c, *e;

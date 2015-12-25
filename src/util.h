@@ -31,6 +31,7 @@ void    pthread_usleep_np(unsigned long usec);
 int     pthread_rand_np(unsigned int *ctx); 
 int     urandom();
 BOOLEAN strmatch(char *str1, char *str2);
+BOOLEAN startswith(const char *pre, const char *str);
 BOOLEAN okay(int code);
 void    echo(const char *fmt, ...);
 void    debug (const char *fmt, ...);
