@@ -296,8 +296,8 @@ main(int argc, char *argv[])
   int            x; 
   int            j = 0;
   int            result;
-  DATA           D    = new_data();
-  ARRAY          urls = new_array();
+  DATA           D;
+  ARRAY          urls;
   CREW           crew;  
   HASH           cookies;
   LINES          *lines;   
@@ -316,10 +316,6 @@ main(int argc, char *argv[])
   sigaddset(&sigs, SIGPIPE);
   sigprocmask(SIG_BLOCK, &sigs, NULL);
 
-  lines = xcalloc(1, sizeof *lines);
-  lines->index   = 0;
-  lines->line    = NULL;
-
   memset(&my, 0, sizeof(struct CONFIG));
 
   parse_rc_cmdline(argc, argv); 
@@ -328,7 +324,7 @@ main(int argc, char *argv[])
   } 
   parse_cmdline(argc, argv);
   ds_module_check(); 
-
+  
   if (my.config) {
     show_config(TRUE);    
   }
@@ -347,6 +343,9 @@ main(int argc, char *argv[])
     my.cusers = my.limit;
   }
 
+  lines = xcalloc(1, sizeof *lines);
+  lines->index   = 0;
+  lines->line    = NULL;
   if (my.url != NULL) {
     my.length = 1; 
   } else { 
@@ -368,7 +367,7 @@ main(int argc, char *argv[])
    * command line or file, and add them
    * to the urls struct.
    */
-
+  urls = new_array();
   if (my.url != NULL) {
     URL tmp = new_url(my.url);
     url_set_ID(tmp, 0);
@@ -402,6 +401,7 @@ main(int argc, char *argv[])
    * as the threads begin hitting the server as
    * soon as they are created.
    */
+  D = new_data();
   data_set_start(D);
 
   /**
@@ -493,24 +493,6 @@ main(int argc, char *argv[])
       NOTIFY(FATAL, "system resources exhausted"); 
     }
   } /* end of for pthread_create */
-#if 0
-  if (cookies != NULL) {
-    int i, j;
-    char **keys = hash_get_keys(cookies);
-    for (i = 0; i < hash_get_entries(cookies) || i < my.cusers; i ++){
-      char **k;
-      HASH hash = hoh_get(cookies, keys[i]);
-      k = hash_get_keys(hash);
-      printf("%s HAS %d ENTRIES\n", keys[i], hash_get_entries(hash));
-      for (j = 0; j < hash_get_entries(hash); j ++){
-        char *tmp = (char*)hash_get(hash, k[j]);
-        printf("%s: %s => %s\n", keys[i], k[j], (tmp==NULL)?"NULL":tmp);
-      }
-      hash_destroy(hash);
-    }
-  }
-#endif
-
   crew_join(crew, TRUE, &statusp);
 
 #ifdef HAVE_SSL
@@ -551,7 +533,18 @@ main(int argc, char *argv[])
     //digest_challenge_destroy(client[x].auth.proxychlg);
     //digest_credential_destroy(client[x].auth.proxycred);
   }
+  URL u;
+  while ((u = (URL)array_pop(urls)) != NULL) {
+    u = url_destroy(u);
+  }
+  while ((u = (URL)array_pop(my.lurl)) != NULL) {
+    u = url_destroy(u);
+  }
+  array_destroy(urls);
   array_destroy(my.lurl);
+  auth_destroy(my.auth);
+  hash_destroy(cookies);
+  cookies_destroy(my.cookies);
   xfree(client);
 
   if (my.get) {
@@ -603,7 +596,6 @@ main(int argc, char *argv[])
   if(my.mark)    mark_log_file(my.markstr);
   if(my.logging) log_transaction(D);
 
-  my.cookies = cookies_destroy(my.cookies);
   data_destroy(D);
   if (my.url == NULL) {
     for (x = 0; x < my.length; x++)
