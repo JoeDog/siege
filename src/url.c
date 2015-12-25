@@ -91,6 +91,7 @@ new_url(char *str)
   this = xcalloc(sizeof(struct URL_T), 1);
   this->ID = 0;
   this->hasparams = FALSE;
+  this->params    = NULL;
   __url_parse(this, str); 
   return this;
 }
@@ -99,6 +100,7 @@ URL
 url_destroy(URL this)
 {
   if (this!=NULL) {
+    xfree(this->url);
     xfree(this->username);
     xfree(this->password);
     xfree(this->hostname);
@@ -109,7 +111,12 @@ url_destroy(URL this)
     xfree(this->request);
     xfree(this->conttype);
     xfree(this->postdata);
+    xfree(this->posttemp);
     xfree(this->etag);
+    xfree(this->realm);
+    if (this->hasparams==TRUE) {
+      xfree(this->params);
+    }
     xfree(this);
   }
   return NULL;  
@@ -501,6 +508,18 @@ url_normalize(URL req, char *location)
   return ret;
 }
 
+char * 
+url_normalize_string(URL req, char *location) 
+{
+  char *t;
+  URL   u;
+  printf("LOCATION: %s\n", location);
+  u = url_normalize(req, location);
+  t = strdup(url_get_absolute(u));
+  u = url_destroy(u);
+  return t;
+}
+
 private void
 __url_parse(URL this, char *url)
 {
@@ -759,16 +778,19 @@ __url_set_hostname(URL this, char *str)
 {
   int i;
 
+  if (startswith("//", str)) {
+    str += 2;
+  }
+
   /* skip to end, slash, or port colon */
-  for(i = 0; str[i] && str[i] != '/' && str[i] != ':'; i++);
+  for (i = 0; str[i] && str[i] != '/' && str[i] != ':'; i++);
 
   this->hostname = xmalloc(i + 1);
+  memset(this->hostname, '\0', i+1);
   memcpy(this->hostname, str, i);
 
-  this->hostname[i] = '\0';
-
   /* if there's a port */
-  if(str[i] == ':'){
+  if (str[i] == ':') {
     str += i + 1;
   } else {
     str += i;

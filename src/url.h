@@ -139,5 +139,7 @@ void     url_set_realm(URL this, char *realm);
 void     url_set_username(URL this, char *username);
 void     url_set_password(URL this, char *password);
 URL      url_normalize(URL req, char *location);
+char *   url_normalize_string(URL req, char *location);
+
 
 #endif/*__URL_H*/
