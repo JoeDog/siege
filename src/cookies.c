@@ -53,6 +53,7 @@ cookies_destroy(COOKIES this)
   while (cur) {
     cur = __delete_node(cur);
   }
+  xfree(this->file);
   pthread_mutex_unlock(&(this->mutex));
   pthread_mutex_destroy(&(this->mutex));
   free(this);
