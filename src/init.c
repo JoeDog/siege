@@ -36,6 +36,8 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#define LINESZ 1024
+
 int
 init_config( void )
 {
@@ -226,62 +228,87 @@ show_config(int EXIT)
   //printf("proxy auth:                     " ); display_authorization(PROXY);printf("\n");
   //printf("www auth:                       " ); display_authorization(WWW); 
   printf("\n");
+
   xfree(method);
+  my.auth    = auth_destroy(my.auth);
+  my.lurl    = array_destroy(my.lurl);
+  my.cookies = cookies_destroy(my.cookies); 
+
   if (EXIT) exit(0);
   else return 0;
 }
 
-static char *
-get_line(FILE *fp)
+int
+readline(char **s, FILE *fp)
 {
+  int  c;
+  int  i;
+  int  len  = 0;
+  int  size = 0;
+  char *tmp = NULL;
   char *ptr = NULL;
-  char *newline;
-  char tmp[256];
 
-  memset(tmp, '\0', sizeof(tmp)); 
-  do {
-    if((fgets(tmp, sizeof(tmp), fp)) == NULL) return(NULL);
-    if(ptr == NULL) {
-      ptr = xstrdup( tmp );
-    } else {
-      ptr = (char*)xrealloc(ptr, strlen(ptr) + strlen(tmp) + 1);
-      strcat( ptr, tmp );
+  ptr  = xmalloc(LINESZ);
+  size = LINESZ;
+
+  while ((c = fgetc(fp))!=EOF && c!='\n') {
+    if (len >= size) {
+      // the buffer is full - extend it
+      tmp = realloc(ptr, size + LINESZ);
+      if (tmp == NULL) {
+        free(ptr);
+        return -1;
+      }
+      ptr = tmp;
+      size += LINESZ;
     }
-    newline = strchr(ptr, '\n');
-  } while( newline == NULL );
-  *newline = '\0';
- 
-  return ptr;
-} 
-
-static char *
-chomp_line(FILE *fp, char **mystr, int *line_num)
-{
-  char *ptr;
-  while(TRUE){
-    if((*mystr = get_line( fp )) == NULL) return NULL;
-    (*line_num)++;
-    ptr = chomp(*mystr);
-    /* exclude comments */
-    if(*ptr != '#' && *ptr != '\0'){
-      return(ptr);
-    } else {
-      xfree(ptr);
+    ptr[len++] = (char)c;
+  }
+  if (len == 0) {
+    if (c == EOF) { /* empty file or read error */
+      free(ptr);
+      return -1;
+    } else { /* empty line */
+      ptr[0] = '\0';
+      *s = ptr;
+      return 0;
     }
   }
-} 
+
+  if (len+1 != size) { /* no room for '\0' */
+    tmp = realloc(ptr, len+1);
+    if (tmp == NULL) {
+      free(ptr);
+      return -1;
+    }
+    ptr = tmp;
+  }
+  ptr[len] = '\0';
+
+  for (i = 0; ptr[i] != '\0'; i++) {
+    if (ptr[i] == '#') {
+      ptr[i] = '\0';
+    }
+  }
+  *s = ptr;
+
+  return len;
+}
 
 int
 load_conf(char *filename)
 {
-  FILE *fp;
-  HASH H;
-  int  line_num = 0;
-  char *line;
-  char *tmp;
-  char *option;
-  char *optionptr;
-  char *value;
+  FILE    *fp;
+  HASH    H;
+  char    *line;
+  char    *option;
+  char    *optionptr;
+  char    *value;
+#ifdef  HAVE_ZLIB
+  BOOLEAN zlib = TRUE;
+#else  
+  BOOLEAN zlib = FALSE;
+#endif/*HAVE_ZLIB*/
  
   if ((fp = fopen(filename, "r")) == NULL) {
     return -1;
@@ -289,13 +316,20 @@ load_conf(char *filename)
 
   H = new_hash();
 
-  while ((line = chomp_line(fp, &line, &line_num)) != NULL) {
-    tmp = trim(line);
+  while (readline(&line, fp) != -1) {
+    char *tmp = line;
+    line = trim(line);
+    if (*line == '#' || *line == '\0' || strlen(line) < 1) {
+      free(line);
+      continue;
+    }
+
     optionptr = option = xstrdup(line);
     while (*optionptr && !ISSPACE((int)*optionptr) && !ISSEPARATOR(*optionptr)) {
       optionptr++;
     }
-    *optionptr++=0;
+    *optionptr++='\0';
+
     while (ISSPACE((int)*optionptr) || ISSEPARATOR(*optionptr)) {
       optionptr++;
     }
@@ -439,7 +473,15 @@ load_conf(char *filename)
       strncpy(my.uagent, value, sizeof(my.uagent));
     }
     else if (strmatch(option, "accept-encoding")) {
-      strncpy(my.encoding, value, sizeof(my.encoding));
+      BOOLEAN compress = FALSE;
+      if ((strstr(value, "gzip") != NULL)||(strstr(value, "compress") != NULL)) {
+        compress = TRUE;
+      }
+      if (compress == TRUE && zlib == FALSE) {
+        NOTIFY(WARNING, "Zip encoding disabled; siege requires zlib support to enable it");
+      } else {
+        strncpy(my.encoding, value, sizeof(my.encoding));
+      }
     }
     #if 1
     else if (!strncasecmp(option, "login", 5)) {
@@ -560,11 +602,10 @@ load_conf(char *filename)
     } else {
       hash_add(H, option, value);
     }
+    xfree(tmp);
     xfree(value);
     xfree(option);
-    free(tmp);
-  } /* end of while line=chomp_line */
-
+  }
   hash_destroy(H);
   fclose(fp);
   return 0;
