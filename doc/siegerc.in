@@ -150,7 +150,7 @@ chunked = true
 # 
 # ex: cache = true
 #
-cache = false
+cache = true
 
 #
 # Connection directive. Options "close" and "keep-alive"
@@ -320,19 +320,6 @@ accept-encoding = gzip
 # ex: url-escaping = false
 #
 url-escaping = true
-
-#
-# TURN OFF THAT ANNOYING SPINNER!
-# Siege spawns a thread and runs a spinner to entertain you
-# as it collects and computes its stats. If you don't like 
-# this feature, you may turn it off here. Your JoeDog loves 
-# this feature but he understands that it may not render well
-# in your particular terminal.  It's on by default because who
-# doesn't love a good spinner! 
-#
-# ex: spinner = false 
-#
-spinner = true
 
 #
 # WWW-Authenticate. Currently siege supports two types
