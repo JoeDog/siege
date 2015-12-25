@@ -38,6 +38,7 @@
 
 #include <auth.h>
 #include <hash.h>
+#include <parser.h>
 
 struct trans
 {
@@ -59,6 +60,7 @@ typedef struct
   unsigned int   fail;
   unsigned int   ok200;
   ARRAY  urls;
+  ARRAY  purls;
   HASH   cookies;
   struct {
     DCHLG *wchlg;

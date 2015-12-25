@@ -93,7 +93,9 @@ start_routine(CLIENT *client)
 #endif 
 
   C = xcalloc(sizeof(CONN), 1);
-  C->sock = -1;
+  C->sock       = -1;
+  C->page       = new_page("");
+  client->purls = new_array();
 
   if (client->cookies != NULL) {
     char **keys = hash_get_keys(client->cookies);
@@ -168,6 +170,12 @@ start_routine(CLIENT *client)
     if (y >= my.length || y < 0) { 
       y = 0; 
     }
+
+    /**
+     * This is the initial request from the command line
+     * or urls.txt file. If it is text/html then it will
+     * be parsed in __http request function.
+     */
     URL tmp = array_get(client->urls, y);
     if (tmp != NULL && url_get_hostname(tmp) != NULL) {
       client->auth.bids.www = 0; /* reset */
@@ -175,7 +183,45 @@ start_routine(CLIENT *client)
         __increment_failures();
       }
     }
- 
+
+    /**
+     * If we parsed http resources, we'll request them here
+     */
+    if (client->purls != NULL) {
+      URL u;
+      while ((u = (URL)array_pop(client->purls)) != NULL) {
+        if (url_get_scheme(u) == UNSUPPORTED) {
+          ;;
+        } else {
+          client->auth.bids.www = 0;
+          // We'll only request files on the same host as the page
+          if (strmatch(url_get_hostname(u), url_get_hostname(tmp))) {
+            if ((ret = __request(C, u, client))==FALSE) {
+              __increment_failures();
+            }
+          }
+        }
+        u = url_destroy(u);
+      }
+    }
+
+    page_clear(C->page);
+
+    /**
+     * Delay between interactions -D num /--delay=num
+     */
+    if (my.delay >= 1) {
+      pthread_sleep_np(
+       (unsigned int) (((double)pthread_rand_np(&(client->rand_r_SEED)) /
+                       ((double)RAND_MAX + 1) * my.delay ) + .5)
+      );
+    } else if (my.delay >= .001) {
+      pthread_usleep_np(
+       (unsigned int) (((double)pthread_rand_np(&(client->rand_r_SEED)) /
+                       ((double)RAND_MAX + 1) * my.delay * 1000000 ) + .0005)
+      );
+    }
+
     if (my.failures > 0 && my.failed >= my.failures) {
       break;
     }
@@ -192,6 +238,8 @@ start_routine(CLIENT *client)
     C->connection.reuse = 0;    
     socket_close(C);
   }
+  C->page = page_destroy(C->page);
+  client->purls = array_destroy(client->purls);
   xfree(C);
   C = NULL;
 
@@ -234,7 +282,8 @@ __http(CONN *C, URL U, CLIENT *client)
   struct   tm *tmp;
   size_t   len;
   char     fmtime[65];
-  URL  redirect_url = NULL; 
+  URL      redirect_url = NULL; 
+  PARSER   parser       = NULL;
  
   if (my.csv) {
     now = time(NULL);
@@ -263,18 +312,6 @@ __http(CONN *C, URL U, CLIENT *client)
       );
     } /* end if my.verbose */
     return FALSE;
-  }
-
-  if (my.delay >= 1) {
-    pthread_sleep_np(
-     (unsigned int) (((double)pthread_rand_np(&(client->rand_r_SEED)) /
-                     ((double)RAND_MAX + 1) * my.delay ) + .5) 
-    );
-  } else if (my.delay >= .001) {
-    pthread_usleep_np(
-     (unsigned int) (((double)pthread_rand_np(&(client->rand_r_SEED)) /
-                     ((double)RAND_MAX + 1) * my.delay * 1000000 ) + .0005) 
-    );
   }
 
   /* record transaction start time */
@@ -310,6 +347,21 @@ __http(CONN *C, URL U, CLIENT *client)
   } 
 
   bytes = http_read(C); 
+
+  if (head->page == TRUE) {
+    int   i;
+    ARRAY array;
+    parser = new_parser(U, page_value(C->page));
+    array  = parser_get(parser);
+    if (array != NULL) {
+      for (i = 0; i < (int)array_length(array); i++) {
+        URL   lru  = (URL)array_get(array, i);
+        URL   url  = new_url(url_get_absolute(lru)); 
+        array_npush(client->purls, url, URLSIZE);
+      }
+    }
+    parser = parser_destroy(parser);
+  }
 
   if (!my.zero_ok && (bytes < 1)) { 
     C->connection.reuse = 0; 
