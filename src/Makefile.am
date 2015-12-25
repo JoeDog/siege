@@ -24,11 +24,11 @@ bin_PROGRAMS       =   siege
 
 WARN_CFLAGS        =   @WARN_CFLAGS@
 
-AM_CFLAGS          =   $(SSL_INCLUDE) $(PTHREAD_CFLAGS) $(WARN_CFLAGS) $(SSL_CFLAGS)
+AM_CFLAGS          =   $(SSL_INCLUDE) $(Z_INCLUDE) $(PTHREAD_CFLAGS) $(WARN_CFLAGS) $(SSL_CFLAGS) $(Z_CFLAGS)
 
-AM_LDFLAGS         =   $(SSL_LDFLAGS) $(PTHREAD_LDFLAGS)  
+AM_LDFLAGS         =   $(SSL_LDFLAGS) $(Z_LDFLAGS) $(PTHREAD_LDFLAGS)  
 
-LIBS               =   $(SSL_LIBS) 
+LIBS               =   $(SSL_LIBS) $(Z_LIBS)
 
 siege_LDADD        =   $(top_srcdir)/lib/joedog/libjoedog.la
 
@@ -58,6 +58,8 @@ load.c     load.h      \
 log.c      log.h       \
 main.c     setup.h     \
 md5.c      md5.h       \
+page.c     page.h      \
+parser.c   parser.h    \
 sock.c     sock.h      \
 ssl.c      ssl.h       \
 timer.c    timer.h     \
