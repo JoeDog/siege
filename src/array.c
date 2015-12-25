@@ -26,6 +26,11 @@
 #include <limits.h>
 #include <array.h>
 #include <joedog/joedog.h>
+#if 1
+#define xfree(x) free(x)
+#define xmalloc(x) malloc(x)
+#define xcalloc(x,y) calloc(x,y)
+#endif
 
 typedef void *array;
 
@@ -79,7 +84,7 @@ array_npush(ARRAY this, void *thing, size_t len)
 {
   array arr;
   if (thing==NULL) return;
-  if (this->length == 0) {
+  if (this->data == NULL && this->length == 0) {
     this->data = xmalloc(sizeof(array));
   } else {
     this->data = realloc(this->data,(this->length+1)*sizeof(array)); 
@@ -98,6 +103,29 @@ array_get(ARRAY this, int index)
   if (index > this->length) return NULL;
 
   return this->data[index];
+}
+
+void *
+array_remove (ARRAY this, int index) {
+  int   length = 0;
+  array arr;
+
+  if (index > this->length) return NULL;
+
+  arr    = this->data[index];
+  length = --this->length;
+
+  for (; index < length; index++) {
+    this->data[index] = this->data[index+1];
+  }
+
+  return arr;
+}
+
+void *
+array_pop(ARRAY this) 
+{
+  return this->length ? this->data[--this->length] : NULL; 
 }
 
 void *
@@ -127,6 +155,8 @@ array_to_string(ARRAY this)
   int    len = 0;
   char  *str;
 
+  if (this->length == 0) return "NULL";
+
   for (i = 0; i < array_length(this); i++) {
     len += strlen(array_get(this, i))+3;
   }
@@ -144,3 +174,42 @@ array_to_string(ARRAY this)
   }
   return str;
 }
+
+void
+array_print(ARRAY this)
+{
+  printf("%s\n", array_to_string(this));
+}
+
+
+#if 0
+#include <unistd.h>
+int
+main (int argc, char *argv[])
+{
+  int   x;
+  int   i;
+  int   len;
+  ARRAY A = new_array();
+  void *v; 
+for (i = 0; i < 1000000; i++) {
+  array_push(A, "Zero");
+  array_push(A, "One");
+  array_push(A, "Two");
+  array_push(A, "Three");
+  array_push(A, "Four");
+  array_push(A, "Five");
+  array_push(A, "Six-six-six");
+
+  while ((v = array_pop(A)) != NULL) {
+    printf("popped: %s\n", (char*)v);
+    xfree(v);
+  } 
+
+}
+  A = array_destroy(A);
+  return 0;
+}
+#endif
+
+
