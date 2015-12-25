@@ -200,19 +200,30 @@ void
 SSL_thread_cleanup(void) 
 {
   int x;
-  
+ 
   CRYPTO_set_locking_callback(NULL);
-  for(x = 0; x < CRYPTO_num_locks(); x++){
+  for (x = 0; x < CRYPTO_num_locks(); x++) {
     pthread_mutex_destroy(&(lock_cs[x]));
   }
-  if(lock_cs!=(pthread_mutex_t *)NULL) { 
+  if (lock_cs!=(pthread_mutex_t *)NULL) { 
     OPENSSL_free(lock_cs); 
     lock_cs=(pthread_mutex_t *)NULL; 
   }
-  if(lock_count!=(long *)NULL){ 
+  if (lock_count!=(long *)NULL) {  
     OPENSSL_free(lock_count); 
     lock_count=(long *)NULL; 
   }
+  sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
+  CRYPTO_cleanup_all_ex_data();
+  ERR_remove_state(0);
+  ERR_free_strings();
+  EVP_cleanup();
+  CRYPTO_cleanup_all_ex_data();
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(OPENSSL_USE_DEPRECATED)
+   ERR_remove_state(0);
+#else
+   ERR_remove_thread_state(NULL);
+#endif
 }
 
 void 
