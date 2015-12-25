@@ -53,6 +53,7 @@
 
 #include <auth.h>
 #include <url.h>
+#include <page.h>
 #include <joedog/boolean.h>
 
 typedef enum
@@ -88,6 +89,7 @@ typedef struct
   S_STATUS status; 
   BOOLEAN  encrypt;    /* TRUE=encrypt, FALSE=clear       */
   SCHEME   scheme;
+  PAGE     page;
   struct {
     TE     transfer;   /* transer encoding specified      */
     size_t length;     /* length of data chunks           */
