@@ -58,6 +58,7 @@ struct URL_T
   time_t    expires;
   time_t    modified;
   BOOLEAN   cached;
+  BOOLEAN   redir;
   char *    etag;
   char *    realm;
 };
@@ -92,6 +93,7 @@ new_url(char *str)
   this->ID = 0;
   this->hasparams = FALSE;
   this->params    = NULL;
+  this->redir     = FALSE;
   __url_parse(this, str); 
   return this;
 }
@@ -125,11 +127,48 @@ url_destroy(URL this)
 /**
  * URL setters 
  */
-
 void 
 url_set_ID(URL this, int ID)
 {
   this->ID = ID;
+  return;
+}
+
+/**
+ * This function is largely for RE-setting the scheme
+ */
+void
+url_set_scheme(URL this, SCHEME scheme)
+{
+  char *tmp;
+  char *str;
+  int   n;
+  int   len;
+
+  this->scheme = scheme;
+  str = strdup(url_get_scheme_name(this));
+
+  if (this->url != NULL) {
+    tmp = xstrdup(this->url);
+    if (!strncasecmp(tmp, "http:", 5)){
+      n = 7;
+    }
+    if (!strncasecmp(tmp, "https:", 6)){
+      n = 8;
+    }
+    if (!strncasecmp(tmp, "ftp:", 4)){
+      n = 6;
+    }
+    len = strlen(tmp);
+    memmove(tmp, tmp+n, len - n + 1);
+    xfree(this->url);
+    len = strlen(tmp)+strlen(str)+4;
+    this->url = xmalloc(len);
+    memset(this->url, '\0', len);
+    snprintf(this->url, len, "%s://%s", str, tmp);
+    xfree(tmp);
+    xfree(str);
+  }
   return;
 }
 
@@ -175,6 +214,12 @@ url_set_etag(URL this, char *etag)
 }
 
 void 
+url_set_redirect(URL this, BOOLEAN redir)
+{
+  this->redir = redir;
+}
+
+void 
 url_set_conttype(URL this, char *type) {
   this->conttype = xstrdup(type);
   return;
@@ -199,11 +244,9 @@ url_set_postdata(URL this, char *postdata, size_t postlen)
   return;
 }
 
-
 /**
  * URL getters
  */
-
 public int
 url_get_ID(URL this) 
 {
@@ -374,6 +417,12 @@ url_get_if_modified_since(URL this)
   return timetostr(&this->modified);
 }
 
+BOOLEAN  
+url_is_redirect(URL this)
+{
+  return this->redir;
+}
+
 char *
 url_get_etag(URL this)
 {
@@ -463,15 +512,17 @@ url_normalize(URL req, char *location)
   if (strchr(location, ':') != NULL) {
     // it's very likely normalized
     ret = new_url(location);
+    url_set_scheme(ret, url_get_scheme(req));
     // but we better test it...
     if (strlen(url_get_hostname(ret)) > 1) {
       return ret;
     }
   }
 
-  if (strchr(location, '.') != NULL) {
+  if ((location[0] != '/') && (strchr(location, '.') != NULL)) {
     // it's *maybe* host/path
     ret = new_url(location);
+    url_set_scheme(ret, url_get_scheme(req));
     // so we better test it...
     if (strchr(url_get_hostname(ret), '.') != NULL) {
       return ret;
@@ -481,6 +532,7 @@ url_normalize(URL req, char *location)
   // XXX: 8/20/2014 - YES. Yes, I do.
   if (strstr(location, "localhost") != NULL) {
     ret = new_url(location);
+    url_set_scheme(ret, url_get_scheme(req));
     if (strlen(url_get_hostname(ret)) == 9) {
       // we found and correctly parsed localhost
       return ret;
@@ -501,9 +553,22 @@ url_normalize(URL req, char *location)
       snprintf(url, len, "%s://%s:%d%s", url_get_scheme_name(req), url_get_hostname(req), url_get_port(req), location);
     }
   } else {
-    snprintf(url, len, "%s://%s:%d/%s", url_get_scheme_name(req), url_get_hostname(req), url_get_port(req), location);
+    if (endswith("/", url_get_path(req))) {
+      snprintf (  // if the path ends with / we won't need one in the format
+        url, len, 
+       "%s://%s:%d%s%s", 
+       url_get_scheme_name(req), url_get_hostname(req), url_get_port(req), url_get_path(req), location
+      );
+    } else {
+      snprintf (  // need to add a slash to separate base path from parsed path/file
+        url, len, 
+        "%s://%s:%d%s/%s", 
+        url_get_scheme_name(req), url_get_hostname(req), url_get_port(req), url_get_path(req), location
+      );
+    }
   }
   ret = new_url(url);
+  url_set_scheme(ret, url_get_scheme(req));
   free(url);
   return ret;
 }
@@ -513,7 +578,6 @@ url_normalize_string(URL req, char *location)
 {
   char *t;
   URL   u;
-  printf("LOCATION: %s\n", location);
   u = url_normalize(req, location);
   t = strdup(url_get_absolute(u));
   u = url_destroy(u);
@@ -538,8 +602,9 @@ __url_parse(URL this, char *url)
   } else {
     ptr = __url_set_absolute(this, url);
   }
-  ptr = __url_set_scheme(this, ptr);
   
+  ptr = __url_set_scheme(this, ptr);
+
   post = strstr(this->url, " POST");
   if (! post) {
     post = strstr(this->url, " PUT");
@@ -611,21 +676,37 @@ __parse_post_data(URL this, char *datap)
 private char *
 __url_set_absolute(URL this, char *url)
 {
+  int    n;
   size_t len;
   char   *slash;
-  //char *ptr = url;
+  char   scheme[16];
 
   if (empty(url)) return NULL;
 
+  memset(scheme, '\0', 16);
+
+  if (!strncasecmp(url, "http:", 5)){
+    n = 7;
+    strncpy(scheme, "http", 4);
+  }
+  if (!strncasecmp(url, "https:", 6)){
+    n = 8;
+    strncpy(scheme, "https", 5);
+  }
+  if (!strncasecmp(url, "ftp:", 4)){
+    n = 6;
+    strncpy(scheme, "ftp", 3);
+  }
+
   len = strlen(url)+5;
   if (!__url_has_scheme(url)) {
-    this->url = xmalloc(len+7);
-    memset(this->url, '\0', len+7);
+    this->url = xmalloc(len+n);
+    memset(this->url, '\0', len+n);
     slash = strstr(url, "/");
     if (slash) {
-      snprintf(this->url, len+7, "http://%s", url);
+      snprintf(this->url, len+n, "%s://%s", scheme, url);
     } else {
-      snprintf(this->url, len+7, "http://%s/", url);
+      snprintf(this->url, len+n, "%s://%s/", scheme, url);
     }
   } else {
     this->url = xmalloc(len);
@@ -777,9 +858,13 @@ private char *
 __url_set_hostname(URL this, char *str)
 {
   int i;
+  int n;
+  int len;
 
   if (startswith("//", str)) {
-    str += 2;
+    n   = 2;
+    len = strlen(str);
+    memmove(str, str+n, len - n + 1);
   }
 
   /* skip to end, slash, or port colon */
