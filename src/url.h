@@ -70,9 +70,11 @@ URL      url_destroy(URL this);
 void     url_dump(URL this);
 
 void     url_set_ID(URL this, int id);
+void     url_set_scheme(URL this, SCHEME scheme);
 void     url_set_hostname(URL this, char *hostname);
 void     url_set_last_modified(URL this, char *date);
 void     url_set_etag(URL this, char *etag);
+void     url_set_redirect(URL this, BOOLEAN redir);
 void     url_set_conttype(URL this, char *type);
 void     url_set_postdata(URL this, char *postdata, size_t postlen);
 void     url_set_method(URL this, METHOD method);
@@ -80,6 +82,7 @@ void     url_set_method(URL this, METHOD method);
 int      url_get_ID(URL this);
 METHOD   url_get_method(URL this);
 char *   url_get_method_name(URL this) ;
+BOOLEAN  url_is_redirect(URL this);
 
 /* <scheme>://<username>:<password>@<hostname>:<port>/<path>;<params>?<query>#<frag> */
 char *   url_get_absolute(URL this);
