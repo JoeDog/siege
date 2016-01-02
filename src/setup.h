@@ -159,6 +159,7 @@ struct CONFIG
   char    logfile[128]; /* alternative user defined simbot.log     */ 
   BOOLEAN verbose;      /* boolean, verbose output to screen       */
   BOOLEAN quiet;        /* boolean, turn off all output to screen  */
+  BOOLEAN parser;       /* boolean, turn on/off the HTML parser    */
   BOOLEAN csv;          /* boolean, display verbose output in CSV  */
   BOOLEAN fullurl;      /* boolean, display full url in verbose    */
   BOOLEAN display;      /* boolean, display the thread id verbose  */
