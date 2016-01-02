@@ -99,6 +99,7 @@ init_config( void )
   my.csv            = FALSE;
   my.fullurl        = FALSE;
   my.escape         = TRUE;
+  my.parser         = FALSE;
   my.secs           = -1;
   my.limit          = 255;
   my.reps           = MAXREPS; 
@@ -192,6 +193,7 @@ show_config(int EXIT)
   printf("quiet:                          %s\n", my.quiet    ? "true"     : "false");
   printf("debug:                          %s\n", my.debug    ? "true"     : "false");
   printf("protocol:                       %s\n", my.protocol ? "HTTP/1.1" : "HTTP/1.0");
+  printf("HTML parser:                    %s\n", my.parser   ? "enabled"  : "disabled");
   printf("get method:                     %s\n", method);
   if (auth_get_proxy_required(my.auth)){
     printf("proxy-host:                     %s\n", auth_get_proxy_host(my.auth));
@@ -353,6 +355,12 @@ load_conf(char *filename)
         my.quiet = TRUE;
       else
         my.quiet = FALSE;
+    } 
+    else if (strmatch(option, "parser")) {
+      if (!strncasecmp(value, "true", 4))
+        my.parser = TRUE;
+      else
+        my.parser = FALSE;
     } 
     else if (strmatch(option, "csv")) {
       if (!strncasecmp(value, "true", 4))
