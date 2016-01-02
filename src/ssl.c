@@ -200,6 +200,8 @@ void
 SSL_thread_cleanup(void) 
 {
   int x;
+
+  xfree(my.ssl_ciphers);
  
   CRYPTO_set_locking_callback(NULL);
   for (x = 0; x < CRYPTO_num_locks(); x++) {
