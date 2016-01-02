@@ -55,6 +55,13 @@ static void signal_init();
 #else /*CANCEL_CLIENT_PLATFORM*/
 void clean_up();
 #endif/*SIGNAL_CLIENT_PLATFORM*/
+
+typedef struct {
+  CONN   *C;
+  URL     U;
+  CLIENT *client;
+  COOKIES cookies;
+} ARG;
  
 /**
  * local variables
@@ -195,17 +202,15 @@ start_routine(CLIENT *client)
         } else {
           client->auth.bids.www = 0;
           // We'll only request files on the same host as the page
-          if (strmatch(url_get_hostname(u), url_get_hostname(tmp))) {
+          //if (strmatch(url_get_hostname(u), url_get_hostname(tmp))) {
             if ((ret = __request(C, u, client))==FALSE) {
               __increment_failures();
             }
-          }
+          //}
         }
         u = url_destroy(u);
       }
     }
-
-    page_clear(C->page);
 
     /**
      * Delay between interactions -D num /--delay=num
@@ -283,7 +288,8 @@ __http(CONN *C, URL U, CLIENT *client)
   size_t   len;
   char     fmtime[65];
   URL      redirect_url = NULL; 
-  PARSER   parser       = NULL;
+
+  page_clear(C->page);
  
   if (my.csv) {
     now = time(NULL);
@@ -348,19 +354,15 @@ __http(CONN *C, URL U, CLIENT *client)
 
   bytes = http_read(C); 
 
-  if (head->page == TRUE) {
+  if (head->page == TRUE && head->code < 400) {
     int   i;
-    ARRAY array;
-    parser = new_parser(U, page_value(C->page));
-    array  = parser_get(parser);
-    if (array != NULL) {
-      for (i = 0; i < (int)array_length(array); i++) {
-        URL   lru  = (URL)array_get(array, i);
-        URL   url  = new_url(url_get_absolute(lru)); 
-        array_npush(client->purls, url, URLSIZE);
+    html_parser(client->purls, U, page_value(C->page));
+    for (i = 0; i < (int)array_length(client->purls); i++) {
+      URL url  = (URL)array_get(client->purls, i);
+      if (url_is_redirect(url)) {
+        head->redirect = strdup(url_get_absolute(url));
       }
     }
-    parser = parser_destroy(parser);
   }
 
   if (!my.zero_ok && (bytes < 1)) { 
@@ -441,6 +443,22 @@ __http(CONN *C, URL U, CLIENT *client)
    * deal with HTTP > 300 
    */
   switch (head->code) {
+    case 200:
+      if (head->redirect != NULL && strlen(head->redirect) > 2) {
+        /**
+         * <meta http-equiv="refresh" content="0; url=https://www.joedog.org/haha.html" />
+         */
+        redirect_url = url_normalize(U, head->redirect); //new_url(head->redirect);
+        if (empty(url_get_hostname(redirect_url))) { 
+          url_set_hostname(redirect_url, url_get_hostname(U));
+        }
+        if ((__request(C, redirect_url, client)) == FALSE) {
+          redirect_url = url_destroy(redirect_url);
+          return FALSE;
+        }
+        redirect_url = url_destroy(redirect_url);
+      }
+      break;
     case 301:
     case 302:
     case 303:
