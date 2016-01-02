@@ -94,6 +94,18 @@ startswith(const char *pre, const char *str)
   return lenstr < lenpre ? FALSE : strncmp(pre, str, lenpre) == 0;
 }
 
+BOOLEAN
+endswith(const char *suffix, const char *str)
+{
+  if (!str || !suffix)
+    return FALSE;
+  size_t lenstr    = strlen(str);
+  size_t lensuffix = strlen(suffix);
+  if (lensuffix >  lenstr)
+    return 0;
+  return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
+}
+
 char *
 uppercase(char *s, size_t len){
   unsigned char *c, *e;
