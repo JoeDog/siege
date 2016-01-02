@@ -49,6 +49,19 @@ quiet = false
 # 
 gmethod = HEAD
 
+#
+# Parser - experimental
+# This directive allows you to turn on the html parser. With
+# this feature enabled, siege will harvest resources like 
+# style sheets, images, javascript, etc. and make additional
+# requests for those items. 
+# HTML parsing was added beginning with siege 4.0.0 It is still
+# considered an experimental feature. It is disabled by default.
+# Use this feature to enable it. (true = on, false = off)
+# 
+# Example: parser = true
+#
+parser = false
 
 #
 # CSV Verbose format: with this option, you can choose 
