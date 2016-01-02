@@ -1,6 +1,19 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/01/01 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_4-0-0-beta2_JAN_01_2016
+ * src/client.c           Added logic for HTML redirect
+ * src/parser.c           De-objectified the parser
+ * src/url.c              Added url_set_scheme
+ * src/url.h              Added url_set_scheme
+ * src/setup.h            Added BOOLEAN parser
+ * src/init.c             Parses 'parser' from siegerc
+ * src/util.c             Added BOOLEAN endswith
+ * src/util.h             Added BOOLEAN endswith
+ * doc/siegerc.in         Added parser = true|false
+ * src/version.c          Version increment: 4.0.0-beta2
+
 2015/12/25 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE BETA             RELEASE_4-0-0-beta1_DEC_25_2015
  * configure.ac           Added a test for zlib
