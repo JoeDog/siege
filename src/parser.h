@@ -4,15 +4,6 @@
 #include <array.h>
 #include <url.h>
 
-/**
- * PARSER object
- */
-typedef struct PARSER_T *PARSER;
-extern  size_t PARSERSIZE;
-
-PARSER  new_parser(URL base, char *page);
-PARSER  parser_destroy(PARSER this);
-void    parser_reset(PARSER this, URL base);
-ARRAY   parser_get(PARSER this);
+BOOLEAN html_parser(ARRAY array, URL base, char *page);
 
 #endif/*PARSER_H*/

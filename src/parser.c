@@ -6,86 +6,21 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <array.h>
-#include <pthread.h>
 #include <joedog/joedog.h>
 #include <joedog/defs.h>
 
 #define CONTROL_TOKENS      " ="
 #define CONTROL_TOKENS_PLUS " =\"\'"
+#define CONTROL_TOKENS_QUOTES " \"\'"
 
-struct PARSER_T
-{
-  size_t  length;
-  char *  page;
-  ARRAY   urls;
-  URL     base;
-};
-
-size_t PARSERSIZE = sizeof(struct PARSER_T);
-
-private BOOLEAN __parse(PARSER this, char *page);
-private void    __parse_control(PARSER this, char *html);
-private void    __add_url(PARSER this, URL U);
+private void    __parse_control(ARRAY array, URL base, char *html);
+private void    __add_url(ARRAY array, URL U);
 private char *  __strcasestr(const char *s, const char *find);
-
-pthread_mutex_t parser_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t  parser_cond  = PTHREAD_COND_INITIALIZER;
-
-PARSER
-new_parser(URL base, char *page){
-  PARSER this = NULL;
-
-  if (base == NULL) {
-    return NULL;
-  }
-  pthread_mutex_lock(&parser_mutex);
-  this = xcalloc(PARSERSIZE, 1);
-  this->length = 0;
-  this->base   = base;
-  this->urls   = new_array();
-  __parse(this, page);
-  pthread_mutex_unlock(&parser_mutex);
-
-  return this;
-}
-
-PARSER
-parser_destroy(PARSER this)
-{
-  //this->urls = array_destroy(this->urls);
-  URL u;
-  while ((u = (URL)array_pop(this->urls)) != NULL) {
-    u = url_destroy(u);
-  }
-  xfree(this->page);
-  xfree(this);
-  this = NULL;
-  return this;
-}
-
-void
-parser_reset(PARSER this, URL base)
-{
-  this->urls = array_destroy(this->urls);
-  this->urls = new_array();
-  this->base = url_destroy(this->base);
-  this->base = base;
-}
-
-ARRAY
-parser_get(PARSER this) 
-{
-  if (this != NULL && array_length(this->urls) > 0) {
-    return this->urls;
-  } else {
-    return NULL;
-  }
-}
 
 #define BUFSZ 4096
 
-private BOOLEAN
-__parse(PARSER this, char *page)
+BOOLEAN
+html_parser(ARRAY array, URL base, char *page)
 {
   char *ptr;
   int  i;
@@ -116,7 +51,7 @@ __parse(PARSER this, char *page)
           i++;
           ptr++;
         }
-        __parse_control(this, tmp);
+        __parse_control(array, base, tmp);
       }
     }
     ptr++;
@@ -125,10 +60,25 @@ __parse(PARSER this, char *page)
 }
 
 private void 
-__add_url(PARSER this, URL U)
+__add_url(ARRAY array, URL U)
 {
-  if (U != NULL) {
-    array_npush(this->urls, U, URLSIZE);
+  int i = 0;
+  BOOLEAN found = FALSE;
+
+  if (U == NULL || url_get_hostname(U) == NULL) {
+    return; 
+  }
+
+  if (array != NULL) {
+    for (i = 0; i < (int)array_length(array); i++) {
+      URL     url   = (URL)array_get(array, i);
+      if (strmatch(url_get_absolute(U), url_get_absolute(url))) {
+        found = TRUE;
+      }
+    }   
+  }
+  if (! found) {
+    array_npush(array, U, URLSIZE);
   }
   return;
 }
@@ -156,7 +106,7 @@ __add_url(PARSER this, URL U)
  *
  */
 private void
-__parse_control(PARSER this, char *html) 
+__parse_control(ARRAY array, URL base, char *html) 
 {
   char * ptr = NULL;
   char * aid;
@@ -177,9 +127,9 @@ __parse_control(PARSER this, char *html)
             if (__strcasestr(ptr, "url") != NULL) {
               ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
               if (ptr != NULL) {
-                URL U = url_normalize(this->base, ptr);
-                __add_url(this, U);
-                //url_destroy(U);
+                URL U = url_normalize(base, ptr);
+                url_set_redirect(U, TRUE);
+                __add_url(array, U);
               }
             }
           }
@@ -189,26 +139,23 @@ __parse_control(PARSER this, char *html)
       ptr = strtok_r(NULL, CONTROL_TOKENS, &aid);
       if (ptr != NULL) {
         if (! strncasecmp(ptr, "src", 3)) {
-          ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
+          ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
           if (ptr != NULL) { 
-            URL U = url_normalize(this->base, ptr);
-            __add_url(this, U);
-            //url_destroy(U);
+            URL U = url_normalize(base, ptr);
+            __add_url(array, U);
           }
         } else {
           for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {
             if ((ptr != NULL) && (strncasecmp(ptr, "src", 3) == 0)) {        
               ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
               if (ptr != NULL) { 
-                URL U = url_normalize(this->base, ptr);
-                __add_url(this, U);
-                //url_destroy(U);
+                URL U = url_normalize(base, ptr);
+                __add_url(array, U);
               }
             } 
           }
         }
       }
-
     } else if (strncasecmp(ptr, "link", 4) == 0) {
       /*
       <link rel="stylesheet" type="text/css" href="/wp-content/themes/joedog/style.css" />
@@ -220,12 +167,18 @@ __parse_control(PARSER this, char *html)
       for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {
         if (strncasecmp(ptr, "rel", 3) == 0) {
           ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
-          if (strncasecmp(ptr, "stylesheet", 10) ==0) {
-            okay = TRUE;
+          if (strncasecmp(ptr, "stylesheet", 10) == 0) {
+            okay = TRUE; 
+          }  
+          if (strncasecmp(ptr, "next", 4) == 0) {
+            okay = FALSE; 
+          }  
+          if (strncasecmp(ptr, "alternate", 9) == 0) {
+            okay = FALSE; 
           }  
         } 
         if (strncasecmp(ptr, "href", 4) == 0) {
-          ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
+          ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
           if (ptr != NULL) {
             memset(buf, '\0', sizeof(buf));
             strncpy(buf, ptr, strlen(ptr));
@@ -233,18 +186,21 @@ __parse_control(PARSER this, char *html)
         }
       }
       if (okay) {
-        URL U = url_normalize(this->base, buf);
-        __add_url(this, U);
+        URL U = url_normalize(base, buf);
+        __add_url(array, U);
       }
     } else if (strncasecmp(ptr, "script", 6) == 0) {
       for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {
         if (strncasecmp(ptr, "src", 3) == 0) {
-          ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
+          ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
           if (ptr != NULL) {
+            if (startswith("+", ptr)) {
+              continue; // XXX: Kludge - probably an inline script
+            }
             memset(tmp, 0, BUFSZ);
             strncpy(tmp, ptr, BUFSZ-1);
-            URL U = url_normalize(this->base, tmp);
-            __add_url(this, U);
+            URL U = url_normalize(base, tmp);
+            __add_url(array, U);
           }
         }
       }
@@ -267,10 +223,12 @@ __parse_control(PARSER this, char *html)
         ptr = strtok_r(NULL, CONTROL_TOKENS, &aid);
       }
     } else if (strncasecmp(ptr, "background", 10) == 0) {
-      ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
+      ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
       if (ptr != NULL) {
         memset(tmp, 0, BUFSZ);
         strncpy(tmp, ptr, BUFSZ-1);
+        URL U = url_normalize(base, tmp);
+        __add_url(array, U);
       }
     }
     ptr = strtok_r(NULL, CONTROL_TOKENS, &aid);
