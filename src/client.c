@@ -360,7 +360,9 @@ __http(CONN *C, URL U, CLIENT *client)
     for (i = 0; i < (int)array_length(client->purls); i++) {
       URL url  = (URL)array_get(client->purls, i);
       if (url_is_redirect(url)) {
-        head->redirect = strdup(url_get_absolute(url));
+        URL tmp = (URL)array_remove(client->purls, i);
+        head->redirect = strdup(url_get_absolute(tmp));
+        tmp     = url_destroy(tmp);
       }
     }
   }
@@ -448,10 +450,15 @@ __http(CONN *C, URL U, CLIENT *client)
         /**
          * <meta http-equiv="refresh" content="0; url=https://www.joedog.org/haha.html" />
          */
-        redirect_url = url_normalize(U, head->redirect); //new_url(head->redirect);
+        redirect_url = url_normalize(U, head->redirect);
+        xfree(head->redirect);
+        head->redirect = NULL;     
+        page_clear(C->page);
         if (empty(url_get_hostname(redirect_url))) { 
           url_set_hostname(redirect_url, url_get_hostname(U));
         }
+        url_set_redirect(U, FALSE);
+        url_set_redirect(redirect_url, FALSE);
         if ((__request(C, redirect_url, client)) == FALSE) {
           redirect_url = url_destroy(redirect_url);
           return FALSE;
