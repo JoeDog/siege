@@ -721,15 +721,14 @@ http_read(CONN *C)
         length = (C->content.length - bytes < MAXFILE)?C->content.length-bytes:MAXFILE; 
       } while (bytes < C->content.length); 
     } else if (my.chunked && C->content.transfer == CHUNKED) {
-      int tries = 0;
-      while (tries < 128) {
+      while (TRUE) {
         chunk = http_chunk_size(C);
         if (chunk == 0)
           break;
         else if (chunk < 0) {
-          tries ++;
+          chunk = 0;
           continue;
-        }
+        } 
         do {
           int n;
           memset(body, '\0', MAXFILE);
@@ -742,6 +741,7 @@ http_read(CONN *C)
           }
           chunk -= n;
           bytes += n;
+          printf("BYTES: %ld\n", bytes);
         } while (chunk > 0);
       }
     } else {
