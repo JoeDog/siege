@@ -741,7 +741,6 @@ http_read(CONN *C)
           }
           chunk -= n;
           bytes += n;
-          printf("BYTES: %ld\n", bytes);
         } while (chunk > 0);
       }
     } else {
