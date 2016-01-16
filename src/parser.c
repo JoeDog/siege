@@ -31,6 +31,13 @@ html_parser(ARRAY array, URL base, char *page)
   if (page == NULL) return FALSE;
   if (strlen(page) < 1) return FALSE;
 
+  /**
+   * portable strcasestr in util.c
+   */
+  if (! stristr(page, "HTML") && !stristr(page, "HEAD") && !stristr(page, "BODY")) {
+    return FALSE; 
+  }
+
   while (*ptr != '\0') {
     if (*ptr == '<') {
       ptr++;
@@ -108,11 +115,13 @@ __add_url(ARRAY array, URL U)
 private void
 __parse_control(ARRAY array, URL base, char *html) 
 {
-  char * ptr = NULL;
-  char * aid;
-  char   tmp[BUFSZ];
+  char  * ptr = NULL;
+  char  * aid;
+  char    tmp[BUFSZ];
+  char  * top;
+  BOOLEAN debug = FALSE;
 
-  ptr = strtok_r(html, CONTROL_TOKENS, &aid);
+  ptr = top = strtok_r(html, CONTROL_TOKENS, &aid);
   while (ptr != NULL) {
     if (strncasecmp(ptr, "href", 4) == 0) {
       ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
@@ -129,6 +138,7 @@ __parse_control(ARRAY array, URL base, char *html)
               if (ptr != NULL) {
                 URL U = url_normalize(base, ptr);
                 url_set_redirect(U, TRUE);
+                if (debug) printf("1.) Adding: %s\n", url_get_absolute(U));
                 __add_url(array, U);
               }
             }
@@ -142,7 +152,10 @@ __parse_control(ARRAY array, URL base, char *html)
           ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
           if (ptr != NULL) { 
             URL U = url_normalize(base, ptr);
-            __add_url(array, U);
+            if (debug) printf("2.) Adding: %s\n", url_get_absolute(U));
+            if (! endswith("+", url_get_absolute(U))) {
+              __add_url(array, U);
+            } 
           }
         } else {
           for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {
@@ -150,6 +163,7 @@ __parse_control(ARRAY array, URL base, char *html)
               ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
               if (ptr != NULL) { 
                 URL U = url_normalize(base, ptr);
+                if (debug) printf("3.) Adding: %s\n", url_get_absolute(U));
                 __add_url(array, U);
               }
             } 
@@ -187,6 +201,7 @@ __parse_control(ARRAY array, URL base, char *html)
       }
       if (okay) {
         URL U = url_normalize(base, buf);
+        if (debug) printf("4.) Adding: %s\n", url_get_absolute(U));
         __add_url(array, U);
       }
     } else if (strncasecmp(ptr, "script", 6) == 0) {
@@ -200,6 +215,7 @@ __parse_control(ARRAY array, URL base, char *html)
             memset(tmp, 0, BUFSZ);
             strncpy(tmp, ptr, BUFSZ-1);
             URL U = url_normalize(base, tmp);
+            if (debug) printf("5.) Adding: %s\n", url_get_absolute(U));
             __add_url(array, U);
           }
         }
@@ -224,10 +240,11 @@ __parse_control(ARRAY array, URL base, char *html)
       }
     } else if (strncasecmp(ptr, "background", 10) == 0) {
       ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
-      if (ptr != NULL) {
+      if (ptr != NULL && strmatch("body", top)) {
         memset(tmp, 0, BUFSZ);
         strncpy(tmp, ptr, BUFSZ-1);
         URL U = url_normalize(base, tmp);
+        if (debug) printf("6.) Adding: %s\n", url_get_absolute(U));
         __add_url(array, U);
       }
     }
