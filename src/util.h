@@ -38,6 +38,7 @@ void    echo(const char *fmt, ...);
 void    debug (const char *fmt, ...);
 char    *uppercase(char *s, size_t len);
 char    *lowercase(char *s, size_t len);
+char    *stristr(const char *haystack, const char *needle);
 #ifndef strnlen
 size_t  strnlen(const char *str, size_t len);
 #endif
