@@ -194,8 +194,9 @@ start_routine(CLIENT *client)
     /**
      * If we parsed http resources, we'll request them here
      */
-    if (client->purls != NULL) {
+    if (my.parser == TRUE && client->purls != NULL) {
       URL u;
+
       while ((u = (URL)array_pop(client->purls)) != NULL) {
         if (url_get_scheme(u) == UNSUPPORTED) {
           ;;
