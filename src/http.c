@@ -683,7 +683,7 @@ http_read(CONN *C)
   char   dest[MAXFILE*6];
   char   *ptr = NULL;
   char   *tmp = NULL;
-  int    size = MAXFILE; 
+  size_t size = MAXFILE; 
   pthread_mutex_lock(&__mutex);
 
   if (C == NULL) NOTIFY(FATAL, "Connection is NULL! Unable to proceed"); 
@@ -722,7 +722,7 @@ http_read(CONN *C)
           break;
         }
         n += r;
-        if (n >= size) {
+        if (bytes >= size) {
           tmp = realloc(ptr, size+MAXFILE);
           if (tmp == NULL) {
             free(ptr);
