@@ -83,7 +83,7 @@ private char *  __url_set_query(URL this, char *str);
 private char *  __url_set_fragment(URL this, char *str);
 private char *  __url_escape(const char *s);
 private METHOD  __url_has_method(const char *url);
-
+private void    __url_replace(char *url, const char *needle, const char *replacement);
 
 URL
 new_url(char *str)
@@ -507,7 +507,15 @@ url_normalize(URL req, char *location)
 {
   URL    ret;
   char * url;
-  size_t len = strlen(url_get_absolute(req)) + strlen(location) + 32;
+  size_t len;
+
+  /**
+   * Should we just do this for all URLs
+   * or just the ones we parse??
+   */
+  __url_replace(location, "&amp;", "&");
+
+  len = strlen(url_get_absolute(req)) + strlen(location) + 32;
 
   if (strchr(location, ':') != NULL) {
     // it's very likely normalized
@@ -578,6 +586,7 @@ url_normalize_string(URL req, char *location)
 {
   char *t;
   URL   u;
+
   u = url_normalize(req, location);
   t = strdup(url_get_absolute(u));
   u = url_destroy(u);
@@ -696,6 +705,11 @@ __url_set_absolute(URL this, char *url)
   if (!strncasecmp(url, "ftp:", 4)){
     n = 6;
     strncpy(scheme, "ftp", 3);
+  }
+  if (strlen(scheme) < 3) {
+    // A scheme wasn't supplied; we'll use http by default.
+    n = 7;
+    strncpy(scheme, "http", 4);
   }
 
   len = strlen(url)+5;
@@ -1228,3 +1242,41 @@ __url_escape(const char *s)
   return newstr;
 }
 
+
+private void
+__url_replace(char *url, const char *needle, const char *replacement)
+{
+  char   buf[4096] = {0};
+  char  *ins       = &buf[0];
+  char  *str       = NULL;
+  const char *tmp  = url;
+  size_t nlen = strlen(needle);
+  size_t rlen = strlen(replacement);
+
+  while (1) {
+    const char *p = strstr(tmp, needle);
+
+    if (p == NULL) {
+      strcpy(ins, tmp);
+      break;
+    }
+
+    memcpy(ins, tmp, p - tmp);
+    ins += p - tmp;
+
+    memcpy(ins, replacement, rlen);
+    ins += rlen;
+    tmp = p + nlen;
+  }
+  if (strlen(buf) > strlen(url)){
+    str = (char *)realloc(url, strlen(buf)+1);
+    if (str == NULL) {
+      return;
+    }
+    url = str;
+    memset(url, '\0', strlen(buf)+1);
+  } else {
+    memset(url, '\0', strlen(url));
+  }
+  strncpy(url, buf, strlen(buf));
+}
