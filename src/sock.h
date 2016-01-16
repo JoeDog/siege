@@ -1,7 +1,7 @@
 /**
  * SIEGE socket header file
  *
- * Copyright (C) 2000-2014 by
+ * Copyright (C) 2000-2016 by
  * by Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege 
  *
