@@ -121,7 +121,7 @@ show-logfile = true
 # Default logging status, true turns logging on.
 # ex: logging = true|false
 #
-logging = true
+logging = false
 
 #
 # Logfile, the default siege logfile is $PREFIX/var/siege.log
