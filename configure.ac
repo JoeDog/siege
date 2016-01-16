@@ -1,5 +1,5 @@
 dnl REQUIRE AUTOCONF 2.50 OR HIGHER...
-AC_PREREQ(2.68) 
+AC_PREREQ(2.63) 
 
 dnl
 dnl Process this file with autoconf to produce a configure script.
