@@ -675,7 +675,6 @@ http_chunk_size(CONN *C)
 ssize_t
 http_read(CONN *C)
 { 
-  char   c;
   int    n      = 0;
   int    z      = 0;
   int    chunk  = 0;
@@ -690,8 +689,6 @@ http_read(CONN *C)
   if (C == NULL) NOTIFY(FATAL, "Connection is NULL! Unable to proceed"); 
 
   if (C->content.length > 0) {
-    int i;
-    char c;
     length = C->content.length;
     ptr    = xmalloc(length+1);
     memset(ptr, '\0', length+1);
@@ -748,7 +745,7 @@ http_read(CONN *C)
     } while (TRUE);
   }
 
-  z = __gzip_inflate(C, ptr, bytes, dest, sizeof(dest));
+  z = __gzip_inflate(ptr, bytes, dest, sizeof(dest));
   if (strlen(dest) > 0) {
     page_concat(C->page, dest, strlen(dest));
   } else {
