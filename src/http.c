@@ -34,13 +34,14 @@
 #include <page.h>
 #include <joedog/defs.h>
 
-#define MAXFILE 10240
+#define MAXFILE 0x10000 // 65536
+
 pthread_mutex_t __mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  __cond  = PTHREAD_COND_INITIALIZER;
 
 private char *__parse_pair(char **str);
 private char *__dequote(char *str);
-private int   __inflate(const char *src, int srcLen, const char *dst, int dstLen);
+private int   __gzip_inflate(const char *src, int srcLen, const char *dst, int dstLen);
 
 /**
  * HTTPS tunnel; set up a secure tunnel with the
@@ -246,7 +247,7 @@ http_get(CONN *C, URL U)
   if (rlen == 0 || rlen > mlen) { 
     NOTIFY(FATAL, "HTTP %s: request buffer overrun!", url_get_method_name(U));
   }
-
+  //XXX: printf("%s", request);
   if ((socket_write(C, request, rlen)) < 0) {
     xfree(ifmod);
     xfree(ifnon);
@@ -277,10 +278,10 @@ http_post(CONN *C, URL U)
   char   fullpath[4096];
 
   memset(hoststr,  '\0', sizeof(hoststr));
-  memset(cookie,   '\0', sizeof(cookie));
-  memset(portstr,  '\0', sizeof portstr);
-  memset(protocol, '\0', sizeof portstr);
-  memset(keepalive,'\0', sizeof portstr);
+  memset(cookie,   '\0', MAX_COOKIE_SIZE);
+  memset(portstr,  '\0', sizeof(portstr));
+  memset(protocol, '\0', sizeof(protocol));
+  memset(keepalive,'\0', sizeof(keepalive));
 
   if (auth_get_proxy_required(my.auth)) {
    sprintf(
@@ -393,7 +394,7 @@ http_post(CONN *C, URL U)
     (strlen(cookie) > 8)?cookie:"", 
     (strncasecmp(my.extra, "Accept:", 7)==0) ? "" : accept,
     encoding, my.uagent, my.extra, keepalive, url_get_conttype(U), (long)url_get_postlen(U)
-  ); 
+  );
 
   if (rlen < mlen) {
     memcpy(request + rlen, url_get_postdata(U), url_get_postlen(U));
@@ -602,7 +603,7 @@ http_read_headers(CONN *C, URL U)
         while(*tmp && !ISSPACE((int)*tmp) && !ISSEPARATOR(*tmp))
           tmp++;
         *tmp++=0;
-        while(ISSPACE((int)*tmp) || ISSEPARATOR(*tmp))
+        while (ISSPACE((int)*tmp) || ISSEPARATOR(*tmp))
           tmp++; 
         value  = tmp;
         while(*tmp)
@@ -657,7 +658,7 @@ http_chunk_size(CONN *C)
   if (((C->chkbuf[0] == '\n')||(strlen(C->chkbuf)==0)||(C->chkbuf[0] == '\r'))) {
     return -1;
   }
- 
+
   errno  = 0;
   if (!isxdigit((unsigned)*C->chkbuf))
     return -1;
@@ -674,92 +675,94 @@ http_chunk_size(CONN *C)
 ssize_t
 http_read(CONN *C)
 { 
-  int    n      = 0;
   char   c;
+  int    n      = 0;
+  int    z      = 0;
   int    chunk  = 0;
   size_t bytes  = 0;
   size_t length = 0;
-  static char body[MAXFILE];
-  char dst[102400];
-  memset(dst, '\0', sizeof(dst));
+  char   dest[MAXFILE*6];
+  char   *ptr = NULL;
+  char   *tmp = NULL;
+  int    size = MAXFILE; 
   pthread_mutex_lock(&__mutex);
 
   if (C == NULL) NOTIFY(FATAL, "Connection is NULL! Unable to proceed"); 
 
-  if (my.get || my.debug) {
-    // The is debug / get mode - read a char and print it to stdout
-    if (C->content.length > 0) {
-      length = (C->content.length < MAXFILE) ? C->content.length:MAXFILE;
-      do {
-        if ((n = socket_read(C, &c, 1)) == 0)
-          break;
-        echo ("%c", c);
-        bytes += n;
-        length = (C->content.length - bytes < MAXFILE)?C->content.length-bytes:MAXFILE;
-      } while (bytes < C->content.length);
-    } else {
-      do {
-        /*if (my.chunked && C->content.transfer == CHUNKED) {
-          chunk = http_chunk_size(C);
-        } */
-        if ((n = socket_read(C, &c, 1)) == 0)
-          break;
-        echo ("%c", c);
-        bytes += n;
-      } while(TRUE);
-    }
-  } else {
-    // This is non-debug / non-get mode. We'll read into a larger bucket
-    if (C->content.length > 0) {
-      length = (C->content.length < MAXFILE) ? C->content.length:MAXFILE;
-      do {
-        memset(body, '\0', sizeof(body));
-        if ((n = socket_read(C, body, length)) == 0)
-          break;
-        page_concat(C->page, body, length);
-        bytes += n;
-        length = (C->content.length - bytes < MAXFILE)?C->content.length-bytes:MAXFILE; 
-      } while (bytes < C->content.length); 
-    } else if (my.chunked && C->content.transfer == CHUNKED) {
-      while (TRUE) {
-        chunk = http_chunk_size(C);
-        if (chunk == 0)
-          break;
-        else if (chunk < 0) {
-          chunk = 0;
-          continue;
-        } 
-        do {
-          int n;
-          memset(body, '\0', MAXFILE);
-          n = socket_read(C, body, (chunk>MAXFILE)?MAXFILE:chunk);
-          __inflate(body, MAXFILE, dst, 202400);
-          if (strlen(dst) > 0) {
-            page_concat(C->page, dst, strlen(dst));
-          } else {
-            page_concat(C->page, body, strlen(body));
-          }
-          chunk -= n;
-          bytes += n;
-        } while (chunk > 0);
+  if (C->content.length > 0) {
+    int i;
+    char c;
+    length = C->content.length;
+    ptr    = xmalloc(length+1);
+    memset(ptr, '\0', length+1);
+    do {
+      if ((n = socket_read(C, ptr, length)) == 0) {
+        break;
       }
-    } else {
-      do {
-        memset(body, '\0', sizeof(body));
-        if ((n = socket_read(C, body, sizeof(body))) == 0)
+      bytes += n;
+    } while (bytes < length); 
+  } else if (my.chunked && C->content.transfer == CHUNKED) {
+    char c;
+    int  r = 0;
+    bytes  = 0;
+    BOOLEAN done = FALSE;
+
+    ptr = xmalloc(size);
+    memset(ptr, '\0', size);
+
+    do {
+      chunk = http_chunk_size(C);
+      if (chunk == 0)
+        break;
+      else if (chunk < 0) {
+        chunk = 0;
+        continue;
+      }  
+      while (n < chunk) {
+        r = socket_read(C, &c, 1);
+        if (r <= 0) {
+          done = TRUE;
           break;
-        bytes += n;
-        page_concat(C->page, body, n);
-      } while (TRUE);
-    }
+        }
+        n += r;
+        if (n >= size) {
+          tmp = realloc(ptr, size+MAXFILE);
+          if (tmp == NULL) {
+            free(ptr);
+            return -1; 
+          }
+          ptr = tmp;
+          size += MAXFILE;
+        }
+        ptr[bytes++] = c;
+      }
+      n = 0;
+    } while (! done);
+  } else {
+    ptr = xmalloc(size);
+    memset(ptr, '\0', size);
+    do {
+      n = socket_read(C, ptr, size);
+      bytes += n;
+      if (n <= 0) break;
+    } while (TRUE);
   }
+
+  z = __gzip_inflate(C, ptr, bytes, dest, sizeof(dest));
+  if (strlen(dest) > 0) {
+    page_concat(C->page, dest, strlen(dest));
+  } else {
+    page_concat(C->page, ptr, strlen(ptr));
+  }
+  xfree(ptr);
+  echo ("%s", page_value(C->page));
   echo ("\n");
   pthread_mutex_unlock(&__mutex);
   return bytes;
 }
 
 private int
-__inflate(const char *src, int srcLen, const char *dst, int dstLen)
+__gzip_inflate(const char *src, int srcLen, const char *dst, int dstLen)
 {
   int err=-1;
 
@@ -778,8 +781,8 @@ __inflate(const char *src, int srcLen, const char *dst, int dstLen)
   strm.next_in   = (Bytef *)src;
   strm.next_out  = (Bytef *)dst;
 
-  err = inflateInit2(&strm, MAX_WBITS+16);
-  if (err == Z_OK){
+  err = inflateInit2(&strm, MAX_WBITS+32);
+  if (err == Z_OK) {
     err = inflate(&strm, Z_FINISH);
     if (err == Z_STREAM_END){
       ret = strm.total_out;
