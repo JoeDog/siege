@@ -134,7 +134,7 @@ __parse_control(ARRAY array, URL base, char *html)
         if (strncasecmp(ptr, "content", 7) == 0) {        
           for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {  
             if (__strcasestr(ptr, "url") != NULL) {
-              ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
+              ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
               if (ptr != NULL) {
                 URL U = url_normalize(base, ptr);
                 url_set_redirect(U, TRUE);
@@ -160,7 +160,7 @@ __parse_control(ARRAY array, URL base, char *html)
         } else {
           for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {
             if ((ptr != NULL) && (strncasecmp(ptr, "src", 3) == 0)) {        
-              ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
+              ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
               if (ptr != NULL) { 
                 URL U = url_normalize(base, ptr);
                 if (debug) printf("3.) Adding: %s\n", url_get_absolute(U));
