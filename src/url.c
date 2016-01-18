@@ -527,8 +527,12 @@ url_normalize(URL req, char *location)
     }
   }
 
-  if ((location[0] != '/') && (strchr(location, '.') != NULL)) {
-    // it's *maybe* host/path
+  if ((location[0] != '/') && location[0] != '.' && (strchr(location, '.') != NULL)) {
+    /**
+     * If we get here, then it's either host/path OR just a file name like
+     * href="theme.css"  Currently we only handle host/path We need to fix
+     * this so we can accomodate the latter.
+     */
     ret = new_url(location);
     url_set_scheme(ret, url_get_scheme(req));
     // so we better test it...
@@ -561,11 +565,22 @@ url_normalize(URL req, char *location)
       snprintf(url, len, "%s://%s:%d%s", url_get_scheme_name(req), url_get_hostname(req), url_get_port(req), location);
     }
   } else {
-    if (endswith("/", url_get_path(req))) {
+    if (endswith("/", url_get_path(req)) == TRUE) {
+      char *tmp;
+      /**
+       * We're dealing with a req that ends in / and a relative
+       * URL that starts with ./ We want to increment two places
+       * to avoid this path:  /haha/./mama.jpg
+       */
+      if (location[0] == '.' && strlen(location) > 1) {
+        tmp = location+2;
+      } else {
+        tmp = location;
+      }
       snprintf (  // if the path ends with / we won't need one in the format
         url, len, 
        "%s://%s:%d%s%s", 
-       url_get_scheme_name(req), url_get_hostname(req), url_get_port(req), url_get_path(req), location
+       url_get_scheme_name(req), url_get_hostname(req), url_get_port(req), url_get_path(req), tmp
       );
     } else {
       snprintf (  // need to add a slash to separate base path from parsed path/file
