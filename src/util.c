@@ -102,7 +102,7 @@ endswith(const char *suffix, const char *str)
   size_t lenstr    = strlen(str);
   size_t lensuffix = strlen(suffix);
   if (lensuffix >  lenstr)
-    return 0;
+    return FALSE;
   return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
