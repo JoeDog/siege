@@ -23,6 +23,7 @@
 #define private static
 #define public 
 
+#define  ISALPHA(x)     ((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')) 
 #define  ISSEPARATOR(x) (('='==(x))||(':'==(x)))
 #define  ISUPPER(x)     ((unsigned)(x)-'A'<='Z'-'A')
 #define  ISLOWER(x)     ((unsigned)(x)-'a'<='z'-'a')
