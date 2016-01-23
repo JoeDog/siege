@@ -324,7 +324,14 @@ load_cookies(COOKIES this)
           snprintf(tmp, 1024, "%d", n);
           hash_add(IDX, pair[0], tmp);
         }
-        hoh_add(HOH, hash_get(IDX, pair[0]), pair[1], pair[1]);
+        HASH tmp = (HASH)hash_get(HOH, hash_get(IDX, pair[0]));
+        if (tmp == NULL) {
+          tmp = new_hash();
+          hash_add(tmp, pair[1], pair[1]);
+          hash_nadd(HOH, hash_get(IDX, pair[0]), tmp, HASHSIZE);
+        } else {
+          hash_add(tmp, pair[1], pair[1]);
+        }
       } 
       split_free(pair, num); 
     }
