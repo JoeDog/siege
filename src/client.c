@@ -114,7 +114,7 @@ start_routine(CLIENT *client)
       int   len = strlen(hash_get(client->cookies, keys[i]));
       tmp = xmalloc(len+2);
       memset(tmp, '\0', len+2);
-      snprintf(tmp, len+1, "%s", hash_get(client->cookies, keys[i]));
+      snprintf(tmp, len+1, "%s", (char*)hash_get(client->cookies, keys[i]));
       cookies_add(my.cookies, tmp, ".");
       xfree(tmp);
     }
@@ -203,11 +203,11 @@ start_routine(CLIENT *client)
         } else {
           client->auth.bids.www = 0;
           // We'll only request files on the same host as the page
-          //if (strmatch(url_get_hostname(u), url_get_hostname(tmp))) {
+          if (! strmatch(url_get_hostname(u), "ad.doubleclick.net")) {
             if ((ret = __request(C, u, client))==FALSE) {
               __increment_failures();
             }
-          //}
+          }
         }
         u = url_destroy(u);
       }
@@ -280,7 +280,9 @@ __http(CONN *C, URL U, CLIENT *client)
   float    etime; 
   clock_t  start, stop;
   struct   tms t_start, t_stop; 
-  HEADERS  *head; 
+  //HEADERS  *head; 
+  RESPONSE resp;
+  char     *meta = NULL;
 #ifdef  HAVE_LOCALTIME_R
   struct   tm keepsake;
 #endif/*HAVE_LOCALTIME_R*/
@@ -323,7 +325,6 @@ __http(CONN *C, URL U, CLIENT *client)
 
   /* record transaction start time */
   start = times(&t_start);  
-
   if (! __init_connection(C, U, client)) return FALSE;
   
   /**
@@ -346,23 +347,23 @@ __http(CONN *C, URL U, CLIENT *client)
   /**
    * read from socket and collect statistics.
    */
-  if ((head = http_read_headers(C, U))==NULL) {
+  if ((resp = http_read_headers(C, U))==NULL) {
     C->connection.reuse = 0; 
     socket_close(C); 
     echo ("%s:%d NULL headers", __FILE__, __LINE__);
     return FALSE; 
   } 
 
-  bytes = http_read(C); 
+  bytes = http_read(C, resp); 
 
-  if (head->page == TRUE && head->code < 400) {
+  if (strmatch(response_get_content_type(resp), "text/html") && response_get_code(resp) < 400) {
     int   i;
     html_parser(client->purls, U, page_value(C->page));
     for (i = 0; i < (int)array_length(client->purls); i++) {
       URL url  = (URL)array_get(client->purls, i);
       if (url_is_redirect(url)) {
         URL tmp = (URL)array_remove(client->purls, i);
-        head->redirect = strdup(url_get_absolute(tmp));
+        meta    = xstrdup(url_get_absolute(tmp));
         tmp     = url_destroy(tmp);
       }
     }
@@ -371,14 +372,14 @@ __http(CONN *C, URL U, CLIENT *client)
   if (!my.zero_ok && (bytes < 1)) { 
     C->connection.reuse = 0; 
     socket_close(C); 
-    http_free_headers(head); 
+    resp = response_destroy(resp);
     echo ("%s:%d zero bytes back from server", __FILE__, __LINE__);
     return FALSE; 
   } 
   stop     =  times(&t_stop); 
   etime    =  elapsed_time(stop - start);  
-  code     =  (head->code <  400 || head->code == 401 || head->code == 407) ? 1 : 0;
-  fail     =  (head->code >= 400 && head->code != 401 && head->code != 407) ? 1 : 0; 
+  code     =  response_success(resp);
+  fail     =  response_failure(resp); 
   /**
    * quantify the statistics for this client.
    */
@@ -386,7 +387,7 @@ __http(CONN *C, URL U, CLIENT *client)
   client->time  += etime;
   client->code  += code;
   client->fail  += fail;
-  if (head->code == 200) {
+  if (response_get_code(resp) == 200) {
     client->ok200++;
   }
 
@@ -406,30 +407,31 @@ __http(CONN *C, URL U, CLIENT *client)
    * verbose output, print statistics to stdout
    */
   if ((my.verbose && !my.get) && (!my.debug)) {
-    int  color     = __select_color(head->code);
+    int  color     = __select_color(response_get_code(resp));
     char *time_str = (my.timestamp==TRUE)?timestamp():"";
     if (my.csv) {
       if (my.display)
         DISPLAY(color, "%s%s%s%4d,%s,%d,%6.2f,%7lu,%s,%d,%s",
-        time_str, (my.mark)?my.markstr:"", (my.mark)?",":"", client->id, head->head, head->code, 
-        etime, bytes, url_get_display(U), url_get_ID(U), fmtime
+        time_str, (my.mark)?my.markstr:"", (my.mark)?",":"", client->id, response_get_protocol(resp), 
+        response_get_code(resp), etime, bytes, url_get_display(U), url_get_ID(U), fmtime
       );
       else
         DISPLAY(color, "%s%s%s%s,%d,%6.2f,%7lu,%s,%d,%s",
-          time_str, (my.mark)?my.markstr:"", (my.mark)?",":"", head->head, head->code, 
-          etime, bytes, url_get_display(U), url_get_ID(U), fmtime
+          time_str, (my.mark)?my.markstr:"", (my.mark)?",":"", response_get_protocol(resp), 
+          response_get_code(resp), etime, bytes, url_get_display(U), url_get_ID(U), fmtime
         );
     } else {
       if (my.display)
         DISPLAY(
           color, "%4d) %s %d %6.2f secs: %7lu bytes ==> %-4s %s", 
-          client->id, head->head, head->code, etime, bytes, url_get_method_name(U), url_get_display(U)
+          client->id, response_get_protocol(resp), response_get_code(resp), 
+          etime, bytes, url_get_method_name(U), url_get_display(U)
         ); 
-      else
+      else 
         DISPLAY ( 
           color, "%s%s %d %6.2f secs: %7lu bytes ==> %-4s %s", 
-          time_str, head->head, head->code, etime, bytes, url_get_method_name(U), 
-		  url_get_display(U)
+          time_str, response_get_protocol(resp), response_get_code(resp), 
+          etime, bytes, url_get_method_name(U), url_get_display(U)
         );
     } /* else not my.csv */
     if (my.timestamp) xfree(time_str);
@@ -445,15 +447,15 @@ __http(CONN *C, URL U, CLIENT *client)
   /**
    * deal with HTTP > 300 
    */
-  switch (head->code) {
+  switch (response_get_code(resp)) {
     case 200:
-      if (head->redirect != NULL && strlen(head->redirect) > 2) {
+      if (meta != NULL && strlen(meta) > 2) {
         /**
          * <meta http-equiv="refresh" content="0; url=https://www.joedog.org/haha.html" />
          */
-        redirect_url = url_normalize(U, head->redirect);
-        xfree(head->redirect);
-        head->redirect = NULL;     
+        redirect_url = url_normalize(U, meta);
+        xfree(meta);
+        meta = NULL;     
         page_clear(C->page);
         if (empty(url_get_hostname(redirect_url))) { 
           url_set_hostname(redirect_url, url_get_hostname(U));
@@ -471,19 +473,19 @@ __http(CONN *C, URL U, CLIENT *client)
     case 302:
     case 303:
     case 307:
-      if (my.follow && head->redirect[0]) {
+      if (my.follow && response_get_location(resp) != NULL) {
         /**  
          * XXX: What if the server sends us
          * Location: path/file.htm 
          *  OR
          * Location: /path/file.htm
          */ 
-        redirect_url = url_normalize(U, head->redirect); //new_url(head->redirect);
+        redirect_url = url_normalize(U, response_get_location(resp)); 
 
         if (empty(url_get_hostname(redirect_url))) { 
           url_set_hostname(redirect_url, url_get_hostname(U));
         }
-        if (head->code == 307) {
+        if (response_get_code(resp) == 307) {
           url_set_conttype(redirect_url,url_get_conttype(U));
           url_set_method(redirect_url, url_get_method(U));
 
@@ -502,38 +504,43 @@ __http(CONN *C, URL U, CLIENT *client)
       /**
        * WWW-Authenticate challenge from the WWW server
        */
+#if 1
       client->auth.www = (client->auth.www==0)?1:client->auth.www;
       if ((client->auth.bids.www++) < my.bids - 1) {
         BOOLEAN b;
-        if (head->auth.type.www == DIGEST) {
+        if (response_get_www_auth_type(resp) == DIGEST) {
           client->auth.type.www = DIGEST;
           b = auth_set_digest_header(
             my.auth, &(client->auth.wchlg), &(client->auth.wcred), &(client->rand_r_SEED),
-            head->auth.realm.www, head->auth.challenge.www
+            response_get_www_auth_realm(resp), response_get_www_auth_challenge(resp)
           );
 	  if (b == FALSE) {
 	    NOTIFY(ERROR, "unable to set digest header");
 	    return FALSE;
 	  }
         }
-        if (head->auth.type.www == NTLM) {
+        if (response_get_www_auth_type(resp) == NTLM) {
           client->auth.type.www =  NTLM;
-          b = auth_set_ntlm_header(my.auth, HTTP, head->auth.challenge.www, head->auth.realm.www);
+          b = auth_set_ntlm_header (
+            my.auth, HTTP, response_get_www_auth_challenge(resp), response_get_www_auth_realm(resp)
+          );
         }
-        if (head->auth.type.www == BASIC) {
+        if (response_get_www_auth_type(resp) == BASIC) {
           client->auth.type.www =  BASIC;
-          auth_set_basic_header(my.auth, HTTP, head->auth.realm.www);
+          auth_set_basic_header(my.auth, HTTP, response_get_www_auth_realm(resp));
         }
         if ((__request(C, U, client)) == FALSE) {
           fprintf(stderr, "ERROR from http_request\n");
           return FALSE;
         }
       }
+#endif
       break;
     case 407:
       /**
        * Proxy-Authenticate challenge from the proxy server.
        */
+#if 0
       client->auth.proxy = (client->auth.proxy==0)?1:client->auth.proxy;
       if ((client->auth.bids.proxy++) < my.bids - 1) {
         if (head->auth.type.proxy == DIGEST) {
@@ -555,6 +562,7 @@ __http(CONN *C, URL U, CLIENT *client)
         if ((__request(C, U, client)) == FALSE)
           return FALSE;
       }
+#endif
       break;
     case 408:
     case 500:
@@ -573,7 +581,8 @@ __http(CONN *C, URL U, CLIENT *client)
   }
 
   client->hits  ++; 
-  http_free_headers(head);
+  //http_free_headers(head);
+  resp = response_destroy(resp);
 
   return TRUE;
 }
