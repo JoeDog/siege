@@ -527,11 +527,11 @@ url_normalize(URL req, char *location)
     }
   }
 
-  if ((location[0] != '/') && location[0] != '.' && (strchr(location, '.') != NULL)) {
+  if ((location[0] != '/') && location[0] != '.' && (strchr(location, '.') != NULL && strchr(location, '/') != NULL)) {
     /**
-     * If we get here, then it's either host/path OR just a file name like
-     * href="theme.css"  Currently we only handle host/path We need to fix
-     * this so we can accomodate the latter.
+     * This is probably host/path; it doesn't start with relevent path 
+     * indicators and it contains the hallmarks of host/path namely at
+     * least one dot and slash
      */
     ret = new_url(location);
     url_set_scheme(ret, url_get_scheme(req));
@@ -541,7 +541,6 @@ url_normalize(URL req, char *location)
     }
   }
 
-  // XXX: 8/20/2014 - YES. Yes, I do.
   if (strstr(location, "localhost") != NULL) {
     ret = new_url(location);
     url_set_scheme(ret, url_get_scheme(req));

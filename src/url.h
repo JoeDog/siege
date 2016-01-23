@@ -1,7 +1,7 @@
 /**
  * URL Support
  *
- * Copyright (C) 2013-2014 by
+ * Copyright (C) 2013-2016 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege
  *
