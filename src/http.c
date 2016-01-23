@@ -32,6 +32,7 @@
 #include <util.h>
 #include <load.h>
 #include <page.h>
+#include <response.h>
 #include <joedog/defs.h>
 
 #define MAXFILE 0x10000 // 65536
@@ -41,7 +42,7 @@ pthread_cond_t  __cond  = PTHREAD_COND_INITIALIZER;
 
 private char *__parse_pair(char **str);
 private char *__dequote(char *str);
-private int   __gzip_inflate(const char *src, int srcLen, const char *dst, int dstLen);
+private int   __gzip_inflate(int window, const char *src, int srcLen, const char *dst, int dstLen);
 
 /**
  * HTTPS tunnel; set up a secure tunnel with the
@@ -430,17 +431,14 @@ http_free_headers(HEADERS *h)
  * reads from http/https socket and parses
  * header information into the struct.
  */
-HEADERS *
+RESPONSE
 http_read_headers(CONN *C, URL U)
 { 
   int  x;           /* while loop index      */
   int  n;           /* assign socket_read    */
   char c;           /* assign char read      */
-  HEADERS *h;       /* struct to hold it all */
   char line[MAX_COOKIE_SIZE];  /* assign chars read     */
-  
-  h = xcalloc(sizeof(HEADERS), 1);
-  h->page = FALSE;
+  RESPONSE resp = new_response();
   
   while (TRUE) {
     x = 0;
@@ -452,77 +450,53 @@ http_read_headers(CONN *C, URL U)
         line[x] = '\n';
       echo("%c", c);  
       if ((line[0] == '\n') || (line[1] == '\n')) { 
-        return h;
+        return resp;
       }
       if (line[x] == '\n') break;
       x ++;
     }
-    line[x]=0;
-    /* strip trailing CR */
-    if (x > 0 && line[x-1] == '\r') line[x-1]=0;
+    line[x]='\0';
+
+    // string carriage return
+    if (x > 0 && line[x-1] == '\r') line[x-1]='\0';
+
+    //printf("LINE: %s\n", line);
+
     if (strncasecmp(line, "http", 4) == 0) {
-      strncpy( h->head, line, 8);
-      h->code = atoi(line + 9); 
+      response_set_code(resp, line);
     }
-    if (strncasecmp(line, "content-type: ", 14) == 0) {
-      if (strncasecmp(line+14, "text/html", 9) == 0) {
-        h->page = TRUE;
-      }
+    if (strncasecmp(line, CONTENT_TYPE, strlen(CONTENT_TYPE)) == 0) {
+      response_set_content_type(resp, line);
     }
-    if (strncasecmp(line, "content-length: ", 16) == 0) { 
+    if (strncasecmp(line, CONTENT_ENCODING, strlen(CONTENT_ENCODING)) == 0) {
+      response_set_content_encoding(resp, line);
+    }
+    if (strncasecmp(line, CONTENT_LENGTH, strlen(CONTENT_LENGTH)) == 0) { 
+      response_set_content_length(resp, line);
       C->content.length = atoi(line + 16); 
     }
-    if (strncasecmp(line, "set-cookie: ", 12) == 0) {
+    if (strncasecmp(line, SET_COOKIE, strlen(SET_COOKIE)) == 0) {
       if (my.cookies) {
-        memset(h->cookie, '\0', sizeof(h->cookie));
-        strncpy(h->cookie, line+12, strlen(line));
-        cookies_add(my.cookies, h->cookie, url_get_hostname(U));
+        char tmp[MAX_COOKIE_SIZE];
+        memset(tmp, '\0', MAX_COOKIE_SIZE);
+        strncpy(tmp, line+12, strlen(line));
+        cookies_add(my.cookies, tmp, url_get_hostname(U));
       }
     }
-    if (strncasecmp(line, "connection: ", 12 ) == 0) {
-      if (strncasecmp(line+12, "keep-alive", 10) == 0) {
-        h->keepalive = 1;
-      } else if (strncasecmp(line+12, "close", 5) == 0) {
-        h->keepalive = 0;
-      }
+    if (strncasecmp(line, CONNECTION, strlen(CONNECTION)) == 0) {
+      response_set_connection(resp, line);
     }
     if (strncasecmp(line, "keep-alive: ", 12) == 0) {
-      char *tmp    = "";
-      char *option = "", *value = "";
-      char *newline = (char*)line;
-      while ((tmp = __parse_pair(&newline)) != NULL) {
-        option = tmp;
-        while (*tmp && !ISSPACE((int)*tmp) && !ISSEPARATOR(*tmp))
-          tmp++;
-        *tmp++=0;
-        while (ISSPACE((int)*tmp) || ISSEPARATOR(*tmp))
-          tmp++;
-        value  = tmp;
-        while (*tmp)
-          tmp++;  
-        if (!strncasecmp(option, "timeout", 7)) {
-          if(value != NULL){
-            C->connection.timeout = atoi(value);
-          } else {
-            C->connection.timeout = 15;
-          }
-        }
-        if (!strncasecmp(option, "max", 3)) {
-          if(value != NULL){
-            C->connection.max = atoi(value);
-          } else {
-            C->connection.max = 0;
-          }
-        }
-      }
+      if (response_set_keepalive(resp, line) == TRUE) {
+        C->connection.timeout = response_get_keepalive_timeout(resp);
+        C->connection.max     = response_get_keepalive_max(resp);
+      } 
     }
-    if (strncasecmp(line, "location: ", 10) == 0) {
-      size_t len  = strlen(line);
-      h->redirect = xmalloc(len);
-      memcpy(h->redirect, line+10, len-10);
-      h->redirect[len-10] = 0;
+    if (strncasecmp(line, LOCATION, strlen(LOCATION)) == 0) {
+      response_set_location(resp, line);
     }
-    if (strncasecmp(line, "last-modified: ", 15) == 0) {
+    if (strncasecmp(line, LAST_MODIFIED, strlen(LAST_MODIFIED)) == 0) {
+      response_set_last_modified(resp, line);
       char *date;
       size_t len = strlen(line);
       if(my.cache){
@@ -532,7 +506,8 @@ http_read_headers(CONN *C, URL U)
         xfree(date); 
       }
     }
-    if (strncasecmp(line, "etag: ", 6) == 0) {
+    if (strncasecmp(line, ETAG, strlen(ETAG)) == 0) {
+      response_set_etag(resp, line);
       char   *etag;
       size_t len = strlen(line);
       if(my.cache){
@@ -544,87 +519,13 @@ http_read_headers(CONN *C, URL U)
       }
     }
     if (strncasecmp(line, "www-authenticate: ", 18) == 0) {
-      char *tmp     = ""; 
-      char *option  = ""; 
-      char *value   = "";
-      char *newline = (char*)line;
-      if (strncasecmp(line+18, "digest", 6) == 0) {
-        newline += 24;
-        h->auth.type.www      = DIGEST;
-        h->auth.challenge.www = xstrdup(line+18);
-      } else if (strncasecmp(line+18, "ntlm", 4) == 0) {
-        newline += 22;
-        h->auth.type.www = NTLM;
-        h->auth.challenge.www = xstrdup(line+18);
-      } else {
-        /** 
-         * XXX: If a server sends more than one www-authenticate header
-         *      then we want to use one we've already parsed. 
-         */
-        if (h->auth.type.www != DIGEST && h->auth.type.www != NTLM) {
-          newline += 23;
-          h->auth.type.www = BASIC;
-        }
-      }
-      while ((tmp = __parse_pair(&newline)) != NULL) {
-        option = tmp; 
-        while (*tmp && !ISSPACE((int)*tmp) && !ISSEPARATOR(*tmp))
-          tmp++;
-        *tmp++=0;
-        while (ISSPACE((int)*tmp) || ISSEPARATOR(*tmp))
-          tmp++; 
-        value  = tmp;
-        while (*tmp)
-          tmp++;
-        if (!strncasecmp(option, "realm", 5)) {
-          if(value != NULL){
-	    h->auth.realm.www = xstrdup(__dequote(value));
-            url_set_realm(U, __dequote(value));
-          } else {
-            h->auth.realm.www = xstrdup("");
-          }
-        }
-      } /* end of parse pairs */
+      response_set_www_authenticate(resp, line);
     } 
     if (strncasecmp(line, "proxy-authenticate: ", 20) == 0) {
-      char *tmp     = ""; 
-      char *option  = "", *value = "";
-      char *newline = (char*)line;
-      if(strncasecmp(line+20, "digest", 6) == 0){
-        newline += 26;
-        h->auth.type.proxy      = DIGEST;
-        h->auth.challenge.proxy = xstrdup(line+20);
-      } else {
-        newline += 25;
-        h->auth.type.proxy = BASIC;
-      }
-      while((tmp = __parse_pair(&newline)) != NULL){
-        option = tmp; 
-        while(*tmp && !ISSPACE((int)*tmp) && !ISSEPARATOR(*tmp))
-          tmp++;
-        *tmp++=0;
-        while (ISSPACE((int)*tmp) || ISSEPARATOR(*tmp))
-          tmp++; 
-        value  = tmp;
-        while(*tmp)
-          tmp++;
-        if (!strncasecmp(option, "realm", 5)) {
-          if (value != NULL) {
-	    h->auth.realm.proxy = xstrdup(__dequote(value));
-          } else {
-            h->auth.realm.proxy = xstrdup("");
-          }
-        }
-      } /* end of parse pairs */
+      response_set_proxy_authenticate(resp, line);
     }
-    if (strncasecmp(line, "transfer-encoding: ", 19) == 0) {
-      if (strncasecmp(line+20, "chunked", 7)) {
-        C->content.transfer = CHUNKED; 
-      } else if (strncasecmp(line+20, "trailer", 7)) {
-        C->content.transfer = TRAILER; 
-      } else {
-        C->content.transfer = NONE;
-      }
+    if (strncasecmp(line, TRANSFER_ENCODING, strlen(TRANSFER_ENCODING)) == 0) {
+      response_set_transfer_encoding(resp, line);
     }
     if (strncasecmp(line, "expires: ", 9) == 0) {
       /* printf("%s\n", line+10);  */
@@ -634,12 +535,12 @@ http_read_headers(CONN *C, URL U)
     }
     if (n <=  0) { 
       echo ("read error: %s:%d", __FILE__, __LINE__);
-      http_free_headers(h);
-      return(NULL); 
+      resp = response_destroy(resp);
+      return resp; 
     } /* socket closed */
   } /* end of while TRUE */
 
-  return h;
+  return resp;
 }
 
 int
@@ -673,7 +574,7 @@ http_chunk_size(CONN *C)
 }
   
 ssize_t
-http_read(CONN *C)
+http_read(CONN *C, RESPONSE resp)
 { 
   int    n      = 0;
   int    z      = 0;
@@ -698,7 +599,7 @@ http_read(CONN *C)
       }
       bytes += n;
     } while (bytes < length); 
-  } else if (my.chunked && C->content.transfer == CHUNKED) {
+  } else if (my.chunked && response_get_transfer_encoding(resp) == CHUNKED) {
     char c;
     int  r = 0;
     bytes  = 0;
@@ -745,21 +646,28 @@ http_read(CONN *C)
     } while (TRUE);
   }
 
-  z = __gzip_inflate(ptr, bytes, dest, sizeof(dest));
+  if (response_get_content_encoding(resp) == GZIP) {
+    puts("GUNZIP IT!!!");
+    z = __gzip_inflate(MAX_WBITS+32, ptr, bytes, dest, sizeof(dest));
+  }
+  if (response_get_content_encoding(resp) == DEFLATE) {
+    puts("DEFLATE IT!!!");
+    z = __gzip_inflate(-MAX_WBITS, ptr, bytes, dest, sizeof(dest));
+  }
   if (strlen(dest) > 0) {
     page_concat(C->page, dest, strlen(dest));
   } else {
     page_concat(C->page, ptr, strlen(ptr));
   }
   xfree(ptr);
-  echo ("%s", page_value(C->page));
+  //echo ("%s", page_value(C->page));
   echo ("\n");
   pthread_mutex_unlock(&__mutex);
   return bytes;
 }
 
 private int
-__gzip_inflate(const char *src, int srcLen, const char *dst, int dstLen)
+__gzip_inflate(int window, const char *src, int srcLen, const char *dst, int dstLen)
 {
   int err=-1;
 
@@ -778,7 +686,7 @@ __gzip_inflate(const char *src, int srcLen, const char *dst, int dstLen)
   strm.next_in   = (Bytef *)src;
   strm.next_out  = (Bytef *)dst;
 
-  err = inflateInit2(&strm, MAX_WBITS+32);
+  err = inflateInit2(&strm, window);
   if (err == Z_OK) {
     err = inflate(&strm, Z_FINISH);
     if (err == Z_STREAM_END){
