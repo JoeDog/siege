@@ -16,27 +16,23 @@
 private void    __parse_control(ARRAY array, URL base, char *html);
 private void    __add_url(ARRAY array, URL U);
 private char *  __strcasestr(const char *s, const char *find);
+private char *  __xstrip(const char * str, const char *pat);
 
 #define BUFSZ 4096
 
 BOOLEAN
 html_parser(ARRAY array, URL base, char *page)
 {
+  char *str;
   char *ptr;
   int  i;
   char tmp[BUFSZ];
+
   memset(tmp, '\0', BUFSZ);
-  ptr = page; 
+  ptr = str = __xstrip(page, "\\"); 
   
   if (page == NULL) return FALSE;
   if (strlen(page) < 1) return FALSE;
-
-  /**
-   * portable strcasestr in util.c
-   */
-  if (! stristr(page, "HTML") && !stristr(page, "HEAD") && !stristr(page, "BODY")) {
-    return FALSE; 
-  }
 
   while (*ptr != '\0') {
     if (*ptr == '<') {
@@ -63,6 +59,7 @@ html_parser(ARRAY array, URL base, char *page)
     }
     ptr++;
   }
+  xfree(str);
   return TRUE;
 }
 
@@ -309,6 +306,26 @@ __strcasestr(const char *s, const char *find)
     s--;
   }
   return ((char *)s);
+}
+
+/**
+ * http://rosettacode.org/wiki/Strip_a_set_of_characters_from_a_string#C
+ */
+private char *
+__xstrip(const char * str, const char *pat)
+{
+  int i = 0;
+  int tbl[128] = {0};
+  while (*pat != '\0') 
+    tbl[(int)*(pat++)] = 1;
+ 
+  char *ret = xmalloc(strlen(str) + 1);
+  do {
+    if (!tbl[(int)*str])
+      ret[i++] = *str;
+  } while (*(str++) != '\0');
+
+  return xrealloc(ret, i);
 }
 
 
