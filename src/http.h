@@ -32,6 +32,7 @@
 #include <cookie.h>
 #include <auth.h>
 #include <url.h>
+#include <response.h>
 #include <joedog/joedog.h>
 #include <joedog/boolean.h>
 
@@ -75,13 +76,13 @@ struct headers
 } HEADERS;
 
 /* http function prototypes */
-BOOLEAN  http_get (CONN *C, URL U);
-BOOLEAN  http_post(CONN *C, URL U);
-void     http_free_headers(HEADERS *h);
-HEADERS *http_read_headers(CONN *C, URL U);
-ssize_t  http_read(CONN *C);
-BOOLEAN  https_tunnel_request(CONN *C, char *host, int port);
-int      https_tunnel_response(CONN *C);
+BOOLEAN   http_get (CONN *C, URL U);
+BOOLEAN   http_post(CONN *C, URL U);
+void      http_free_headers(HEADERS *h);
+RESPONSE  http_read_headers(CONN *C, URL U);
+ssize_t   http_read(CONN *C, RESPONSE R);
+BOOLEAN   https_tunnel_request(CONN *C, char *host, int port);
+int       https_tunnel_response(CONN *C);
 
 #endif /* HTTP_H */
 
