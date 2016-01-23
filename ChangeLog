@@ -1,6 +1,25 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/01/23 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE BETA             RELEASE_4-0-0_beta4_JAN_23_2016
+ * src/Makefile.am        Added response.c response.h
+ * src/response.c         Response headers, added to project
+ * src/response.h         Added to the project
+ * src/http.c             Parse headers with response
+ * src/sock.h             Moved TE enum into response.h
+ * src/client.c           Changed calls to response
+ * src/hash.c             Changed value type to void* 
+ * src/hash.h             Changed value type to void*
+ * src/cookies.c          Changed to use new hash object
+ * src/eval.c             Changed to use new hash object
+ * src/init.c             Changed to use new hash object
+ * src/main.c             Changed to use new hash object
+ * src/parser.c           Various logical improvements
+ * include/boolean.h      Minor cleanup
+ * include/joedog.h       Added ISALPHA
+ * src/version.c          Version increment: 4.0.0-beta4
+
 2016/01/16 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE BETA             RELEASE_4-0-0-beta3_JAN_16_2016
  * ChangeLog              Pruned to 4.x.x
