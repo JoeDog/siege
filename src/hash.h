@@ -30,13 +30,18 @@
 #include <joedog/boolean.h>
 
 typedef struct HASH_T *HASH;
+typedef void (*method)(void *v);
+
+extern size_t  HASHSIZE;
 
 HASH     new_hash();
-void     hash_add(HASH this, char *key, char *value);
-char *   hash_get(HASH this, char *key);
+void     hash_add(HASH this, char *key, void *value);
+void     hash_nadd(HASH this, char *key, void *val, size_t len);
+void *   hash_get(HASH this, char *key);
 char **  hash_get_keys(HASH this);
 BOOLEAN  hash_lookup(HASH this, char *key);
-void     hash_destroy(HASH this);
+HASH     hash_destroy(HASH this);
+HASH     hash_destroyer(HASH this, method m);
 void     hash_free_keys(HASH this, char **keys);
 int      hash_get_entries(HASH this);
 void     hoh_add(HASH this, char *key, char *k, char *v);

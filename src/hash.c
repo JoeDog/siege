@@ -33,18 +33,20 @@
 typedef struct NODE
 {
   char  *key;
-  char  *val;
-  HASH   hash;
+  void  *val;
   struct NODE *next;
 } NODE;
 
 struct HASH_T
 {
-  int   size;
-  int   entries;
-  int   index;
-  NODE  **table;
+  int    size;
+  int    entries;
+  int    index;
+  NODE   **table;
+  method free; 
 };
+
+size_t HASHSIZE = sizeof(struct HASH_T);
 
 #define xfree(x) free(x)
 #define xmalloc(x) malloc(x)
@@ -66,15 +68,15 @@ new_hash()
 {
   HASH this;
   int  size = 10240;
-
-  this = calloc(sizeof(*this),1);
+  this = calloc(HASHSIZE,1);
   this->size    = size;
   this->entries = 0;
   this->index   = 0;
   while (this->size < size) {
     this->size <<= 1;
   }
-  this->table = (NODE**)calloc(this->size * sizeof(NODE*), 1);
+  this->table  = (NODE**)calloc(this->size * sizeof(NODE*), 1);
+  this->free   = NULL;
   return this;
 }
 
@@ -134,12 +136,24 @@ __resize(HASH this)
  * len is the size of void pointer.
  */
 void
-hash_add(HASH this, char *key, char *val)
+hash_add(HASH this, char *key, void *val)
+{
+  size_t len = 0;
+  if (__lookup(this, key) == TRUE)
+    return; 
+
+  len = strlen(val);
+  hash_nadd(this, key, val, len);
+  return;
+}
+
+void
+hash_nadd(HASH this, char *key, void *val, size_t len)
 {
   int  x;
   NODE *node;
 
-  if (__lookup(this, key) == TRUE)
+  if (__lookup(this, key) == TRUE) 
     return;
 
   if (this->entries >= this->size/4)
@@ -148,50 +162,21 @@ hash_add(HASH this, char *key, char *val)
   x = __genkey(this->size, key);
   node           = xmalloc(sizeof(NODE));
   node->key      = strdup(key);
-  node->val      = strdup(val);
-  node->next     = this->table[x]; 
-  node->hash     = new_hash();
+  node->val      = xmalloc(len+1);
+  memset(node->val,  '\0', len+1);
+  memcpy(node->val,  val, len);
+  node->next     = this->table[x];
   this->table[x] = node;
   this->entries++;
   return;
 }
 
-void 
-hoh_add(HASH this, char *key, char *k, char *v) 
-{
-  int  x;
-  NODE *node;
-
-  if (__lookup(this, key) == FALSE) {
-    // we don't have a corresponding hash
-    if (this->entries >= this->size/4)
-      __resize(this);
-    x = __genkey(this->size, key); 
-    node           = xmalloc(sizeof(NODE));
-    node->key      = strdup(key);
-    node->val      = strdup("HOH");
-    node->hash     = new_hash();
-    node->next     = this->table[x]; 
-    hash_add(node->hash, k, v);
-    this->table[x] = node;
-    this->entries++;
-  } else {
-    // we already have a hash; we can just add an entry
-    x = __genkey(this->size, key);
-    for (node = this->table[x]; node != NULL; node = node->next) {
-      if (!strcmp(node->key, key)) {
-        hash_add(node->hash, k, v);
-      } 
-    }
-  } 
-  return;
-}
 
 /**
  * returns a void NODE->val element
  * in the table corresponding to key.
  */
-char *
+void *
 hash_get(HASH this, char *key)
 {
   int  x;
@@ -206,21 +191,6 @@ hash_get(HASH this, char *key)
 
  return NULL;
 } 
-
-HASH
-hoh_get(HASH this, char *key) 
-{
-  int  x;
-  NODE *node;
-  
-  x = __genkey(this->size, key);
-  for (node = this->table[x]; node != NULL; node = node->next) {
-    if (!strcmp(node->key, key)) {
-      return(node->hash);
-    }
-  }
-  return NULL;
-}
 
 BOOLEAN 
 hash_lookup(HASH this, char *key) 
@@ -237,7 +207,10 @@ hash_get_keys(HASH this)
   NODE *node;
   char **keys;
 
-  keys = (char**)malloc(sizeof( char*) * this->entries);
+  if (this == NULL || this->entries == 0) return NULL;
+
+
+  keys = (char**)malloc(sizeof(char*) * this->entries);
   for (x = 0; x < this->size; x ++) {
     for(node = this->table[x]; node != NULL; node = node->next){
       size_t len = strlen(node->key)+1;
@@ -268,13 +241,17 @@ hash_free_keys(HASH this, char **keys)
  * destroy the hash table and free
  * memory which was allocated to it.
  */
-void 
+HASH
 hash_destroy(HASH this)
 {
   int x;
   NODE *t1, *t2;
 
-  if (this == NULL) return;
+  if (this == NULL) return this;
+
+  if (this->free == NULL) {
+    this->free = free;
+  }
 
   for (x = 0; x < this->size; x++) {
     t1 = this->table[x];
@@ -283,9 +260,7 @@ hash_destroy(HASH this)
       if (t1->key != NULL)
         xfree(t1->key);
       if (t1->val != NULL)
-        xfree(t1->val);
-      if (t1->hash != NULL) 
-        hash_destroy(t1->hash);
+        this->free(t1->val);
       xfree(t1);
       t1 = t2;      
     } 
@@ -296,7 +271,14 @@ hash_destroy(HASH this)
     memset(this, 0, sizeof(struct HASH_T));
   } 
   xfree(this);
-  return;
+  return NULL;
+}
+
+HASH
+hash_destroyer(HASH this, method m)
+{
+  this->free = m;
+  return hash_destroy(this);
 }
 
 int
@@ -358,52 +340,6 @@ __lookup(HASH this, char *key)
   }
   return FALSE;
 }
-
-#if 0
-int 
-main()
-{
-  int    i, j;
-  char **keys;
-  HASH HOH = new_hash();
-  hoh_add(HOH,
-    "139804567041792",
-    "1", "haha=Whoo+hoo%21; domain=.armstrong.com; path=/; expires=1449261008"
-  );
-  hoh_add(HOH, 
-    "139804567041792",
-    "2", "exes=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX; domain=.armstrong.com; path=/; expires=1449253423"
-  );
-  hoh_add(HOH,
-    "139804577531648", 
-    "3", "haha=Whoo+hoo%21; domain=.armstrong.com; path=/; expires=1449261009"
-  );
-  hoh_add(HOH, 
-    "139804577531648", 
-    "4", "exes=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX; domain=.armstrong.com; path=/; expires=1449253423"
-  );
-  hoh_add(HOH,
-    "139804588021504",
-    "5", "haha=Whoo+hoo%21; domain=.armstrong.com; path=/; expires=1449261009"
-  );
-  hoh_add(HOH,
-    "139804588021504",
-    "6", "exes=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX; domain=.armstrong.com; path=/; expires=1449253423"
-  );
-
-  keys = hash_get_keys(HOH);
-  for (i = 0; i < hash_get_entries(HOH); i ++){
-    char **k;
-    HASH hash = hoh_get(HOH, keys[i]);
-    k = hash_get_keys(hash);
-    for (j = 0; j < hash_get_entries(hash); j ++){
-      char *tmp = (char*)hash_get(hash, k[j]);
-      printf("%s: %s => %s\n", keys[i], k[j], (tmp==NULL)?"NULL":tmp);
-    }
-    hash_destroy(hash);
-  }
-}
-#endif
 
 #if 0
 int
