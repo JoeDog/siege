@@ -1,7 +1,7 @@
 /**
  * Variable evaluation
  *
- * Copyright (C) 2003-2014 by
+ * Copyright (C) 2003-2016 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is part of siege
  *
@@ -28,6 +28,6 @@
 
 #define BUFSIZE 40000
 
-char *evaluate(HASH hash_table, char *buf);
+char *evaluate(HASH hash, char *buf);
 
 #endif/*EVAL_H*/ 

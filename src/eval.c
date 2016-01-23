@@ -1,7 +1,7 @@
 /**
  * Variable evaluation
  *
- * Copyright (C) 2003-2014 by
+ * Copyright (C) 2003-2016 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is part of siege
  *
@@ -32,7 +32,7 @@
 #include <joedog/joedog.h>
 
 char *
-evaluate(HASH hash_table, char *buf)
+evaluate(HASH hash, char *buf)
 {
   int  x   = 0;
   int  ENV = 0;
@@ -54,16 +54,17 @@ evaluate(HASH hash_table, char *buf)
  
   ptr = (char*)scan;
   
-  while(*scan && *scan != '}' && *scan != ')' && *scan != '/'){
+  while (*scan && *scan != '}' && *scan != ')' && *scan != '/') {
     scan++;
     x++;
   }
  
-  if(scan[0] == '}' || scan[0] == ')')
+  if (scan[0] == '}' || scan[0] == ')') {
     scan++;
+  }
  
   string = substring(ptr, 0, x);
-  if (hash_lookup(hash_table, string) == 0) {
+  if (hash_lookup(hash, string) == 0) {
     if (getenv(string) != NULL) {
       ENV = 1;
     } else {
@@ -71,12 +72,13 @@ evaluate(HASH hash_table, char *buf)
     }
   }
  
-  memset(final, 0, sizeof final);
+  memset(final, '\0', sizeof final);
   strncpy( final, buf, len);
-  if(string != NULL)
-    strcat(final, ENV==0?hash_get(hash_table, string):getenv(string));
-  strcat(final, scan );
-  memset(result, 0, BUFSIZE * sizeof(char));
+  if (string != NULL) {
+    strcat(final, ENV==0?(char*)hash_get(hash, string):getenv(string));
+  }
+  strcat(final, scan);
+  memset(result, '\0', BUFSIZE * sizeof(char));
   strncpy(result, final, strlen(final));
   
   xfree(string);
