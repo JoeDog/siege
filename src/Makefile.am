@@ -60,6 +60,7 @@ main.c     setup.h     \
 md5.c      md5.h       \
 page.c     page.h      \
 parser.c   parser.h    \
+response.c response.h  \
 sock.c     sock.h      \
 ssl.c      ssl.h       \
 timer.c    timer.h     \
