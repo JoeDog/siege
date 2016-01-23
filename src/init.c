@@ -614,7 +614,7 @@ load_conf(char *filename)
     xfree(value);
     xfree(option);
   }
-  hash_destroy(H);
+  H = hash_destroy(H);
   fclose(fp);
   return 0;
 }
