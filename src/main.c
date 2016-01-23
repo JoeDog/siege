@@ -455,7 +455,7 @@ main(int argc, char *argv[])
     client[x].fail            = 0; 
     if (cookies != NULL) {
       if (hash_get(cookies, tmp) != NULL) {
-        client[x].cookies = hoh_get(cookies, tmp);
+        client[x].cookies = (HASH)hash_get(cookies, tmp);
       } 
     }
     if (my.reps > 0 ) {
