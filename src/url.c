@@ -256,7 +256,7 @@ url_get_ID(URL this)
 public char *
 url_get_absolute(URL this)
 {
-  return this->url;
+  return (this == NULL) ? "NULL" : this->url;
 }
 
 public SCHEME
@@ -513,14 +513,20 @@ url_normalize(URL req, char *location)
    * Should we just do this for all URLs
    * or just the ones we parse??
    */
-  __url_replace(location, "&amp;", "&");
+  __url_replace(location, "&amp;",  "&");
+  __url_replace(location, "&#038;", "&");
 
   len = strlen(url_get_absolute(req)) + strlen(location) + 32;
 
-  if (strchr(location, ':') != NULL) {
+  if (stristr(location, "data:image/gif")) {
+    // stupid CSS tricks
+    return NULL;
+  }
+
+  if (stristr(location, "://")) {
     // it's very likely normalized
     ret = new_url(location);
-    url_set_scheme(ret, url_get_scheme(req));
+
     // but we better test it...
     if (strlen(url_get_hostname(ret)) > 1) {
       return ret;
