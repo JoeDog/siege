@@ -1,7 +1,7 @@
 /**
  * HTTP/HTTPS protocol support 
  *
- * Copyright (C) 2000-2015 by
+ * Copyright (C) 2000-2016 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege 
  *
@@ -40,9 +40,7 @@
 pthread_mutex_t __mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  __cond  = PTHREAD_COND_INITIALIZER;
 
-private char *__parse_pair(char **str);
-private char *__dequote(char *str);
-private int   __gzip_inflate(int window, const char *src, int srcLen, const char *dst, int dstLen);
+private int     __gzip_inflate(int window, const char *src, int srcLen, const char *dst, int dstLen);
 
 /**
  * HTTPS tunnel; set up a secure tunnel with the
@@ -577,7 +575,6 @@ ssize_t
 http_read(CONN *C, RESPONSE resp)
 { 
   int    n      = 0;
-  int    z      = 0;
   int    chunk  = 0;
   size_t bytes  = 0;
   size_t length = 0;
@@ -647,12 +644,10 @@ http_read(CONN *C, RESPONSE resp)
   }
 
   if (response_get_content_encoding(resp) == GZIP) {
-    puts("GUNZIP IT!!!");
-    z = __gzip_inflate(MAX_WBITS+32, ptr, bytes, dest, sizeof(dest));
+    __gzip_inflate(MAX_WBITS+32, ptr, bytes, dest, sizeof(dest));
   }
   if (response_get_content_encoding(resp) == DEFLATE) {
-    puts("DEFLATE IT!!!");
-    z = __gzip_inflate(-MAX_WBITS, ptr, bytes, dest, sizeof(dest));
+    __gzip_inflate(-MAX_WBITS, ptr, bytes, dest, sizeof(dest));
   }
   if (strlen(dest) > 0) {
     page_concat(C->page, dest, strlen(dest));
@@ -660,7 +655,6 @@ http_read(CONN *C, RESPONSE resp)
     page_concat(C->page, ptr, strlen(ptr));
   }
   xfree(ptr);
-  //echo ("%s", page_value(C->page));
   echo ("\n");
   pthread_mutex_unlock(&__mutex);
   return bytes;
@@ -704,83 +698,3 @@ __gzip_inflate(int window, const char *src, int srcLen, const char *dst, int dst
 #endif/*HAVE_ZLIB*/
 }
 
-/**
- * parses option=value pairs from an
- * http header, see keep-alive: above
- * while ((tmp = __parse_pair(&newline)) != NULL) {
- *   do_something( tmp );
- * }
- */
-private char *
-__parse_pair(char **str)
-{
-  int  okay  = 0;
-  char *p    = *str;
-  char *pair = NULL;
- 
-  if( !str || !*str ) return NULL;
-  /**
-   * strip the header label
-   */
-  while( *p && *p != ' ' )
-    p++;
-  *p++=0;
-  if( !*p ){
-    *str   = p;
-    return NULL;
-  }
- 
-  pair = p;
-  while( *p && *p != ';' && *p != ',' ){
-    if( !*p ){
-      *str = p;
-      return NULL;
-    }
-    if( *p == '=' ) okay = 1;
-    p++;
-  }
-  *p++ = 0;
-  *str = p;
- 
-  if( okay )
-    return pair;
-  else
-    return NULL;
-} 
-
-char *
-__rquote(char *str)
-{
-  char *ptr;
-  int   len;
-
-  len = strlen(str);
-  for(ptr = str + len - 1; ptr >= str && ISQUOTE((int)*ptr ); --ptr);
-
-  ptr[1] = '\0';
-
-  return str;
-}
-
-char *
-__lquote(char *str)
-{
-  char *ptr;
-  int  len;
-
-  for(ptr = str; *ptr && ISQUOTE((int)*ptr); ++ptr);
-
-  len = strlen(ptr);
-  memmove(str, ptr, len + 1);
-
-  return str;
-}
-
-char *
-__dequote(char *str)
-{
-  char *ptr;
-  ptr = __rquote(str);
-  str = __lquote(ptr);
-  return str;
-}
