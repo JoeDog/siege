@@ -170,7 +170,7 @@ response_set_content_type(RESPONSE this, char *line) {
 char *
 response_get_content_type(RESPONSE this) 
 {
-  return (char*)hash_get(this->headers, CONTENT_TYPE);
+ return ((char*)hash_get(this->headers, CONTENT_TYPE) == NULL) ? "unknown" : (char*)hash_get(this->headers, CONTENT_TYPE);
 }
 
 char *
