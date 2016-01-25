@@ -196,7 +196,6 @@ start_routine(CLIENT *client)
      */
     if (my.parser == TRUE && client->purls != NULL) {
       URL u;
-
       while ((u = (URL)array_pop(client->purls)) != NULL) {
         if (url_get_scheme(u) == UNSUPPORTED) {
           ;;
@@ -280,7 +279,6 @@ __http(CONN *C, URL U, CLIENT *client)
   float    etime; 
   clock_t  start, stop;
   struct   tms t_start, t_stop; 
-  //HEADERS  *head; 
   RESPONSE resp;
   char     *meta = NULL;
 #ifdef  HAVE_LOCALTIME_R
@@ -356,15 +354,17 @@ __http(CONN *C, URL U, CLIENT *client)
 
   bytes = http_read(C, resp); 
 
-  if (strmatch(response_get_content_type(resp), "text/html") && response_get_code(resp) < 400) {
-    int   i;
-    html_parser(client->purls, U, page_value(C->page));
-    for (i = 0; i < (int)array_length(client->purls); i++) {
-      URL url  = (URL)array_get(client->purls, i);
-      if (url_is_redirect(url)) {
-        URL tmp = (URL)array_remove(client->purls, i);
-        meta    = xstrdup(url_get_absolute(tmp));
-        tmp     = url_destroy(tmp);
+  if (my.parser == TRUE) {
+    if (strmatch(response_get_content_type(resp), "text/html") && response_get_code(resp) < 300) {
+      int   i;
+      html_parser(client->purls, U, page_value(C->page));
+      for (i = 0; i < (int)array_length(client->purls); i++) {
+        URL url  = (URL)array_get(client->purls, i);
+        if (url_is_redirect(url)) {
+          URL tmp = (URL)array_remove(client->purls, i);
+          meta    = xstrdup(url_get_absolute(tmp));
+          tmp     = url_destroy(tmp);
+        }
       }
     }
   }
@@ -504,7 +504,6 @@ __http(CONN *C, URL U, CLIENT *client)
       /**
        * WWW-Authenticate challenge from the WWW server
        */
-#if 1
       client->auth.www = (client->auth.www==0)?1:client->auth.www;
       if ((client->auth.bids.www++) < my.bids - 1) {
         BOOLEAN b;
@@ -534,7 +533,6 @@ __http(CONN *C, URL U, CLIENT *client)
           return FALSE;
         }
       }
-#endif
       break;
     case 407:
       /**
@@ -799,7 +797,7 @@ __init_connection(CONN *C, URL U, CLIENT *client)
     (auth_get_proxy_required(my.auth))?auth_get_proxy_port(my.auth):url_get_port(U)
   );
 
-  if (C->encrypt == TRUE) {
+  if (url_get_scheme(U) == HTTPS) {
     if (auth_get_proxy_required(my.auth)) {
       https_tunnel_request(C, url_get_hostname(U), url_get_port(U));
       https_tunnel_response(C);
