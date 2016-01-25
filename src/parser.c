@@ -69,7 +69,7 @@ __add_url(ARRAY array, URL U)
   int i = 0;
   BOOLEAN found = FALSE;
 
-  if (U == NULL || url_get_hostname(U) == NULL) {
+  if (U == NULL || url_get_hostname(U) == NULL || strlen(url_get_hostname(U)) < 2) {
     return; 
   }
 
@@ -127,12 +127,15 @@ __parse_control(ARRAY array, URL base, char *html)
         strncpy(tmp, ptr, BUFSZ-1);
       }
     } else if (strncasecmp(ptr, "meta", 4) == 0) {
+      /* <meta http-equiv="refresh" content="0; url=http://example.com/" /> */
+      char *pre = NULL;
       for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {
         if (strncasecmp(ptr, "content", 7) == 0) {        
           for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {  
             if (__strcasestr(ptr, "url") != NULL) {
+              pre = ptr; // save for comparison below
               ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
-              if (ptr != NULL) {
+              if (ptr != NULL && startswith("url", pre)) {
                 URL U = url_normalize(base, ptr);
                 url_set_redirect(U, TRUE);
                 if (debug) printf("1.) Adding: %s\n", url_get_absolute(U));
@@ -145,6 +148,10 @@ __parse_control(ARRAY array, URL base, char *html)
     } else if (strncasecmp(ptr, "img", 3) == 0) {
       ptr = strtok_r(NULL, CONTROL_TOKENS, &aid);
       if (ptr != NULL) {
+        if (! strncasecmp(aid, "\"\"", 2)) {
+          // empty string, i.e., img src=""
+          continue;
+        }
         if (! strncasecmp(ptr, "src", 3)) {
           ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
           if (ptr != NULL) { 
@@ -158,7 +165,7 @@ __parse_control(ARRAY array, URL base, char *html)
           for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {
             if ((ptr != NULL) && (strncasecmp(ptr, "src", 3) == 0)) {        
               ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
-              if (ptr != NULL) { 
+              if (ptr != NULL && strlen(ptr) > 1) { 
                 URL U = url_normalize(base, ptr);
                 if (debug) printf("3.) Adding: %s\n", url_get_absolute(U));
                 __add_url(array, U);
