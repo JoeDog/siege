@@ -538,29 +538,27 @@ __http(CONN *C, URL U, CLIENT *client)
       /**
        * Proxy-Authenticate challenge from the proxy server.
        */
-#if 0
       client->auth.proxy = (client->auth.proxy==0)?1:client->auth.proxy;
       if ((client->auth.bids.proxy++) < my.bids - 1) {
-        if (head->auth.type.proxy == DIGEST) {
+        if (response_get_proxy_auth_type(resp) == DIGEST) {
           BOOLEAN b;
           client->auth.type.proxy =  DIGEST;
-          b = auth_set_digest_header(
+          b = auth_set_digest_header (
             my.auth, &(client->auth.pchlg), &(client->auth.pcred), &(client->rand_r_SEED),
-            head->auth.realm.proxy, head->auth.challenge.proxy
+            response_get_proxy_auth_realm(resp), response_get_proxy_auth_challenge(resp)
           );
 	  if (b == FALSE) {
 	    NOTIFY(ERROR, "unable to set digest header");
 	    return FALSE;
 	  }
         }
-        if (head->auth.type.proxy == BASIC) {
+        if (response_get_proxy_auth_type(resp) == BASIC) {
           client->auth.type.proxy = BASIC;
-          auth_set_basic_header(my.auth, PROXY, head->auth.realm.proxy);
+          auth_set_basic_header(my.auth, PROXY, response_get_proxy_auth_realm(resp));
         }
         if ((__request(C, U, client)) == FALSE)
           return FALSE;
       }
-#endif
       break;
     case 408:
     case 500:
