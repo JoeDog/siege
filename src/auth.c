@@ -201,7 +201,7 @@ auth_set_basic_header(AUTH this, SCHEME scheme, char *realm)
     CREDS tmp = array_get(this->creds, i);
     if (realm == NULL) break;
     if (strmatch(creds_get_realm(tmp), realm)) {
-      if (creds_get_scheme(tmp) == HTTP || creds_get_scheme(tmp) == HTTPS) {
+      if (creds_get_scheme(tmp) == scheme) {
         return __basic_header(this, scheme, tmp); 
       }
     }
@@ -212,7 +212,7 @@ auth_set_basic_header(AUTH this, SCHEME scheme, char *realm)
   for (i = 0; i < array_length(this->creds); i++) {
     CREDS tmp = array_get(this->creds, i);
     if (strmatch(creds_get_realm(tmp), "any")) {
-      if (creds_get_scheme(tmp) == HTTP || creds_get_scheme(tmp) == HTTPS) {
+      if (creds_get_scheme(tmp) == scheme) {
         return __basic_header(this, scheme, tmp); 
       }
     }
