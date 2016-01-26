@@ -135,7 +135,7 @@ __parse_control(ARRAY array, URL base, char *html)
             if (__strcasestr(ptr, "url") != NULL) {
               pre = ptr; // save for comparison below
               ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
-              if (ptr != NULL && startswith("url", pre)) {
+              if (ptr != NULL) {
                 URL U = url_normalize(base, ptr);
                 url_set_redirect(U, TRUE);
                 if (debug) printf("1.) Adding: %s\n", url_get_absolute(U));
