@@ -543,7 +543,7 @@ response_get_proxy_auth_challenge(RESPONSE this)
 char *
 response_get_proxy_auth_realm(RESPONSE this)
 {
-  return this->auth.realm.www;
+  return this->auth.realm.proxy;
 }
 
 private int
