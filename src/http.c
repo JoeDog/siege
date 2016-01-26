@@ -169,8 +169,8 @@ http_get(CONN *C, URL U)
   if (C->auth.proxy) {
     if (C->auth.type.proxy==DIGEST) {
       snprintf (
-        authwww, sizeof(authwww), "%s", 
-        auth_get_digest_header(my.auth, HTTP, C->auth.wchlg, C->auth.wcred, url_get_method_name(U), fullpath)
+        authpxy, sizeof(authpxy), "%s", 
+        auth_get_digest_header(my.auth, PROXY, C->auth.pchlg, C->auth.pcred, url_get_method_name(U), fullpath)
       );
     } else  {
       snprintf(authpxy, sizeof(authpxy), "%s", auth_get_basic_header(my.auth, PROXY));
@@ -329,8 +329,8 @@ http_post(CONN *C, URL U)
   if (C->auth.proxy) {
     if (C->auth.type.proxy==DIGEST) {
       snprintf (
-        authwww, sizeof(authwww), "%s", 
-        auth_get_digest_header(my.auth, HTTP, C->auth.wchlg, C->auth.wcred, url_get_method_name(U), fullpath)
+        authpxy, sizeof(authpxy), "%s", 
+        auth_get_digest_header(my.auth, HTTP, C->auth.pchlg, C->auth.pcred, url_get_method_name(U), fullpath)
       );
     } else  {
       snprintf(authpxy, sizeof(authpxy), "%s", auth_get_basic_header(my.auth, PROXY));
