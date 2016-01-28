@@ -1,6 +1,22 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/01/28 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * src/Makefile.am        Added cache.c and cache.h
+ * src/cache.c            Added to the distribution
+ * src/cache.h            Added to the distribution
+ * src/date.c             Overhauled as an object
+ * src/date.c             Updated prototypes
+ * src/eval.c             Updated for new hash API
+ * src/hash.c             Added hash_remove, hash_remover
+ * src/hash.h             Changed hash_lookup to hash_contains
+ * src/http.c             Implemented cache for entity tags
+ * src/http.h             Removed old headers struct
+ * src/sock.h             Added cache to the CONN struct
+ * src/url.c              Removed cache indicators
+ * src/url.h              Removed prototypes associated with cache
+ * src/version.c          Copyright update; version increment: 4.0.0-beta5
+
 2016/01/23 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE BETA             RELEASE_4-0-0_beta4_JAN_23_2016
  * src/Makefile.am        Added response.c response.h
