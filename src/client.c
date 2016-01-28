@@ -102,6 +102,7 @@ start_routine(CLIENT *client)
   C = xcalloc(sizeof(CONN), 1);
   C->sock       = -1;
   C->page       = new_page("");
+  C->cache      = new_cache();
   client->purls = new_array();
 
   if (client->cookies != NULL) {
@@ -243,7 +244,8 @@ start_routine(CLIENT *client)
     C->connection.reuse = 0;    
     socket_close(C);
   }
-  C->page = page_destroy(C->page);
+  C->page  = page_destroy(C->page);
+  C->cache = cache_destroy(C->cache); //XXX: do we want to persist this?
   client->purls = array_destroy(client->purls);
   xfree(C);
   C = NULL;
@@ -407,17 +409,18 @@ __http(CONN *C, URL U, CLIENT *client)
    * verbose output, print statistics to stdout
    */
   if ((my.verbose && !my.get) && (!my.debug)) {
-    int  color     = __select_color(response_get_code(resp));
-    char *time_str = (my.timestamp==TRUE)?timestamp():"";
+    int  color  = __select_color(response_get_code(resp));
+    DATE date   = new_date(NULL);
+    char *stamp = (my.timestamp)?date_stamp(date):"";
     if (my.csv) {
       if (my.display)
         DISPLAY(color, "%s%s%s%4d,%s,%d,%6.2f,%7lu,%s,%d,%s",
-        time_str, (my.mark)?my.markstr:"", (my.mark)?",":"", client->id, response_get_protocol(resp), 
+        stamp, (my.mark)?my.markstr:"", (my.mark)?",":"", client->id, response_get_protocol(resp), 
         response_get_code(resp), etime, bytes, url_get_display(U), url_get_ID(U), fmtime
       );
       else
         DISPLAY(color, "%s%s%s%s,%d,%6.2f,%7lu,%s,%d,%s",
-          time_str, (my.mark)?my.markstr:"", (my.mark)?",":"", response_get_protocol(resp), 
+          stamp, (my.mark)?my.markstr:"", (my.mark)?",":"", response_get_protocol(resp), 
           response_get_code(resp), etime, bytes, url_get_display(U), url_get_ID(U), fmtime
         );
     } else {
@@ -430,11 +433,11 @@ __http(CONN *C, URL U, CLIENT *client)
       else 
         DISPLAY ( 
           color, "%s%s %d %6.2f secs: %7lu bytes ==> %-4s %s", 
-          time_str, response_get_protocol(resp), response_get_code(resp), 
+          stamp, response_get_protocol(resp), response_get_code(resp), 
           etime, bytes, url_get_method_name(U), url_get_display(U)
         );
     } /* else not my.csv */
-    if (my.timestamp) xfree(time_str);
+    date = date_destroy(date);
   }
 
   /**
@@ -514,7 +517,10 @@ __http(CONN *C, URL U, CLIENT *client)
             response_get_www_auth_realm(resp), response_get_www_auth_challenge(resp)
           );
 	  if (b == FALSE) {
-	    NOTIFY(ERROR, "unable to set digest header");
+	    fprintf(stderr, "ERROR: Unable to respond to an authorization challenge\n");
+            fprintf(stderr, "       in the following realm: '%s'\n", response_get_www_auth_realm(resp));
+	    fprintf(stderr, "       Did you set login credentials in the conf file?\n");
+            resp = response_destroy(resp);
 	    return FALSE;
 	  }
         }
@@ -548,7 +554,10 @@ __http(CONN *C, URL U, CLIENT *client)
             response_get_proxy_auth_realm(resp), response_get_proxy_auth_challenge(resp)
           );
 	  if (b == FALSE) {
-	    NOTIFY(ERROR, "unable to set digest header");
+            fprintf(stderr, "ERROR: Unable to respond to a proxy authorization challenge\n");
+            fprintf(stderr, "       in the following HTTP realm: '%s'\n", response_get_proxy_auth_realm(resp));
+            fprintf(stderr, "       Did you set proxy-login credentials in the conf file?\n");
+            resp = response_destroy(resp);
 	    return FALSE;
 	  }
         }
