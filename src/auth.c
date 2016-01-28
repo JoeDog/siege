@@ -257,22 +257,29 @@ auth_get_ntlm_header(AUTH this, SCHEME scheme)
   }
 }
 
-//digest_generate_authorization(C->auth.wwwchlg, C->auth.wwwcred, "GET", fullpath);
 char *
 auth_get_digest_header(AUTH this, SCHEME scheme, DCHLG *chlg, DCRED *cred, const char *method, const char *uri)
 {
   size_t len;
-  char  *cnonce      = NULL;
-  char  *nonce_count = NULL;
-  char  *qop         = NULL;
-  char  *response    = NULL;
+  char  *cnonce         = NULL;
+  char  *nonce_count    = NULL;
+  char  *qop            = NULL;
+  char  *response       = NULL;
   char  *request_digest = NULL;
-  char  *h_a1 = NULL;
-  char  *h_a2 = NULL;
-  char  *opaque = NULL;
-  char  *result, *tmp;
+  char  *h_a1           = NULL;
+  char  *h_a2           = NULL;
+  char  *opaque         = NULL;
+  char  *result         = NULL; 
+  char  *tmp            = NULL;
 
-  if (NULL != chlg->qop) {
+  /**
+   * The user probably didn't set login credentials. 
+   * We'll return "" here and display a message after
+   * the authorization failure.
+   */
+  if (chlg == NULL || cred == NULL) return "";
+
+  if (chlg != NULL && chlg->qop != NULL) {
     nonce_count = xstrcat(", nc=", cred->nc, NULL);
     cnonce = xstrcat(", cnonce=\"", cred->cnonce_value, "\"", NULL);
 
@@ -308,7 +315,7 @@ auth_get_digest_header(AUTH this, SCHEME scheme, DCHLG *chlg, DCRED *cred, const
     xfree(tmp);
     response = xstrcat(" response=\"", request_digest, "\"", NULL);
   }
-  if (NULL != chlg->opaque)
+  if (chlg != NULL && chlg->opaque != NULL)
     opaque = xstrcat(", opaque=\"", chlg->opaque, "\"", NULL);
 
   result = xstrcat (
