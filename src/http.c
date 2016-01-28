@@ -116,8 +116,8 @@ http_get(CONN *C, URL U)
   char   portstr[16];
   char   fullpath[4096];
   char   cookie[MAX_COOKIE_SIZE+8];
-  char * ifmod = url_get_if_modified_since(U);
-  char * ifnon = url_get_etag(U);
+  char * ifnon = cache_get_header(C->cache, U, "If-None-Match");
+  char * ifmod = cache_get_header(C->cache, U, "IF-Modified-Since");
 
   memset(hoststr, '\0', sizeof hoststr);
   memset(cookie,  '\0', sizeof cookie);
@@ -415,15 +415,6 @@ http_post(CONN *C, URL U)
   return TRUE;
 }
 
-void
-http_free_headers(HEADERS *h)
-{
-  xfree(h->redirect);
-  xfree(h->auth.realm.proxy);
-  xfree(h->auth.realm.www);
-  xfree(h);
-}
-
 /**
  * returns HEADERS struct
  * reads from http/https socket and parses
@@ -432,10 +423,10 @@ http_free_headers(HEADERS *h)
 RESPONSE
 http_read_headers(CONN *C, URL U)
 { 
-  int  x;           /* while loop index      */
-  int  n;           /* assign socket_read    */
-  char c;           /* assign char read      */
-  char line[MAX_COOKIE_SIZE];  /* assign chars read     */
+  int  x;
+  int  n; 
+  char c; 
+  char line[MAX_COOKIE_SIZE]; 
   RESPONSE resp = new_response();
   
   while (TRUE) {
@@ -500,7 +491,7 @@ http_read_headers(CONN *C, URL U)
       if(my.cache){
         date = xmalloc(len);
         memcpy(date, line+15, len-14);
-        url_set_last_modified(U, date);
+        //url_set_last_modified(U, date);
         xfree(date); 
       }
     }
@@ -508,11 +499,11 @@ http_read_headers(CONN *C, URL U)
       response_set_etag(resp, line);
       char   *etag;
       size_t len = strlen(line);
-      if(my.cache){
+      if (my.cache) {
         etag = xmalloc(len);
         memcpy(etag, line+6, len-5);
         etag[len-1] = '\0';
-        url_set_etag(U, etag);
+        cache_add(C->cache, U, etag);
         xfree(etag);
       }
     }
