@@ -72,8 +72,6 @@ void     url_dump(URL this);
 void     url_set_ID(URL this, int id);
 void     url_set_scheme(URL this, SCHEME scheme);
 void     url_set_hostname(URL this, char *hostname);
-void     url_set_last_modified(URL this, char *date);
-void     url_set_etag(URL this, char *etag);
 void     url_set_redirect(URL this, BOOLEAN redir);
 void     url_set_conttype(URL this, char *type);
 void     url_set_postdata(URL this, char *postdata, size_t postlen);

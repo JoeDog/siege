@@ -55,12 +55,8 @@ struct URL_T
   char *    postdata;
   char *    posttemp;
   char *    conttype;
-  time_t    expires;
-  time_t    modified;
   BOOLEAN   cached;
   BOOLEAN   redir;
-  char *    etag;
-  char *    realm;
 };
 
 size_t URLSIZE = sizeof(struct URL_T);
@@ -114,8 +110,6 @@ url_destroy(URL this)
     xfree(this->conttype);
     xfree(this->postdata);
     xfree(this->posttemp);
-    xfree(this->etag);
-    xfree(this->realm);
     if (this->hasparams==TRUE) {
       xfree(this->params);
     }
@@ -189,27 +183,6 @@ url_set_hostname(URL this, char *hostname)
   this->hostname = xmalloc(len);
   memset(this->hostname, '\0', len);
   strncpy(this->hostname, hostname, len);
-  return;
-}
-
-void
-url_set_last_modified(URL this, char *date) 
-{
-  this->modified = strtotime(date);
-  return;
-}
-
-void
-url_set_etag(URL this, char *etag)
-{
-  size_t len;
-
-  if (empty(etag)) return;
-
-  len = strlen(etag)+1;
-  this->etag = xmalloc(len);
-  memset(this->etag, '\0', len);
-  strncpy(this->etag, etag, len);
   return;
 }
 
@@ -407,48 +380,10 @@ url_get_method_name(URL this) {
   return "GET";
 }
 
-char *
-url_get_if_modified_since(URL this)
-{
-  if (this->cached == FALSE){
-    return NULL;
-  }
-
-  return timetostr(&this->modified);
-}
-
 BOOLEAN  
 url_is_redirect(URL this)
 {
   return this->redir;
-}
-
-char *
-url_get_etag(URL this)
-{
-  char   *tag;
-  size_t len;
-
-  if (empty(this->etag)) return NULL;
-
-  len = strlen(this->etag) + 18;
-  tag = xmalloc(len);
-  memset(tag, '\0', len);
-
-  snprintf(tag, len, "If-None-Match: %s\015\012", this->etag);
-  return tag;
-}
-
-public char *
-url_get_realm(URL this)
-{
-  return (this->realm!=NULL)?this->realm:"";
-}
-
-public void
-url_set_realm(URL this, char *realm)
-{
-  this->realm = xstrdup(realm);
 }
 
 void
@@ -494,11 +429,6 @@ url_dump(URL this)
   printf("Post Len:  %d\n", (int)url_get_postlen(this));
   printf("Post Data: %s\n", url_get_postdata(this));
   printf("Cont Type: %s\n", url_get_conttype(this));
-  //time_t    expires;
-  //time_t    modified;
-  //BOOLEAN   cached;
-  //char *    etag;
-  //char *    realm;
   return;
 }
 
