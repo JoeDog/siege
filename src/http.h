@@ -44,41 +44,9 @@
 #define REQBUF  43008
 #define POSTBUF 63488
 
-/**
- * HTTP headers structure.
- */
-typedef 
-struct headers
-{
-  char                head[64];                /* http response         */
-  BOOLEAN             page;
-  int                 code;                    /* http return code      */
-  unsigned long int   length;
-  char                cookie[MAX_COOKIE_SIZE]; /* set-cookie data       */
-  char                *redirect;               /* redirection URL       */
-  struct{
-    int   www;                                 /* www auth challenge    */
-    int   proxy;                               /* proxy auth challenge  */
-    struct {
-      char  *www;                              /* www auth realm        */
-      char  *proxy;                            /* proxy auth realm      */
-    } realm;
-    struct {
-      char  *www;                              /* www auth realm        */
-      char  *proxy;                            /* proxy auth realm      */
-    } challenge;                               /* square peg/round hole */
-    struct {
-      TYPE  www;
-      TYPE  proxy;
-    } type;
-  } auth;
-  int                 keepalive;               /* http keep-alive       */
-} HEADERS;
-
 /* http function prototypes */
 BOOLEAN   http_get (CONN *C, URL U);
 BOOLEAN   http_post(CONN *C, URL U);
-void      http_free_headers(HEADERS *h);
 RESPONSE  http_read_headers(CONN *C, URL U);
 ssize_t   http_read(CONN *C, RESPONSE R);
 BOOLEAN   https_tunnel_request(CONN *C, char *host, int port);
