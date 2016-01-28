@@ -39,6 +39,7 @@ ansidecl.h             \
 array.c    array.h     \
 auth.c     auth.h      \
 base64.c   base64.h    \
+cache.c    cache.h     \
 client.c   client.h    \
 cookie.c   cookie.h    \
 cookies.c  cookies.h   \
