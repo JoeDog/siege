@@ -52,8 +52,8 @@
 #endif/*HAVE_SSL*/
 
 #include <auth.h>
-#include <response.h>
 #include <page.h>
+#include <cache.h>
 #include <joedog/boolean.h>
 
 typedef enum
@@ -90,7 +90,7 @@ typedef struct
   BOOLEAN  encrypt;    /* TRUE=encrypt, FALSE=clear       */
   SCHEME   scheme;
   PAGE     page;
-  RESPONSE response;
+  CACHE    cache;
   struct {
     int    transfer;   /* transfer encoding specified     */
     size_t length;     /* length of data chunks           */
