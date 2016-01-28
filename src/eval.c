@@ -64,7 +64,7 @@ evaluate(HASH hash, char *buf)
   }
  
   string = substring(ptr, 0, x);
-  if (hash_lookup(hash, string) == 0) {
+  if (hash_contains(hash, string) == 0) {
     if (getenv(string) != NULL) {
       ENV = 1;
     } else {
