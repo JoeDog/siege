@@ -39,12 +39,13 @@ void     hash_add(HASH this, char *key, void *value);
 void     hash_nadd(HASH this, char *key, void *val, size_t len);
 void *   hash_get(HASH this, char *key);
 char **  hash_get_keys(HASH this);
-BOOLEAN  hash_lookup(HASH this, char *key);
+void     hash_remove(HASH this, char *key);
+void     hash_remover(HASH this, char *key, method m);
+BOOLEAN  hash_contains(HASH this, char *key);
 HASH     hash_destroy(HASH this);
 HASH     hash_destroyer(HASH this, method m);
+void     hash_set_destroyer(HASH this, method m);
 void     hash_free_keys(HASH this, char **keys);
 int      hash_get_entries(HASH this);
-void     hoh_add(HASH this, char *key, char *k, char *v);
-HASH     hoh_get(HASH this, char *key);
 
 #endif/*HASH_H*/

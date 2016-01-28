@@ -60,8 +60,8 @@ private unsigned int __genkey(int size, char *str);
 private u_int32_t    fnv_32_buf(void *buf, size_t len, u_int32_t hval); 
 
 /**
- * allocs size and space for the 
- * hash table. 
+ * Constructs an empty hash map with an initial 
+ * capacity of 10240 entries.
  */
 HASH 
 new_hash()
@@ -80,6 +80,15 @@ new_hash()
   return this;
 }
 
+/**
+ * Returns the number of key-value mappings in this hash.
+ */
+int
+hash_size(HASH this)
+{
+  return this->entries;
+}
+
 void
 hash_reset(HASH this, ssize_t size)
 {
@@ -91,41 +100,6 @@ hash_reset(HASH this, ssize_t size)
   }
 
   this->table = (NODE**)calloc(this->size * sizeof(NODE*), 1);
-  return;
-}
-
-/**
- * redoubles the size of the hash table. 
- * This is a local function called by hash_add 
- * which dynamically resizes the table as 
- * necessary.
- */
-private void
-__resize(HASH this) 
-{
-  NODE *tmp;
-  NODE *last_node; 
-  NODE **last_table;
-  int  x, hash, size;
- 
-  size       = this->size; 
-  last_table = this->table;
-
-  hash_reset(this, size*2);
-
-  x = 0;
-  while (x < size) {
-    last_node = last_table[x]; 
-    while (last_node != NULL) {
-      tmp       = last_node;
-      last_node = last_node->next;
-      hash      = __genkey(this->size, (char*)tmp->key);
-      tmp->next = this->table[hash];
-      this->table[hash] = tmp;
-      this->entries++;
-    } 
-    x++;
-  } 
   return;
 }
 
@@ -192,8 +166,59 @@ hash_get(HASH this, char *key)
  return NULL;
 } 
 
+/**
+ * Removes and element from the hash; if
+ * a function wasn't assigned, then it uses
+ * free. You can assign an alternative method
+ * using hash_remover or assign it in advance
+ * with hash_set_destroyer
+ */
+void
+hash_remove(HASH this, char *key)
+{
+  int   x  = 0;
+  NODE *n1 = NULL;
+  NODE *n2 = NULL;
+
+  if (__lookup(this, key) == FALSE)
+    return;
+
+  if (this->free == NULL) {
+    this->free = free;
+  }
+
+  x  = __genkey(this->size, key);
+  n1 = this->table[x];
+  while (n1 != NULL) {
+    n2 = n1->next;
+    if (n1->key != NULL) {
+      xfree(n1->key);
+      this->entries--;
+    }
+    if (n1->val != NULL)
+      this->free(n1->val);
+    xfree(n1);
+    n1 = n2;
+  }
+  this->table[x] = NULL;
+}
+
+void
+hash_remover(HASH this, char *key, method m)
+{
+  this->free = m;
+  hash_remove(this, key);
+}
+
+void
+hash_set_destroyer(HASH this, method m)
+{
+  this->free = m;
+}
+
+
 BOOLEAN 
-hash_lookup(HASH this, char *key) 
+hash_contains(HASH this, char *key) 
 {
   return __lookup(this, key);
 }
@@ -238,7 +263,7 @@ hash_free_keys(HASH this, char **keys)
 }
 
 /**
- * destroy the hash table and free
+ * Destroy the hash table and free
  * memory which was allocated to it.
  */
 HASH
@@ -288,12 +313,78 @@ hash_get_entries(HASH this)
 }
 
 /**
- * returns int cache key for the table
+ * redoubles the size of the hash table.
+ * This is a local function called by hash_add
+ * which dynamically resizes the table as
+ * necessary.
+ */
+private void
+__resize(HASH this)
+{
+  NODE *tmp;
+  NODE *last_node;
+  NODE **last_table;
+  int  x, hash, size;
+
+  size       = this->size;
+  last_table = this->table;
+
+  hash_reset(this, size*2);
+
+  x = 0;
+  while (x < size) {
+    last_node = last_table[x];
+    while (last_node != NULL) {
+      tmp       = last_node;
+      last_node = last_node->next;
+      hash      = __genkey(this->size, (char*)tmp->key);
+      tmp->next = this->table[hash];
+      this->table[hash] = tmp;
+      this->entries++;
+    }
+    x++;
+  }
+  return;
+}
+
+/**
+ * Fowler/Noll/Vo hash
+ *
+ * The basis of this hash algorithm was taken from an idea sent
+ * as reviewer comments to the IEEE POSIX P1003.2 committee by:
+ *
+ * Phong Vo (http://www.research.att.com/info/kpv/)
+ * Glenn Fowler (http://www.research.att.com/~gsf/)
+ *
+ * In a subsequent ballot round:
+ *
+ * Landon Curt Noll (http://www.isthe.com/chongo/)
+ *
+ * improved on their algorithm.  Some people tried this hash
+ * and found that it worked rather well.  In an EMail message
+ * to Landon, they named it the ``Fowler/Noll/Vo'' or FNV hash.
+ *
+ * FNV hashes are designed to be fast while maintaining a low
+ * collision rate. The FNV speed allows one to quickly hash lots
+ * of data while maintaining a reasonable collision rate.  
+ *
+ * See: http://www.isthe.com/chongo/tech/comp/fnv/index.html
+ *
+ * This code is in the public domain.
+ *
+ * LANDON CURT NOLL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO
+ * EVENT SHALL LANDON CURT NOLL BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+ * USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ *
  */
 private unsigned int
 fnv_32_buf(void *buf, size_t len, unsigned int hval) {
-  unsigned char *bp = (unsigned char *)buf;   /* start of buffer */
-  unsigned char *be = bp + len;               /* beyond end of buffer */
+  unsigned char *bp = (unsigned char *)buf; /* start of buffer */
+  unsigned char *be = bp + len;             /* beyond end of buffer */
 
   /**
    * FNV-1a hash each octet in the buffer
