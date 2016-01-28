@@ -29,6 +29,7 @@
 #include <stdlib.h> 
 #include <date.h>
 #include <util.h>
+#include <locale.h>
 
 #if  TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -45,6 +46,9 @@
 #include <joedog/boolean.h>
 
 #define MAX_TIME_LEN 64
+
+#define xfree(x) free(x)
+#define xmalloc(x) malloc(x)
 
 enum assume {
   DATE_MDAY,
@@ -116,47 +120,101 @@ static const struct tzinfo tz[]= {
   {"IDLE", -720},             /* International Date Line East */
 };
 
-char * 
-timetostr(const time_t *T)
+private int    __checkday(char *check, size_t len);
+private int    __checkmonth(char *check);
+private int    __checktz(char *check);
+private time_t __strtotime(const char *string);
+
+struct DATE_T
 {
-  char *line;
-  struct tm *tm;
+  char      * date; 
+  char      * etag;
+  char      * head;
+  struct tm * tm;
+  struct tm   safe;
+};
 
-  tm   = gmtime(T);
-  line = xmalloc(MAX_TIME_LEN);
+size_t DATESIZE = sizeof(struct DATE_T);
 
-  snprintf(
-    line, MAX_TIME_LEN,
-    "If-Modified-Since: %s, %d %s %d %d:%d:%d GMT\015\012",
-    wday[tm->tm_wday],
-    tm->tm_mday,
-    month[tm->tm_mon],
-    tm->tm_year,
-    tm->tm_hour,
-    tm->tm_min,
-    tm->tm_sec
-  );
+DATE
+new_date(char *date)
+{
+  time_t now;
+  DATE this  = calloc(DATESIZE, 1);
+  this->tm   = NULL;
+  this->etag = NULL;
+  this->date = xmalloc(MAX_TIME_LEN);
+  this->head = xmalloc(MAX_TIME_LEN);
+  memset(this->date, '\0', MAX_TIME_LEN);
+  memset(this->head, '\0', MAX_TIME_LEN);
 
-  return line;
+  if (date == NULL) {
+    now      = time(NULL);
+    this->tm = localtime_r(&now, &this->safe);  
+  } else if (strstr(date, " ") == NULL) {
+    this->etag = strdup(date);
+  } else {
+    now      = __strtotime(date);
+    this->tm = localtime_r(&now, &this->safe);
+  }
+  return this;
+}
+
+DATE
+date_destroy(DATE this)
+{
+  if (this != NULL) {
+    xfree(this->date);
+    this->date = NULL;
+    xfree(this->head);
+    this->head = NULL;
+    xfree(this);
+    this = NULL;
+  }
+  return this; 
 }
 
 char *
-timestamp()
+date_get_etag(DATE this) 
+{  
+  return (this->etag == NULL) ? "" : this->etag;  
+}
+
+char * 
+date_get_rfc850(DATE this)
 {
-  char *line;
-  time_t ltime;
-  struct tm *tm;
+  memset(this->date, '\0', MAX_TIME_LEN);
 
-  ltime = time(NULL);
-  tm    = localtime(&ltime);
-  line  = xmalloc(MAX_TIME_LEN);
+  if (this->tm == NULL || this->tm->tm_year == 0) {
+    return "";
+  }
 
-  strftime(line, 64, "[%a, %F %T] ", tm);
-  return line;
+  snprintf (
+    this->date, MAX_TIME_LEN,
+    "%s, %d %s %d %d:%d:%d GMT",
+    wday[this->tm->tm_wday],
+    this->tm->tm_mday,
+    month[this->tm->tm_mon],
+    this->tm->tm_year,
+    this->tm->tm_hour,
+    this->tm->tm_min,
+    this->tm->tm_sec
+  );
+  return this->date;
+}
+
+char *
+date_stamp(DATE this)
+{
+
+  memset(this->date, '\0', MAX_TIME_LEN);
+  setlocale(LC_TIME, "C");
+  strftime(this->date, 64, "[%a, %F %T] ", this->tm);
+  return this->date;
 }
 
 time_t
-adjust(time_t tvalue, int secs)
+date_adjust(time_t tvalue, int secs)
 {
   struct tm *tp;
   time_t ret;
@@ -177,7 +235,8 @@ adjust(time_t tvalue, int secs)
  * Copyright (C) 1998 - 2006, Daniel Stenberg, <daniel@haxx.se>, et al.  
  * (modified - use the original: http://curl.haxx.se/)
  */
-static int checkday(char *check, size_t len)
+private int 
+__checkday(char *check, size_t len)
 {
   int i;
   const char * const *what;
@@ -200,7 +259,8 @@ static int checkday(char *check, size_t len)
  * Copyright (C) 1998 - 2006, Daniel Stenberg, <daniel@haxx.se>, et al.  
  * (modified - use the original: http://curl.haxx.se/)
  */
-static int checkmonth(char *check)
+private int 
+__checkmonth(char *check)
 {
   int i;
   const char * const *what;
@@ -221,7 +281,8 @@ static int checkmonth(char *check)
  * Copyright (C) 1998 - 2006, Daniel Stenberg, <daniel@haxx.se>, et al.  
  * (modified - use the original: http://curl.haxx.se/)
  */
-static int checktz(char *check)
+private int 
+__checktz(char *check)
 {
   unsigned int i;
   const struct tzinfo *what;
@@ -247,8 +308,9 @@ static void skip(const char **date) {
     (*date)++;
 }
 
-time_t
-strtotime(const char *string){
+private time_t
+__strtotime(const char *string)
+{
   int     sec   = -1;   /* seconds          */
   int     min   = -1;   /* minutes          */
   int     hour  = -1;   /* hours            */
@@ -257,9 +319,8 @@ strtotime(const char *string){
   int     year  = -1;   /* year             */
   int     wday  = -1;   /* day of the week  */
   int     tzoff = -1;   /* time zone offset */
-  int     part  = 0;
-  time_t  t     = 0;
-  //time_t  now   = 0;
+  int     part  =  0;
+  time_t  t     =  0;
   struct  tm     tm;
   const   char   *date;
   const   char   *indate = string;    /* original pointer */
@@ -293,19 +354,19 @@ strtotime(const char *string){
       len = strlen(buf);
 
       if(wday == -1) {
-        wday = checkday(buf, len);
+        wday = __checkday(buf, len);
         if(wday != -1)
           found = TRUE;
       }
       if(!found && (mon == -1)) {
-        mon = checkmonth(buf);
+        mon = __checkmonth(buf);
         if(mon != -1)
           found = TRUE;
       }
 
       if(!found && (tzoff == -1)) {
         /* this just must be a time zone string */
-        tzoff = checktz(buf);
+        tzoff = __checktz(buf);
         if(tzoff != -1)
           found = TRUE;
       }
@@ -441,7 +502,6 @@ strtotime(const char *string){
 
     t += delta;
   }
-  //now = time(NULL);
   return t;
 }
 
