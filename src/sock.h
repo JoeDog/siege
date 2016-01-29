@@ -72,17 +72,6 @@ typedef enum
   RDWR  = 3
 } SDSET;  
 
-/**
- * Transfer encoding headers
- */
-/*typedef enum
-{
-  NONE        = 0,
-  CHUNKED     = 1,
-  TRAILER     = 2
-} TE;*/
-       
-
 typedef struct
 {
   int      sock;       /* socket file descriptor          */
