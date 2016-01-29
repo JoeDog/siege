@@ -45,7 +45,7 @@
 #include <setup.h>
 #include <joedog/boolean.h>
 
-#define MAX_TIME_LEN 64
+#define MAX_DATE_LEN 64
 
 #define xfree(x) free(x)
 #define xmalloc(x) malloc(x)
@@ -143,19 +143,31 @@ new_date(char *date)
   DATE this  = calloc(DATESIZE, 1);
   this->tm   = NULL;
   this->etag = NULL;
-  this->date = xmalloc(MAX_TIME_LEN);
-  this->head = xmalloc(MAX_TIME_LEN);
-  memset(this->date, '\0', MAX_TIME_LEN);
-  memset(this->head, '\0', MAX_TIME_LEN);
+  this->date = xmalloc(MAX_DATE_LEN);
+  this->head = xmalloc(MAX_DATE_LEN);
+  memset(this->date, '\0', MAX_DATE_LEN);
+  memset(this->head, '\0', MAX_DATE_LEN);
 
   if (date == NULL) {
     now      = time(NULL);
     this->tm = localtime_r(&now, &this->safe);  
-  } else if (strstr(date, " ") == NULL) {
-    this->etag = strdup(date);
   } else {
     now      = __strtotime(date);
     this->tm = localtime_r(&now, &this->safe);
+  }
+  return this;
+}
+
+DATE
+new_etag(char *etag)
+{
+  DATE this  = calloc(DATESIZE, 1);
+  this->tm   = NULL;
+  this->date = NULL;
+  this->etag = NULL; 
+
+  if (etag != NULL) {
+    this->etag = xstrdup(etag);  
   }
   return this;
 }
@@ -165,9 +177,8 @@ date_destroy(DATE this)
 {
   if (this != NULL) {
     xfree(this->date);
-    this->date = NULL;
     xfree(this->head);
-    this->head = NULL;
+    xfree(this->etag);
     xfree(this);
     this = NULL;
   }
@@ -183,14 +194,14 @@ date_get_etag(DATE this)
 char * 
 date_get_rfc850(DATE this)
 {
-  memset(this->date, '\0', MAX_TIME_LEN);
+  memset(this->date, '\0', MAX_DATE_LEN);
 
   if (this->tm == NULL || this->tm->tm_year == 0) {
     return "";
   }
 
   snprintf (
-    this->date, MAX_TIME_LEN,
+    this->date, MAX_DATE_LEN,
     "%s, %d %s %d %d:%d:%d GMT",
     wday[this->tm->tm_wday],
     this->tm->tm_mday,
@@ -207,7 +218,7 @@ char *
 date_stamp(DATE this)
 {
 
-  memset(this->date, '\0', MAX_TIME_LEN);
+  memset(this->date, '\0', MAX_DATE_LEN);
   setlocale(LC_TIME, "C");
   strftime(this->date, 64, "[%a, %F %T] ", this->tm);
   return this->date;

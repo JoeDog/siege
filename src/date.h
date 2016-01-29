@@ -28,7 +28,14 @@
 typedef struct DATE_T *DATE;
 extern  size_t DATESIZE;
 
+/**
+ * We decided to make etag a DATE
+ * because then we have one destroyer
+ * that we can pass to the HASH
+ */
 DATE   new_date();
+DATE   new_etag(char *etag);
+
 DATE   date_destroy(DATE this);
 time_t adjust(time_t tvalue, int secs);
 time_t strtotime(const char *string);
@@ -36,6 +43,5 @@ char * timetostr(const time_t *T);
 char * date_get_etag(DATE this);
 char * date_get_rfc850(DATE this);
 char * date_stamp(DATE this);
-
 
 #endif/*DATE_H*/
