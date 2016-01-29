@@ -43,6 +43,9 @@ struct CACHE_T
   char * header;
 };
 
+private const char* keys[] = { "ET.", "LM.", "EX.", NULL };
+private char * __build_key(CTYPE type, URL U);
+
 size_t CACHESIZE = sizeof(struct CACHE_T);
 
 CACHE
@@ -54,7 +57,6 @@ new_cache()
   hash_set_destroyer(this->cache, (void*)date_destroy);
   return this;
 }
-
 
 CACHE
 cache_destroy(CACHE this)
@@ -68,25 +70,58 @@ cache_destroy(CACHE this)
 }
 
 BOOLEAN
-cache_contains(CACHE this, URL U)
+cache_contains(CACHE this, CTYPE type, URL U)
 {
-  return hash_contains(this->cache, url_get_request(U));
+  char   *key;
+  BOOLEAN found = FALSE;
+
+  key = __build_key(type, U);
+  if (key == NULL) {
+    return FALSE;
+  }
+  found = hash_contains(this->cache, key);
+
+  xfree(key);
+  return found;
 }
 
 void
-cache_add(CACHE this, URL U, char *date)
+cache_add(CACHE this, CTYPE type, URL U, char *date)
 {
-  if (hash_contains(this->cache, url_get_request(U))) {
+  char *key = __build_key(type, U);
+  
+  if (key == NULL) return;
+
+  if (hash_contains(this->cache, key)) {
     // NOTE: hash destroyer was set in the constructor
-    hash_remove(this->cache, url_get_request(U));
+    hash_remove(this->cache, key);
   }
-  hash_nadd(this->cache, url_get_request(U), new_date(date), DATESIZE); 
+
+  switch (type) {
+    case C_ETAG:
+      hash_nadd(this->cache, key, new_etag(date), DATESIZE); 
+      break; 
+    default:
+      hash_nadd(this->cache, key, new_date(date), DATESIZE); 
+      break; 
+  }
+  xfree(key);
+  
+  return;
 }
 
 DATE
-cache_get(CACHE this, URL U)
+cache_get(CACHE this, CTYPE type, URL U)
 {
-  return (DATE)hash_get(this->cache, url_get_request(U));
+  DATE  date;
+  char  *key = __build_key(type, U);
+
+  if (key == NULL) return NULL;
+  
+  date = (DATE)hash_get(this->cache, key);
+  xfree(key);
+
+  return date;
 }
 
 /**
@@ -98,34 +133,71 @@ cache_get(CACHE this, URL U)
  * managing memory outside of the object.
  */
 char *
-cache_get_header(CACHE this, URL U, char *name)
+cache_get_header(CACHE this, CTYPE type, URL U)
 {
-  DATE d = NULL;
-  char tmp[256];
- 
-  if (! hash_contains(this->cache, url_get_request(U))) {
-    return ""; 
+  DATE  d   = NULL;
+  char *key = NULL;
+  char  tmp[256];
+
+  /**
+   * If we don't have it cached, there's no
+   * point in continuing...
+   */
+  if (! cache_contains(this, type, U)) {
+    return NULL;
+  }
+
+  /**
+   * If we can't build a key, we better bail...
+   */
+  key = __build_key(type, U);
+  if (key == NULL) {
+    return NULL;
+  } 
+
+  /**
+   * At this point we should be able to grab
+   * a date but we'll test and bail on failure
+   */
+  d = (DATE)hash_get(this->cache, key);
+  if (d == NULL) {
+    return NULL;
   }
 
   memset(tmp, '\0', 256);
-
-  d = (DATE)hash_get(this->cache, url_get_request(U));
-
-  if (strmatch(name, "If-None-Match")) {
-    char   *etag = strdup(date_get_etag(d)); // strdup for local copy
-    if (empty(etag)) return "";
-
-    snprintf(tmp, 256, "If-None-Match: %s\015\012", etag);
-    this->header = strdup(tmp);
-    xfree(etag);
-    return this->header;
-  } else if (strmatch(name, "If-Modified-Since")) {
-    char *date = strdup(date_get_rfc850(d)); 
-
-    if (empty(date)) return "";
-    snprintf(tmp, 256, "If-Modified-Since: %s\015\012", date);
-    this->header = strdup(tmp);
-    return this->header;
+  switch (type) {
+    char *ptr = NULL;
+    case C_ETAG:
+      ptr = strdup(date_get_etag(d)); // need a local copy 
+      if (empty(ptr)) return "";      // should never happen
+      snprintf(tmp, 256, "If-None-Match: %s\015\012", ptr);
+      this->header = strdup(tmp);
+      xfree(ptr);
+      return this->header;
+    default:
+      ptr = strdup(date_get_rfc850(d));
+      if (empty(ptr)) return "";
+      snprintf(tmp, 256, "If-Modified-Since: %s\015\012", ptr);
+      this->header = strdup(tmp);
+      xfree(ptr);
+      //return this->header;
+      return NULL;
   }
-  return ""; // Unsupported header or a WTF?
+  return NULL; // Unsupported header or a WTF?
+}
+
+private char *
+__build_key(CTYPE type, URL U)
+{
+  int   len = 0; 
+  char *key = NULL;
+
+  if (U == NULL || url_get_request(U) == NULL || strlen(url_get_request(U)) < 1) {
+    return NULL;
+  }
+  len = strlen(url_get_request(U)) + strlen(keys[type]);
+  key = (char *)xmalloc(len+1);
+  memset(key, '\0', len+1);
+  snprintf(key, len, "%s%s", keys[type], url_get_request(U));
+  return key;  
 }

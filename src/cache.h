@@ -29,20 +29,21 @@
 #include <joedog/defs.h>
 #include <joedog/boolean.h>
 
+typedef enum {
+  C_ETAG    = 0,
+  C_LAST    = 1,
+  C_EXPIRES = 2 
+} CTYPE;
+
+
 typedef struct CACHE_T *CACHE;
 extern size_t  CACHESIZE;
 
-
-CACHE new_cache();
-CACHE cache_destroy(CACHE this);
-void  cache_add(CACHE this, URL U, char *date);
-DATE  cache_get(CACHE this, URL U);
-
-/**
- * Returns an HTTP request field
- * A Name filed will consist of either 
- * If-Modified-Since or If-None-Match 
- */
-char *cache_get_header(CACHE this, URL U, char *name);
+CACHE   new_cache();
+CACHE   cache_destroy(CACHE this);
+BOOLEAN cache_contains(CACHE this, CTYPE type, URL U);
+void    cache_add(CACHE this, CTYPE type, URL U, char *date);
+DATE    cache_get(CACHE this, CTYPE type, URL U);
+char *  cache_get_header(CACHE this, CTYPE type, URL U);
 
 #endif/*__CACHE_H*/
