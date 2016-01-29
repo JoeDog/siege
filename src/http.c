@@ -116,12 +116,15 @@ http_get(CONN *C, URL U)
   char   portstr[16];
   char   fullpath[4096];
   char   cookie[MAX_COOKIE_SIZE+8];
-  char * ifnon = cache_get_header(C->cache, U, "If-None-Match");
-  char * ifmod = cache_get_header(C->cache, U, "IF-Modified-Since");
+  char * ifnon = NULL;
+  char * ifmod = NULL; 
 
   memset(hoststr, '\0', sizeof hoststr);
   memset(cookie,  '\0', sizeof cookie);
   memset(portstr, '\0', sizeof portstr);
+
+  ifnon = cache_get_header(C->cache, C_ETAG, U);
+  ifmod = cache_get_header(C->cache, C_LAST, U);
 
   /* Request path based on proxy settings */
   if(auth_get_proxy_required(my.auth)){
@@ -491,19 +494,18 @@ http_read_headers(CONN *C, URL U)
       if(my.cache){
         date = xmalloc(len);
         memcpy(date, line+15, len-14);
-        //url_set_last_modified(U, date);
+        cache_add(C->cache, C_LAST, U, date);
         xfree(date); 
       }
     }
     if (strncasecmp(line, ETAG, strlen(ETAG)) == 0) {
-      response_set_etag(resp, line);
       char   *etag;
       size_t len = strlen(line);
       if (my.cache) {
         etag = xmalloc(len);
         memcpy(etag, line+6, len-5);
         etag[len-1] = '\0';
-        cache_add(C->cache, U, etag);
+        cache_add(C->cache, C_ETAG, U, etag);
         xfree(etag);
       }
     }
