@@ -203,7 +203,8 @@ static const struct ContentType tmap[] = {
   {"xpm",     FALSE, "image/x-xpixmap"},
   {"xwd",     FALSE, "image/x-xwindowdump"},
   {"xyz",     FALSE, "chemical/x-pdb"},
-  {"zip",     FALSE, "application/zip"}
+  {"zip",     FALSE, "application/zip"},
+  {"proto",   FALSE, "application/x-protobuf"}
 };
 
 char * 
