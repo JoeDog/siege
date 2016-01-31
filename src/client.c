@@ -200,6 +200,8 @@ start_routine(CLIENT *client)
       while ((u = (URL)array_pop(client->purls)) != NULL) {
         if (url_get_scheme(u) == UNSUPPORTED) {
           ;;
+        } else if (my.cache && is_cached(C->cache, u)) {
+          ;;
         } else {
           client->auth.bids.www = 0;
           // We'll only request files on the same host as the page
