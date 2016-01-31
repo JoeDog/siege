@@ -502,24 +502,32 @@ http_read_headers(CONN *C, URL U)
       char   *etag;
       size_t len = strlen(line);
       if (my.cache) {
-        etag = xmalloc(len);
+        etag = (char *)xmalloc(len);
+        memset(etag, '\0', len);
         memcpy(etag, line+6, len-5);
-        etag[len-1] = '\0';
         cache_add(C->cache, C_ETAG, U, etag);
         xfree(etag);
       }
     }
-    if (strncasecmp(line, "www-authenticate: ", 18) == 0) {
+    if (strncasecmp(line, WWW_AUTHENTICATE, strlen(WWW_AUTHENTICATE)) == 0) {
       response_set_www_authenticate(resp, line);
     } 
-    if (strncasecmp(line, "proxy-authenticate: ", 20) == 0) {
+    if (strncasecmp(line, PROXY_AUTHENTICATE, strlen(PROXY_AUTHENTICATE)) == 0) {
       response_set_proxy_authenticate(resp, line);
     }
     if (strncasecmp(line, TRANSFER_ENCODING, strlen(TRANSFER_ENCODING)) == 0) {
       response_set_transfer_encoding(resp, line);
     }
-    if (strncasecmp(line, "expires: ", 9) == 0) {
-      /* printf("%s\n", line+10);  */
+    if (strncasecmp(line, EXPIRES, strlen(EXPIRES)) == 0) {
+      char   *expires;
+      size_t  len = strlen(line); 
+      if (my.cache) {
+        expires = (char *)xmalloc(len);
+        memset(expires, '\0', len);
+        memcpy(expires, line+9, len-8);
+        cache_add(C->cache, C_EXPIRES, U, expires);
+        xfree(expires);
+      }
     }
     if (strncasecmp(line, "cache-control: ", 15) == 0) {
       /* printf("%s\n", line+15); */
