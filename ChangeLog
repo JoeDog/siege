@@ -1,6 +1,15 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/01/31 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * include/config.h.in    Added HAVE_LOCALTIME_R
+ * src/date.c             Changed Daniels tm_year; added date_expired
+ * src/cache.c            Added is_cached; logical enhancements
+ * src/cache.h            Added is_cached
+ * src/cient.c            Added check for cached items
+ * src/http.c             Parse expires and last-modified
+ * src/parser.c           Minor refinements
+
 2016/01/28 Jeffrey Fulmer <http://www.joedog.org/support/>
  * src/Makefile.am        Added cache.c and cache.h
  * src/cache.c            Added to the distribution
