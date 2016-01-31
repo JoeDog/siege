@@ -131,7 +131,9 @@ struct DATE_T
   char      * etag;
   char      * head;
   struct tm * tm;
+#ifdef  HAVE_GMTIME_R
   struct tm   safe;
+#endif/*HAVE_LOCALTIME_R*/
 };
 
 size_t DATESIZE = sizeof(struct DATE_T);
@@ -150,10 +152,18 @@ new_date(char *date)
 
   if (date == NULL) {
     now      = time(NULL);
-    this->tm = localtime_r(&now, &this->safe);  
+#ifdef  HAVE_GMTIME_R
+    this->tm = gmtime_r(&now, &this->safe);  
+#else
+    this->tm = gmtime(&now);  
+#endif/*HAVE_GMTIME_R*/
   } else {
     now      = __strtotime(date);
-    this->tm = localtime_r(&now, &this->safe);
+#ifdef  HAVE_GMTIME_R
+    this->tm =gmtime_r(&now, &this->safe);
+#else
+    this->tm = gmtime(&now);
+#endif/*HAVE_GMTIME_R*/
   }
   return this;
 }
@@ -214,13 +224,50 @@ date_get_rfc850(DATE this)
   return this->date;
 }
 
+BOOLEAN 
+date_expired(DATE this) 
+{
+  long res  = 0;
+  time_t now;  
+  struct tm *gmt;
+  time_t then;
+
+  if (this == NULL || this->tm == NULL) return TRUE;
+
+  now  = time(NULL);
+  gmt  = gmtime(&now);
+  then = mktime(this->tm);
+  now  = mktime(gmt);
+  res  = difftime(then, now); 
+  return (res < 0) ? TRUE : FALSE;
+}
+
+char *
+date_to_string(DATE this)
+{
+  if (this->etag != NULL) return this->etag;
+  memset(this->date, '\0', MAX_DATE_LEN);
+  setlocale(LC_TIME, "C");
+  strftime(this->date, MAX_DATE_LEN, "%a, %F %T ", this->tm);
+  return this->date;
+}
+
+time_t mylocaltime(struct tm *tm) {
+    time_t epoch  = 0;
+    time_t offset = mktime(localtime(&epoch));
+    time_t local  = mktime(tm);
+    return difftime(local, offset);
+}
+
 char *
 date_stamp(DATE this)
 {
-
+  struct tm *tmp;
+  time_t time;
+  time = mylocaltime(this->tm);
+  tmp = localtime(&time);
   memset(this->date, '\0', MAX_DATE_LEN);
-  setlocale(LC_TIME, "C");
-  strftime(this->date, 64, "[%a, %F %T] ", this->tm);
+  strftime(this->date, MAX_DATE_LEN, "[%a, %F %T] ", tmp);
   return this->date;
 }
 
@@ -352,7 +399,7 @@ __strtotime(const char *string)
    * http://curl.haxx.se/
    */
  
-  while(*date && (part < 6)) {
+  while (*date && (part < 6)) {
     found=FALSE;
 
     skip(&date);
@@ -399,7 +446,7 @@ __strtotime(const char *string)
       else {
         val = (int)strtol(date, &end, 10);
 
-        if((tzoff == -1) &&
+        if ((tzoff == -1) &&
            ((end - date) == 4) &&
            (val < 1300) &&
            (indate< date) &&
@@ -414,7 +461,7 @@ __strtotime(const char *string)
           tzoff = date[-1]=='+'?-tzoff:tzoff;
         }
 
-        if(((end - date) == 8) && (year == -1) && (mon == -1) && (mday == -1)) {
+        if (((end - date) == 8) && (year == -1) && (mon == -1) && (mday == -1)) {
           /* 8 digits, no year, month or day yet. This is YYYYMMDD */
           found = TRUE;
           year  = val/10000;
@@ -422,28 +469,37 @@ __strtotime(const char *string)
           mday  = val%100;
         }
 
-        if(!found && (dignext == DATE_MDAY) && (mday == -1)) {
-          if((val > 0) && (val<32)) {
+        if (!found && (dignext == DATE_MDAY) && (mday == -1)) {
+          if ((val > 0) && (val<32)) {
             mday = val;
             found = TRUE;
           }
           dignext = DATE_YEAR;
         }
 
-        if(!found && (dignext == DATE_YEAR) && (year == -1)) {
+        if (!found && (dignext == DATE_YEAR) && (year == -1)) {
           year = val;
           found = TRUE;
-          if(year < 1900) {
+          if (year > 1970) {
+            year -= 1900;
+          }
+          /**
+           * Daniel adjusts tm_year 
+           * to the actual year but
+           * we want to do date calcs 
+           * so our adjust is to 1xx
+          if (year < 1900) {
             if (year > 70)
               year += 1900;
             else
               year += 2000;
           }
-          if(mday == -1)
+          */
+          if (mday == -1)
             dignext = DATE_MDAY;
         }
 
-        if(!found)
+        if (!found)
           return -1;
 
         date = end;
@@ -455,9 +511,9 @@ __strtotime(const char *string)
   if(-1 == sec)
     sec = min = hour = 0; /* no time, make it zero */
 
-  if((-1 == mday) ||
-     (-1 == mon) ||
-     (-1 == year))
+  if ((-1 == mday)  ||
+      (-1 == mon)   ||
+      (-1 == year))
     /* lacks vital info, fail */
     return -1;
 
@@ -470,7 +526,7 @@ __strtotime(const char *string)
   tm.tm_hour  = hour;
   tm.tm_mday  = mday;
   tm.tm_mon   = mon;
-  tm.tm_year  = year - 1900;
+  tm.tm_year  = year; //(year < 2000) ? (year - 1900) : year;
   tm.tm_wday  = 0;
   tm.tm_yday  = 0;
   tm.tm_isdst = 0;

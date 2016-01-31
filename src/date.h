@@ -24,6 +24,7 @@
 #define DATE_H
 
 #include <time.h>
+#include <joedog/boolean.h>
 
 typedef struct DATE_T *DATE;
 extern  size_t DATESIZE;
@@ -36,12 +37,14 @@ extern  size_t DATESIZE;
 DATE   new_date();
 DATE   new_etag(char *etag);
 
-DATE   date_destroy(DATE this);
-time_t adjust(time_t tvalue, int secs);
-time_t strtotime(const char *string);
-char * timetostr(const time_t *T);
-char * date_get_etag(DATE this);
-char * date_get_rfc850(DATE this);
-char * date_stamp(DATE this);
+DATE    date_destroy(DATE this);
+time_t  adjust(time_t tvalue, int secs);
+time_t  strtotime(const char *string);
+BOOLEAN date_expired(DATE this);
+char *  timetostr(const time_t *T);
+char *  date_get_etag(DATE this);
+char *  date_get_rfc850(DATE this);
+char *  date_stamp(DATE this);
+char *  date_to_string(DATE this);
 
 #endif/*DATE_H*/
