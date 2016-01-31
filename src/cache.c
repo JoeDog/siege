@@ -43,7 +43,7 @@ struct CACHE_T
   char * header;
 };
 
-private const char* keys[] = { "ET.", "LM.", "EX.", NULL };
+private const char* keys[] = { "ET_", "LM_", "EX_", NULL };
 private char * __build_key(CTYPE type, URL U);
 
 size_t CACHESIZE = sizeof(struct CACHE_T);
@@ -85,6 +85,24 @@ cache_contains(CACHE this, CTYPE type, URL U)
   return found;
 }
 
+BOOLEAN
+is_cached(CACHE this, URL U)
+{
+  DATE  day = NULL;
+  char *key = __build_key(C_EXPIRES, U);
+
+  if (hash_contains(this->cache, key)) {
+    day = (DATE)hash_get(this->cache, key);
+    if (date_expired(day) == FALSE) {
+      return TRUE;
+    } else {
+      hash_remove(this->cache, key);
+      return FALSE;
+    }
+  }
+  return FALSE;
+}
+
 void
 cache_add(CACHE this, CTYPE type, URL U, char *date)
 {
@@ -92,7 +110,7 @@ cache_add(CACHE this, CTYPE type, URL U, char *date)
   
   if (key == NULL) return;
 
-  if (hash_contains(this->cache, key)) {
+  if (type != C_EXPIRES && hash_contains(this->cache, key)) {
     // NOTE: hash destroyer was set in the constructor
     hash_remove(this->cache, key);
   }
@@ -101,6 +119,12 @@ cache_add(CACHE this, CTYPE type, URL U, char *date)
     case C_ETAG:
       hash_nadd(this->cache, key, new_etag(date), DATESIZE); 
       break; 
+    case C_EXPIRES:
+      if (hash_contains(this->cache, key) == TRUE) {
+        break; 
+      }
+      hash_nadd(this->cache, key, new_date(date), DATESIZE); 
+      break;
     default:
       hash_nadd(this->cache, key, new_date(date), DATESIZE); 
       break; 
@@ -136,7 +160,9 @@ char *
 cache_get_header(CACHE this, CTYPE type, URL U)
 {
   DATE  d   = NULL;
+  DATE  e   = NULL;
   char *key = NULL;
+  char *exp = NULL;
   char  tmp[256];
 
   /**
@@ -145,6 +171,19 @@ cache_get_header(CACHE this, CTYPE type, URL U)
    */
   if (! cache_contains(this, type, U)) {
     return NULL;
+  }
+
+  /**
+   * Check it's freshness
+   */
+  exp = __build_key(C_EXPIRES, U);
+  if (exp) {
+    e = (DATE)hash_get(this->cache, exp);
+    xfree(exp);
+    if (date_expired(e)) {
+      // remove entries
+      return NULL;
+    }
   }
 
   /**
@@ -180,8 +219,7 @@ cache_get_header(CACHE this, CTYPE type, URL U)
       snprintf(tmp, 256, "If-Modified-Since: %s\015\012", ptr);
       this->header = strdup(tmp);
       xfree(ptr);
-      //return this->header;
-      return NULL;
+      return this->header;
   }
   return NULL; // Unsupported header or a WTF?
 }
@@ -195,7 +233,7 @@ __build_key(CTYPE type, URL U)
   if (U == NULL || url_get_request(U) == NULL || strlen(url_get_request(U)) < 1) {
     return NULL;
   }
-  len = strlen(url_get_request(U)) + strlen(keys[type]);
+  len = strlen(url_get_request(U)) + strlen(keys[type])+1;
   key = (char *)xmalloc(len+1);
   memset(key, '\0', len+1);
   snprintf(key, len, "%s%s", keys[type], url_get_request(U));

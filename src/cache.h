@@ -45,5 +45,7 @@ BOOLEAN cache_contains(CACHE this, CTYPE type, URL U);
 void    cache_add(CACHE this, CTYPE type, URL U, char *date);
 DATE    cache_get(CACHE this, CTYPE type, URL U);
 char *  cache_get_header(CACHE this, CTYPE type, URL U);
+BOOLEAN is_cached(CACHE this, URL U);
+
 
 #endif/*__CACHE_H*/
