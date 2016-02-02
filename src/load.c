@@ -61,6 +61,7 @@ static const struct ContentType tmap[] = {
   {"cpt",     FALSE, "application/mac-compactpro"},
   {"csh",     FALSE, "application/x-csh"},
   {"css",     TRUE,  "text/css"},
+  {"csv",     TRUE,  "text/csv"},
   {"dcr",     FALSE, "application/x-director"},
   {"dir",     FALSE, "application/x-director"},
   {"dms",     FALSE, "application/octet-stream"},
@@ -87,6 +88,7 @@ static const struct ContentType tmap[] = {
   {"htm",     TRUE,  "text/html"},
   {"html",    TRUE,  "text/html"},
   {"ice",     FALSE, "x-conference/x-cooltalk"},
+  {"ico",     FALSE, "image/x-icon"},
   {"ief",     FALSE, "image/ief"},
   {"iges",    FALSE, "model/iges"},
   {"igs",     FALSE, "model/iges"},
@@ -105,6 +107,7 @@ static const struct ContentType tmap[] = {
   {"m",       TRUE,  "text/plain"},
   {"man",     FALSE, "application/x-troff-man"},
   {"me",      FALSE, "application/x-troff-me"},
+  {"md",      TRUE,  "text/x-markdown"},
   {"mesh",    FALSE, "model/mesh"},
   {"mid",     FALSE, "audio/midi"},
   {"midi",    FALSE, "audio/midi"},
@@ -170,6 +173,7 @@ static const struct ContentType tmap[] = {
   {"stp",     FALSE, "application/STEP"},
   {"sv4cpio", FALSE, "application/x-sv4cpio"},
   {"sv4crc",  FALSE, "application/x-sv4crc"},
+  {"svg",     TRUE,  "image/svg+xml"},
   {"swf",     FALSE, "application/x-shockwave-flash"},
   {"t",       FALSE, "application/x-troff"},
   {"tar",     FALSE, "application/x-tar"},
@@ -203,6 +207,7 @@ static const struct ContentType tmap[] = {
   {"xpm",     FALSE, "image/x-xpixmap"},
   {"xwd",     FALSE, "image/x-xwindowdump"},
   {"xyz",     FALSE, "chemical/x-pdb"},
+  {"yml",     TRUE,  "application/x-yaml"},
   {"zip",     FALSE, "application/zip"}
 };
 
