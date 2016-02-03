@@ -1,6 +1,14 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/02/03 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_3-1-4_FEB_02_2016
+ * src/auth.c             Patched from 4.x.x
+ * src/auth.h             Patched from 4.x.x
+ * src/client.c           Patched 407 block from 4.x.x
+ * src/http.c             Patched proxy-auth block from 4.x.x
+ * src/version.c          Version increment: 3.1.4
+
 2015/12/12 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE BETA             RELEASE_3-1-4b2_DEC_12_2015
  * configure.ac           Added check for sys/types.h
