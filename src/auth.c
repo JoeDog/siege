@@ -155,6 +155,10 @@ AUTH
 auth_destroy(AUTH this)
 {
   this->creds = array_destroy(this->creds);
+  xfree(this->basic.encode);
+  xfree(this->digest.encode);
+  xfree(this->ntlm.encode);
+  xfree(this->proxy.encode);
   xfree(this);
   return NULL;
 }
@@ -197,7 +201,7 @@ auth_set_basic_header(AUTH this, SCHEME scheme, char *realm)
     CREDS tmp = array_get(this->creds, i);
     if (realm == NULL) break;
     if (strmatch(creds_get_realm(tmp), realm)) {
-      if (creds_get_scheme(tmp) == HTTP || creds_get_scheme(tmp) == HTTPS) {
+      if (creds_get_scheme(tmp) == scheme) {
         return __basic_header(this, scheme, tmp); 
       }
     }
@@ -208,7 +212,7 @@ auth_set_basic_header(AUTH this, SCHEME scheme, char *realm)
   for (i = 0; i < array_length(this->creds); i++) {
     CREDS tmp = array_get(this->creds, i);
     if (strmatch(creds_get_realm(tmp), "any")) {
-      if (creds_get_scheme(tmp) == HTTP || creds_get_scheme(tmp) == HTTPS) {
+      if (creds_get_scheme(tmp) == scheme) {
         return __basic_header(this, scheme, tmp); 
       }
     }
@@ -253,22 +257,29 @@ auth_get_ntlm_header(AUTH this, SCHEME scheme)
   }
 }
 
-//digest_generate_authorization(C->auth.wwwchlg, C->auth.wwwcred, "GET", fullpath);
 char *
 auth_get_digest_header(AUTH this, SCHEME scheme, DCHLG *chlg, DCRED *cred, const char *method, const char *uri)
 {
   size_t len;
-  char  *cnonce      = NULL;
-  char  *nonce_count = NULL;
-  char  *qop         = NULL;
-  char  *response    = NULL;
+  char  *cnonce         = NULL;
+  char  *nonce_count    = NULL;
+  char  *qop            = NULL;
+  char  *response       = NULL;
   char  *request_digest = NULL;
-  char  *h_a1 = NULL;
-  char  *h_a2 = NULL;
-  char  *opaque = NULL;
-  char  *result, *tmp;
+  char  *h_a1           = NULL;
+  char  *h_a2           = NULL;
+  char  *opaque         = NULL;
+  char  *result         = NULL; 
+  char  *tmp            = NULL;
 
-  if (NULL != chlg->qop) {
+  /**
+   * The user probably didn't set login credentials. 
+   * We'll return "" here and display a message after
+   * the authorization failure.
+   */
+  if (chlg == NULL || cred == NULL) return "";
+
+  if (chlg != NULL && chlg->qop != NULL) {
     nonce_count = xstrcat(", nc=", cred->nc, NULL);
     cnonce = xstrcat(", cnonce=\"", cred->cnonce_value, "\"", NULL);
 
@@ -304,7 +315,7 @@ auth_get_digest_header(AUTH this, SCHEME scheme, DCHLG *chlg, DCRED *cred, const
     xfree(tmp);
     response = xstrcat(" response=\"", request_digest, "\"", NULL);
   }
-  if (NULL != chlg->opaque)
+  if (chlg != NULL && chlg->opaque != NULL)
     opaque = xstrcat(", opaque=\"", chlg->opaque, "\"", NULL);
 
   result = xstrcat (
@@ -543,6 +554,11 @@ __ntlm_header(AUTH this, SCHEME scheme, const char *header, CREDS creds)
   if (strncasecmp(header, "NTLM", 4)) {
     return FALSE;
   }
+
+  NOTIFY( // honestly this is here to silence the compiler...
+    DEBUG, "Parsing NTLM header:  %d, %d, %s, %s",
+    this->okay, scheme, header, creds_get_username(creds)
+  );
 
   header += 4; // Step past NTLM
   while (*header && ISSPACE(*header)) {
