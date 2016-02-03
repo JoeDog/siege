@@ -35,20 +35,14 @@ BOOLEAN is_variable_line(char *line);
  * '#' empty lines beginning with \n 
  * Takes a char* as an argument        
  */
-void 
+void
 parse(char *str)
 {
   char *ch;
-  char *sp = strchr(str, ' ');
-  char *sl = strchr(str, '/');
-  if (sl==NULL && sp != NULL) {
-    ch = (char *)strstr(str, "#"); 
-    if (ch) {*ch = '\0';}
-  }
-  ch = (char *)strstr(str, "\n"); 
-  if (ch) {*ch = '\0';}
-
-  trim(str);
+  ch = (char *)strstr(str, "#");
+  if (ch){ *ch = '\0'; }
+  ch = (char *)strstr(str, "\n");
+  if (ch){ *ch = '\0'; }
 }
 
 /** 
