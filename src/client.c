@@ -461,12 +461,14 @@ __http(CONN *C, URL U, CLIENT *client)
         if (head->auth.type.proxy == DIGEST) {
           BOOLEAN b;
           client->auth.type.proxy =  DIGEST;
-          b = auth_set_digest_header(
+          b = auth_set_digest_header (
             my.auth, &(client->auth.pchlg), &(client->auth.pcred), &(client->rand_r_SEED),
             head->auth.realm.proxy, head->auth.challenge.proxy
           );
 	  if (b == FALSE) {
-	    NOTIFY(ERROR, "unable to set digest header");
+            fprintf(stderr, "ERROR: Unable to respond to a proxy authorization challenge\n");
+            fprintf(stderr, "       in the following HTTP realm: '%s'\n", head->auth.realm.proxy);
+            fprintf(stderr, "       Did you set proxy-login credentials in the conf file?\n");
 	    return FALSE;
 	  }
         }
