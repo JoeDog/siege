@@ -39,8 +39,21 @@ void
 parse(char *str)
 {
   char *ch;
-  char *sp = strchr(str, ' ');
-  char *sl = strchr(str, '/');
+  char *sp;
+  char *sl;
+
+  /**
+   * An indented comment could be problematic.
+   * Let's trim the string then see if the first
+   * character is a comment.
+   */
+  str = trim(str);
+  if (str[0] == '#') { 
+    str[0] = '\0';
+  }
+
+  sp = strchr(str, ' ');
+  sl = strchr(str, '/');
   if (sl==NULL && sp != NULL) {
     ch = (char *)strstr(str, "#"); 
     if (ch) {*ch = '\0';}
@@ -69,12 +82,12 @@ read_cfg_file(LINES *l, char *filename)
   /* char array to hold contents */
   
   /* make sure LINES has been initialized. */
-  if(!l){	
+  if (!l) {	
     printf("Structure not initialized!\n");
     return -1;
   }
 
-  if((file = fopen(filename, "r")) == NULL) {
+  if ((file = fopen(filename, "r")) == NULL) {
     /* this is a fatal problem, but we want  
        to enlighten the user before dying   */
     NOTIFY(WARNING, "unable to open file: %s", filename);
@@ -102,30 +115,30 @@ read_cfg_file(LINES *l, char *filename)
        * Check to see if we are at the end of the file. If so
        * keep the line, otherwise throw it away!
        */
-      if((num = fgetc(file)) != EOF) {
-        while((num = fgetc(file)) != EOF && num != '\n');
+      if ((num = fgetc(file)) != EOF) {
+        while ((num = fgetc(file)) != EOF && num != '\n');
         line[0]='\0';
       }
     }
     parse(line);
     chomp(line);
-    if(strlen(line) == 0);
-    else if(is_variable_line(line)){
+    if (strlen(line) == 0);
+    else if (is_variable_line(line)) {
       char *tmp = line;
       option = tmp;
-      while(*tmp && !ISSPACE((int)*tmp) && !ISSEPARATOR(*tmp))
+      while (*tmp && !ISSPACE((int)*tmp) && !ISSEPARATOR(*tmp))
         tmp++; 
       *tmp++=0;
-      while(ISSPACE((int)*tmp) || ISSEPARATOR(*tmp))
+      while (ISSPACE((int)*tmp) || ISSEPARATOR(*tmp))
         tmp++;
       value  = tmp;
-      while(*tmp)
+      while (*tmp)
         tmp++;
       *tmp++=0;
       hash_add(H, option, value); 
     } else {
     char *tmp = xstrdup(line);
-      while(strstr(tmp, "$")){
+      while (strstr(tmp, "$")) {
         tmp = evaluate(H, tmp);
       }
       l->line = (char**)realloc(l->line, sizeof(char *) * (l->index + 1));
@@ -161,8 +174,8 @@ read_cmd_line(LINES *l, char *url)
   snprintf(head, sizeof(head), "%s", url);
   parse(head);
   chomp(head);
-  if(strlen(head) == 0);
-  else{
+  if (strlen(head) == 0);
+  else {
     l->line = (char**)realloc(l->line, sizeof(char *) * (l->index + 1));
     l->line[l->index] = (char *)strdup(head);
     l->index++;
