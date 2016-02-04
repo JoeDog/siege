@@ -611,9 +611,8 @@ __parse_post_data(URL this, char *datap)
   if (*datap == '<') {
     datap++;
     load_file(this, datap);
-    this->file = xmalloc(strlen(datap)+1);
-    memset(this->file, '\0', strlen(datap)+1);
-    memcpy(this->file, datap, strlen(datap));
+    datap = __url_set_path(this, datap);
+    datap = __url_set_file(this, datap);
     return;
   } else {
     this->postdata = xstrdup(datap);
@@ -832,7 +831,7 @@ __url_set_hostname(URL this, char *str)
   }
 
   /* skip to end, slash, or port colon */
-  for (i = 0; str[i] && str[i] != '/' && str[i] != ':'; i++);
+  for (i = 0; str[i] && str[i] != '/' && str[i] != '#' && str[i] != ':'; i++);
 
   this->hostname = xmalloc(i + 1);
   memset(this->hostname, '\0', i+1);
@@ -882,13 +881,29 @@ __url_set_port(URL this, char *str)
 private char *
 __url_set_path(URL this, char *str)
 {
-  int  i;    // capture the lenght of the path
-  int  j;    // capture the length of the request (sans frag)
+  int   i;    // capture the lenght of the path
+  int   j;    // capture the length of the request (sans frag)
+  char *c;
+
+  if (str != NULL && str[0] == '#') {
+    // WTF'ery. We probably have this: www.joedog.org#haha
+    this->request = xstrdup("/");
+    return str; 
+  }
 
   this->request = xstrdup(str);
 
-  for(i = strlen(str); i > 0 && str[i] != '/'; i--);
-  for(j = 0; str[j] && (str[j] != '#' && !isspace(str[j])); j++);
+  /**
+   * Does the request have a fragment? 
+   * Let's whack that annoyance off...
+   */
+  c = (char *)strstr(this->request, "#");
+  if (c) {
+   *c = '\0';
+  }
+
+  for (i = strlen(str); i > 0 && str[i] != '/'; i--);
+  for (j = 0; str[j] && (str[j] != '#' && !isspace(str[j])); j++);
 
   if (str[i] != '/') {
     this->path    = xmalloc(2);
