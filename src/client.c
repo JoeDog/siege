@@ -47,6 +47,7 @@ private BOOLEAN __http(CONN *C, URL U, CLIENT *c);
 private BOOLEAN __ftp (CONN *C, URL U, CLIENT *c);
 private BOOLEAN __init_connection(CONN *C, URL U, CLIENT *c);
 private void    __increment_failures();
+private void    __display_result(CLIENT *client, RESPONSE resp, URL U, unsigned long b, float e);
 private int     __select_color(int code);
 
 #ifdef  SIGNAL_CLIENT_PLATFORM
@@ -88,10 +89,10 @@ void *
 start_routine(CLIENT *client)
 {
   int i;
-  int       x, y;    // loop counters, indices 
-  int       ret;     //function return value  
-  int       len;     // main loop length 
-  CONN *C = NULL;    // connection data (sock.h)  
+  int x, y;        // loop counters, indices 
+  int ret;         // function return value  
+  int len;         // main loop length 
+  CONN *C = NULL;  // connection data (sock.h)  
 
 #ifdef SIGNAL_CLIENT_PLATFORM
   sigset_t  sigs;
@@ -201,6 +202,11 @@ start_routine(CLIENT *client)
         if (url_get_scheme(u) == UNSUPPORTED) {
           ;;
         } else if (my.cache && is_cached(C->cache, u)) {
+          RESPONSE r = new_response();
+          response_set_code(r, "HTTP/1.1 200 OK");
+          response_set_from_cache(r, TRUE);
+          __display_result(client, r, u, 0, 0.00);
+          r = response_destroy(r);
           ;;
         } else {
           client->auth.bids.www = 0;
@@ -410,6 +416,8 @@ __http(CONN *C, URL U, CLIENT *client)
   /**
    * verbose output, print statistics to stdout
    */
+  __display_result(client, resp, U, bytes, etime);
+#if 0
   if ((my.verbose && !my.get) && (!my.debug)) {
     int  color  = __select_color(response_get_code(resp));
     DATE date   = new_date(NULL);
@@ -441,6 +449,7 @@ __http(CONN *C, URL U, CLIENT *client)
     } /* else not my.csv */
     date = date_destroy(date);
   }
+#endif 
 
   /**
    * close the socket and free memory.
@@ -594,6 +603,78 @@ __http(CONN *C, URL U, CLIENT *client)
   return TRUE;
 }
 
+private void
+__display_result(CLIENT *client, RESPONSE resp, URL U, unsigned long bytes, float etime)
+{
+  char   fmtime[65];
+#ifdef  HAVE_LOCALTIME_R
+  struct tm keepsake;
+#endif/*HAVE_LOCALTIME_R*/
+  time_t now;
+  struct tm * tmp;
+  size_t len;
+
+
+  if (my.csv) {
+    now = time(NULL);
+#ifdef HAVE_LOCALTIME_R
+    tmp = (struct tm *)localtime_r(&now, &keepsake);
+#else
+    tmp = localtime(&now);
+#endif/*HAVE_LOCALTIME_R*/
+    if (tmp) {
+      len = strftime(fmtime, 64, "%Y-%m-%d %H:%M:%S", tmp);
+      if (len == 0) {
+        memset(fmtime, '\0', 64);
+        snprintf(fmtime, 64, "n/a");
+      }
+    } else {
+      snprintf(fmtime, 64, "n/a");
+    }
+  }
+
+  /**
+   * verbose output, print statistics to stdout
+   */
+  if ((my.verbose && !my.get) && (!my.debug)) {
+    int  color   = (my.color == TRUE) ? __select_color(response_get_code(resp)) : -1;
+    DATE date    = new_date(NULL);
+    char *stamp  = (my.timestamp)?date_stamp(date):"";
+    char *cached = response_get_from_cache(resp) ? "(C)":"   ";
+    if (my.color && response_get_from_cache(resp) == TRUE) {
+      color = GREEN;
+    }
+
+    if (my.csv) {
+      if (my.display)
+        DISPLAY(color, "%s%s%s%4d,%s,%d,%6.2f,%7lu,%s,%d,%s",
+        stamp, (my.mark)?my.markstr:"", (my.mark)?",":"", client->id, response_get_protocol(resp),
+        response_get_code(resp), etime, bytes, url_get_display(U), url_get_ID(U), fmtime
+      );
+      else
+        DISPLAY(color, "%s%s%s%s,%d,%6.2f,%7lu,%s,%d,%s",
+          stamp, (my.mark)?my.markstr:"", (my.mark)?",":"", response_get_protocol(resp),
+          response_get_code(resp), etime, bytes, url_get_display(U), url_get_ID(U), fmtime
+        );
+    } else {
+      if (my.display)
+        DISPLAY(
+          color, "%4d) %s %d %6.2f secs: %7lu bytes ==> %-4s %s",
+          client->id, response_get_protocol(resp), response_get_code(resp),
+          etime, bytes, url_get_method_name(U), url_get_display(U)
+        );
+      else 
+        DISPLAY (
+          color, "%s%s %d%s %5.2f secs: %7lu bytes ==> %-4s %s",
+          stamp, response_get_protocol(resp), response_get_code(resp), cached,
+          etime, bytes, url_get_method_name(U), url_get_display(U)
+        );
+    } /* else not my.csv */
+    date = date_destroy(date);
+  }
+  return;
+}
+
 /**
  * HTTP client request.
  * The protocol is executed in http.c 
@@ -707,7 +788,7 @@ __ftp(CONN *C, URL U, CLIENT *client)
   client->lomark = lomark;
  
   if (my.verbose) {
-    int  color = __select_color(code);
+    int  color = (my.color == TRUE) ? __select_color(code) : -1;
     DISPLAY ( 
       color, "FTP/%d %6.2f secs: %7lu bytes ==> %-6s %s", 
       code, etime, bytes, url_get_method_name(U), url_get_request(U)
