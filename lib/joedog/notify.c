@@ -44,6 +44,7 @@
 #define REVERSE    7
 #define HIDDEN     8
 
+#define UNCOLOR   -1
 #define BLACK      0
 #define RED        1
 #define GREEN      2
@@ -156,7 +157,11 @@ __display(int color, const char *fmt, va_list ap)
   char   msg[BUFSIZE+1024];
 
   vsprintf(buf, fmt, ap);
-  snprintf(msg, sizeof msg, "%c[%d;%dm%s%c[%dm\n", 0x1B, RESET, color+30, buf, 0x1B, RESET);
+  if (color == UNCOLOR) {
+    snprintf(msg, sizeof msg,"%s\n", buf);
+  } else {
+    snprintf(msg, sizeof msg, "%c[%d;%dm%s%c[%dm\n", 0x1B, RESET, color+30, buf, 0x1B, RESET);
+  }
   printf("%s", msg);
   return;
 }
