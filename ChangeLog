@@ -1,6 +1,17 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/02/04 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE BETA             RELEASE_4-0-0_beta5_FEB_04_2016
+ * doc/siegerc.in         Added instructions for color = on | off
+ * lib/notify.c           Added options (-1) to turn off color
+ * src/cfg.c              Improved the urls.txt comment parser
+ * src/ftp.c              Fixed a bug with unique file names
+ * src/init.c             Added my.color to conf file parser
+ * src/load.c             Added: .csv .ico .md .svg .yml
+ * src/url.c              On POST/PUT changed path/file assignment
+ * src/init.c             Added my.color on|off to my.config
+
 2016/01/31 Jeffrey Fulmer <http://www.joedog.org/support/>
  * include/config.h.in    Added HAVE_LOCALTIME_R
  * src/date.c             Changed Daniels tm_year; added date_expired
