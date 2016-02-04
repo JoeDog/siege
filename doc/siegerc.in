@@ -27,6 +27,16 @@
 verbose = true
 
 #
+# Color mode: This option works in conjuction with verbose mode. 
+# It tells siege whether or not it should display its output in
+# color-coded output. (Enabled by default)
+#
+# ex: color = on | off
+# 
+color = on
+
+
+#
 # Quiet mode: With this featured enabled, siege goes mostly silent.
 # It will display the opening message and the final stats but nothing
 # else. If you enable quiet mode with -g/--get then siege will be
