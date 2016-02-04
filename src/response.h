@@ -91,6 +91,9 @@ BOOLEAN   response_set_code(RESPONSE this, char *line);
 int       response_get_code(RESPONSE this);
 char *    response_get_protocol(RESPONSE this);
 
+void      response_set_from_cache(RESPONSE this, BOOLEAN cached);
+BOOLEAN   response_get_from_cache(RESPONSE this);
+
 int       response_success(RESPONSE this);
 int       response_failure(RESPONSE this);
 

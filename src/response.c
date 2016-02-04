@@ -56,6 +56,7 @@ struct RESPONSE_T
       TYPE  proxy;
     } type;
   } auth;
+  BOOLEAN  cached;
 };
 
 size_t RESPONSESIZE = sizeof(struct RESPONSE_T);
@@ -137,6 +138,18 @@ response_failure(RESPONSE this)
 {
   int code = atoi((char *)hash_get(this->headers, RESPONSE_CODE));
   return (code >= 400 && code != 401 && code != 407) ? 1 : 0;
+}
+
+void
+response_set_from_cache(RESPONSE this, BOOLEAN cached)
+{
+  this->cached = cached;
+}
+
+BOOLEAN
+response_get_from_cache(RESPONSE this)
+{
+  return this->cached;
 }
 
 BOOLEAN
