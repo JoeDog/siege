@@ -94,6 +94,7 @@ init_config( void )
 
   my.debug          = FALSE;
   my.quiet          = FALSE;
+  my.color          = TRUE;
   my.internet       = FALSE;
   my.config         = FALSE;
   my.csv            = FALSE;
@@ -190,6 +191,7 @@ show_config(int EXIT)
   printf("----------------------------------------------\n");
   printf("version:                        %s\n", version_string);
   printf("verbose:                        %s\n", my.verbose  ? "true"     : "false");
+  printf("color:                          %s\n", my.color  ? "true"     : "false");
   printf("quiet:                          %s\n", my.quiet    ? "true"     : "false");
   printf("debug:                          %s\n", my.debug    ? "true"     : "false");
   printf("protocol:                       %s\n", my.protocol ? "HTTP/1.1" : "HTTP/1.0");
@@ -349,6 +351,12 @@ load_conf(char *filename)
         my.verbose = TRUE;
       else
         my.verbose = FALSE;
+    } 
+    else if (strmatch(option, "color")) {
+      if (strmatch(value, "false") || strmatch(value, "off"))
+        my.color = FALSE;
+      else
+        my.color = TRUE;
     } 
     else if (strmatch(option, "quiet")) {
       if (!strncasecmp(value, "true", 4))
@@ -575,10 +583,10 @@ load_conf(char *filename)
         my.follow = FALSE;
     }
     else if (strmatch(option, "url-escaping")) {
-      if (!strncasecmp(value, "true", 4))
-        my.escape = TRUE;
-      else
+      if (!strncasecmp(value, "false", 5))
         my.escape = FALSE;
+      else
+        my.escape = TRUE;
     } 
     else if (strmatch(option, "zero-data-ok")) {
       if (!strncasecmp(value, "true", 4))
