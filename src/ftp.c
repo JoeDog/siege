@@ -151,7 +151,7 @@ ftp_stor(CONN *C, URL U)
     id = -id;
   }
  
-  len   = strlen(url_get_file(U))+16; 
+  len   = strlen(url_get_file(U))+17; 
   parts = split('.', url_get_file(U), &num);
 
   file = xmalloc(len);
