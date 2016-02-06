@@ -45,7 +45,6 @@ struct DATA_T
 {
   float    total;  /*ttime*/
   float    available;
-  float    failed;
   float    lowest;
   float    highest;
   float    elapsed;
@@ -70,7 +69,7 @@ new_data()
   this->available = 0.0;
   this->count     = 0.0;
   this->ok200     = 0;
-  this->failed    = 0.0;
+  this->fail      = 0.0;
   this->lowest    =  -1;
   this->highest   = 0.0;
   this->elapsed   = 0.0;
@@ -232,7 +231,7 @@ data_get_elapsed(DATA this)
 float
 data_get_availability(DATA this)
 {
-  this->available = (this->count==0)?0:((this->count/(this->count+this->failed))*100);
+  this->available = (this->count==0)?0:((this->count/(this->count+this->fail))*100);
   return this->available;  
 }
 
