@@ -1,6 +1,24 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/02/07 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE BETA             RELEASE_4-0-0_beta6_FEB_07_2016
+ * doc/siegerc.in         Added instructions for nofollow
+ * src/Makefile.am        Added browser and removed client
+ * src/array.c            Added destroyer to set free method
+ * src/array.h            Added destroyer to set free method
+ * src/browser.c          Added to the distribution
+ * src/browser.h          Added to the distribution
+ * src/cfg.c              Minor bug fix
+ * src/client.c           Removed from distribution
+ * src/client.h           Removed from distribution
+ * src/hash.c             Minor refinements
+ * src/http.c             Initialize dest with memset
+ * src/init.c             Added support for nofollow
+ * src/main.c             Reworked to invoke browser
+ * src/parser.c           Added copyright
+ * src/url.c              Added config.h
+
 2016/02/04 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE BETA             RELEASE_4-0-0_beta5_FEB_04_2016
  * doc/siegerc.in         Added instructions for color = on | off
