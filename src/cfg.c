@@ -96,7 +96,7 @@ read_cfg_file(LINES *l, char *filename)
   }
  
   line = xmalloc(BUFSIZE);
-  memset(line, 0, BUFSIZE);
+  memset(line, '\0', BUFSIZE);
 
   H = new_hash();
 
