@@ -54,7 +54,7 @@ struct DATA_T
   struct   tms  t_stop;
   unsigned int  code;
   unsigned int  count;
-  unsigned int  ok200;
+  unsigned int  okay;
   unsigned int  fail;
   unsigned long long bytes;
 };
@@ -68,7 +68,7 @@ new_data()
   this->total     = 0.0;
   this->available = 0.0;
   this->count     = 0.0;
-  this->ok200     = 0;
+  this->okay      = 0;
   this->fail      = 0.0;
   this->lowest    =  -1;
   this->highest   = 0.0;
@@ -77,11 +77,11 @@ new_data()
   return this;
 }
 
-void
+DATA
 data_destroy(DATA this)
 {
   xfree(this);
-  return;
+  return NULL;
 } 
 
 void
@@ -120,9 +120,9 @@ data_increment_fail(DATA this, int fail)
 }
 
 void
-data_increment_ok200(DATA this, int ok200)
+data_increment_okay(DATA this, int okay)
 {
-  this->ok200 += ok200;
+  this->okay += okay;
   return;
 }
 
@@ -177,9 +177,9 @@ data_get_fail(DATA this)
 }
 
 unsigned int
-data_get_ok200(DATA this)
+data_get_okay(DATA this)
 {
-  return this->ok200;
+  return this->okay;
 }
 
 float
