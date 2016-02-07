@@ -24,6 +24,7 @@
 #define ARRAY_H
 
 #include <stdlib.h>
+#include <joedog/defs.h>
 
 /**
  * ARRAY object
@@ -33,6 +34,8 @@ extern  size_t ARRAYSIZE;
 
 ARRAY  new_array();
 ARRAY  array_destroy(ARRAY this);
+ARRAY  array_destroyer(ARRAY this, method m);
+void   array_set_destroyer(ARRAY this, method m);
 void   array_push(ARRAY this, void *thing);
 void   array_npush(ARRAY this, void *thing, size_t len);
 void * array_get(ARRAY this, int index);

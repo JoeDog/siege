@@ -26,30 +26,28 @@
 #include <limits.h>
 #include <array.h>
 #include <joedog/joedog.h>
-#if 1
-#define xfree(x) free(x)
-#define xmalloc(x) malloc(x)
-#define xcalloc(x,y) calloc(x,y)
-#endif
 
 typedef void *array;
 
 struct ARRAY_T
 {
-  int    index;
-  int    length;
-  array  *data;
+  int     index;
+  int     length;
+  array * data;
+  method  free;
 };
 
 size_t ARRAYSIZE = sizeof(struct ARRAY_T);
 
 ARRAY
-new_array(){
+new_array()
+{
   ARRAY this;
 
   this = xcalloc(sizeof(struct ARRAY_T), 1);
   this->index  = -1;
   this->length =  0;
+  this->free   = NULL;
   return this;
 }
 
@@ -57,15 +55,35 @@ ARRAY
 array_destroy(ARRAY this) 
 {
   int i;
+  
+  if (this == NULL) return NULL;
+  
+  if (this->free == NULL) {
+    this->free = free;
+  }
 
   for (i = 0; i < this->length; i++) {
-    xfree(this->data[i]);  
+    this->free(this->data[i]);  
   } 
   xfree(this->data);
   xfree(this);
   this = NULL;
   return this; 
 }
+
+ARRAY
+array_destroyer(ARRAY this, method m)
+{
+  this->free = m;
+  return array_destroy(this);
+}
+
+void
+array_set_destroyer(ARRAY this, method m)
+{
+  this->free = m;
+}
+
 
 void 
 array_push(ARRAY this, void *thing)
@@ -125,6 +143,7 @@ array_remove (ARRAY this, int index) {
 void *
 array_pop(ARRAY this) 
 {
+  if (this == NULL) return NULL;
   return this->length ? this->data[--this->length] : NULL; 
 }
 
