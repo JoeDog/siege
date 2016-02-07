@@ -27,10 +27,10 @@
 # include <unistd.h>
 #endif
 
+#include <joedog/defs.h>
 #include <joedog/boolean.h>
 
 typedef struct HASH_T *HASH;
-typedef void (*method)(void *v);
 
 extern size_t  HASHSIZE;
 

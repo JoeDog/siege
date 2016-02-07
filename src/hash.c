@@ -48,9 +48,6 @@ struct HASH_T
 
 size_t HASHSIZE = sizeof(struct HASH_T);
 
-#define xfree(x) free(x)
-#define xmalloc(x) malloc(x)
-
 /** 
  * local prototypes
  */
@@ -213,6 +210,8 @@ hash_remover(HASH this, char *key, method m)
 void
 hash_set_destroyer(HASH this, method m)
 {
+  if (this == NULL) return;
+
   this->free = m;
 }
 
@@ -293,7 +292,7 @@ hash_destroy(HASH this)
   }
   if (this->table != NULL) {
     xfree(this->table);
-    memset(this, 0, sizeof(struct HASH_T));
+    memset(this, '\0', sizeof(struct HASH_T));
   } 
   xfree(this);
   return NULL;
