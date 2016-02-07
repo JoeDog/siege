@@ -141,6 +141,11 @@ int strlen();
 # define INT_MAX (~0 - INT_MIN)
 #endif
 
+typedef struct {
+  int  index;
+  char **line;
+} LINES;
+
 void display_help();
 void display_version(BOOLEAN b);
 
@@ -176,6 +181,7 @@ struct CONFIG
   int     reps;         /* reps to run the test, default infinite  */ 
   char    file[128];    /* urls.txt file, default in joepath.h     */
   int     length;       /* length of the urls array, made global   */
+  LINES * nomap;        /* list of hosts to not follow             */
   BOOLEAN debug;        /* boolean, undocumented debug command     */
   BOOLEAN chunked;      /* boolean, accept chunked encoding        */
   BOOLEAN unique;       /* create unique files for upload          */
@@ -221,16 +227,6 @@ struct CONFIG
   pthread_mutex_t lock;
 };
 
-
-/**
- * struct LINES, read by read_cfg_file
- * in config.c 
- */
-typedef struct
-{
-  int  index;
-  char **line;
-} LINES;
 
 #if INTERN
 # define EXTERN /* */
