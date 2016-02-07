@@ -125,6 +125,9 @@ init_config( void )
   my.ssl_ciphers    = NULL; 
   my.lurl           = new_array();
   my.cookies        = new_cookies();
+  my.nomap          = xcalloc(1, sizeof(LINES));
+  my.nomap->index   = 0;
+  my.nomap->line    = NULL;
 
   if ((res = pthread_mutex_init(&(my.lock), NULL)) != 0)
     NOTIFY(FATAL, "unable to initiate lock");
@@ -229,6 +232,13 @@ show_config(int EXIT)
   printf("allow zero byte data:           %s\n", my.zero_ok?"true":"false"); 
   printf("allow chunked encoding:         %s\n", my.chunked?"true":"false"); 
   printf("upload unique files:            %s\n", my.unique?"true":"false"); 
+  if (my.parser == TRUE && my.nomap->index > 0) {
+    int i;
+    printf("no-follow:\n"); 
+    for (i = 0; i < my.nomap->index; i++) {
+      printf(" - %s\n", my.nomap->line[i]);
+    } 
+  }
   //printf("proxy auth:                     " ); display_authorization(PROXY);printf("\n");
   //printf("www auth:                       " ); display_authorization(WWW); 
   printf("\n");
@@ -370,6 +380,13 @@ load_conf(char *filename)
       else
         my.parser = FALSE;
     } 
+    else if (strmatch(option, "nofollow")) {
+      if (value && strlen(value) > 3) {
+        my.nomap->line = (char**)realloc(my.nomap->line, sizeof(char *) * (my.nomap->index + 1));
+        my.nomap->line[my.nomap->index] = (char *)strdup(value);
+        my.nomap->index++;
+      }
+    }
     else if (strmatch(option, "csv")) {
       if (!strncasecmp(value, "true", 4))
         my.csv = TRUE;
