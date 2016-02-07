@@ -35,7 +35,7 @@
 #include <array.h>
 #include <handler.h>
 #include <timer.h>
-#include <client.h>
+#include <browser.h>
 #include <util.h>
 #include <log.h>
 #include <init.h>
@@ -290,22 +290,9 @@ parse_cmdline(int argc, char *argv[])
   return;
 } /* end of parse_cmdline */
 
-int 
-main(int argc, char *argv[])
+private void
+__signal_setup()
 {
-  int            x; 
-  int            j = 0;
-  int            result;
-  DATA           D;
-  ARRAY          urls;
-  CREW           crew;  
-  HASH           cookies;
-  LINES          *lines;   
-  CLIENT         *client; 
-  pthread_t      cease; 
-  pthread_t      timer;  
-  pthread_attr_t scope_attr; 
-  void *statusp;
   sigset_t sigs;
 
   sigemptyset(&sigs);
@@ -315,8 +302,13 @@ main(int argc, char *argv[])
   sigaddset(&sigs, SIGTERM);
   sigaddset(&sigs, SIGPIPE);
   sigprocmask(SIG_BLOCK, &sigs, NULL);
+}
 
-  memset(&my, 0, sizeof(struct CONFIG));
+private void
+__config_setup(int argc, char *argv[])
+{
+  
+  memset(&my, '\0', sizeof(struct CONFIG));
 
   parse_rc_cmdline(argc, argv); 
   if (init_config() < 0) { 
@@ -342,10 +334,17 @@ main(int argc, char *argv[])
     sleep(10);
     my.cusers = my.limit;
   }
+}
 
-  lines = xcalloc(1, sizeof *lines);
+private LINES *
+__urls_setup() 
+{
+  LINES * lines;
+
+  lines          = xcalloc(1, sizeof(LINES));
   lines->index   = 0;
   lines->line    = NULL;
+
   if (my.url != NULL) {
     my.length = 1; 
   } else { 
@@ -356,18 +355,43 @@ main(int argc, char *argv[])
     display_help();
   }
 
-  /* memory allocation for threads and clients */
-  client = xcalloc(my.cusers, sizeof(CLIENT));
-  if ((crew = new_crew(my.cusers, my.cusers, FALSE)) == NULL) {
-    NOTIFY(FATAL, "unable to allocate memory for %d simulated browser", my.cusers);  
-  }
+  return lines;
+}
 
-  /** 
-   * determine the source of the url(s),
-   * command line or file, and add them
-   * to the urls struct.
+int 
+main(int argc, char *argv[])
+{
+  int       i, j;
+  int       result   = 0;
+  void  *   status   = NULL;
+  LINES *   lines    = NULL;
+  CREW      crew     = NULL;
+  DATA      data     = NULL;
+  HASH      cookies  = NULL;
+  ARRAY     urls     = new_array();
+  ARRAY     browsers = new_array();
+  pthread_t cease; 
+  pthread_t timer;  
+  pthread_attr_t scope_attr;
+ 
+  __signal_setup();
+  __config_setup(argc, argv);
+  lines = __urls_setup();
+
+  pthread_attr_init(&scope_attr);
+  pthread_attr_setscope(&scope_attr, PTHREAD_SCOPE_SYSTEM);
+#if defined(_AIX)
+  /**
+   * AIX, for whatever reason, defies the pthreads standard and  
+   * creates threads detached by default. (see pthread.h on AIX) 
    */
-  urls = new_array();
+  pthread_attr_setdetachstate(&scope_attr, PTHREAD_CREATE_JOINABLE);
+#endif
+
+#ifdef HAVE_SSL
+  SSL_thread_setup();
+#endif
+
   if (my.url != NULL) {
     URL tmp = new_url(my.url);
     url_set_ID(tmp, 0);
@@ -376,60 +400,48 @@ main(int argc, char *argv[])
     }
     array_npush(urls, tmp, URLSIZE); // from cmd line
   } else { 
-    for (x = 0; x < my.length; x++) {
-      URL tmp = new_url(lines->line[x]);
-      url_set_ID(tmp, x);
+    for (i = 0; i < my.length; i++) {
+      URL tmp = new_url(lines->line[i]);
+      url_set_ID(tmp, i);
       array_npush(urls, tmp, URLSIZE);
     }
   } 
 
-  /**
-   * display information about the siege
-   * to the user and prepare for verbose 
-   * output if necessary.
-   */
-  if (!my.get && !my.quiet) {
-    fprintf(stderr, "** "); 
-    display_version(FALSE);
-    fprintf(stderr, "** Preparing %d concurrent users for battle.\n", my.cusers);
-    fprintf(stderr, "The server is now under siege...");
-    if (my.verbose) { fprintf(stderr, "\n"); }
+  cookies = load_cookies(my.cookies);
+
+  for (i = 0; i < my.cusers; i++) {
+    char    tmp[4096];
+    BROWSER B = new_browser(i);
+    memset(tmp, '\0', sizeof(tmp));
+    snprintf(tmp, 4096, "%d", i);
+    if (cookies != NULL) {
+      if (hash_get(cookies, tmp) != NULL) {
+        browser_set_cookies(B, (HASH)hash_get(cookies, tmp));
+      } 
+    }
+    if (my.reps > 0 ) {
+      browser_set_urls(B, urls);
+    } else {
+      /**
+       * Scenario: -r once/--reps=once 
+       */
+      int   len = (array_length(urls)/my.cusers); 
+      ARRAY tmp = new_array();
+      for (j = 0; j < ((i+1) * len) && j < (int)array_length(urls); j++) {
+        URL u = array_get(urls, j);
+        if (u != NULL && url_get_hostname(u) != NULL && strlen(url_get_hostname(u)) > 1) {
+          array_npush(tmp, array_get(urls, j), URLSIZE);    
+        }
+      } 
+      browser_set_urls(B, urls);
+    }
+    array_npush(browsers, B, BROWSERSIZE);
   }
 
-  /**
-   * record start time before spawning threads
-   * as the threads begin hitting the server as
-   * soon as they are created.
-   */
-  D = new_data();
-  data_set_start(D);
+  if ((crew = new_crew(my.cusers, my.cusers, FALSE)) == NULL) {
+    NOTIFY(FATAL, "unable to allocate memory for %d simulated browser", my.cusers);  
+  } 
 
-  /**
-   * for each concurrent user, spawn a thread and
-   * loop until condition or pthread_cancel from the
-   * handler thread.
-   */
-  pthread_attr_init(&scope_attr);
-  pthread_attr_setscope(&scope_attr, PTHREAD_SCOPE_SYSTEM);
-#if defined(_AIX)
-  /* AIX, for whatever reason, defies the pthreads standard and  *
-   * creates threads detached by default. (see pthread.h on AIX) */
-  pthread_attr_setdetachstate(&scope_attr, PTHREAD_CREATE_JOINABLE);
-#endif
-
-  /** 
-   * invoke OpenSSL's thread safety
-   */
-#ifdef HAVE_SSL
-  SSL_thread_setup();
-#endif
-
-  /**
-   * create the signal handler and timer;  the
-   * signal handler thread (cease) responds to
-   * ctrl-C (sigterm) and the timer thread sends
-   * sigterm to cease on time out.
-   */
   if ((result = pthread_create(&cease, NULL, (void*)sig_handler, (void*)crew)) < 0) {
     NOTIFY(FATAL, "failed to create handler: %d\n", result);
   }
@@ -440,51 +452,22 @@ main(int argc, char *argv[])
   }
 
   /**
-   * loop until my.cusers and create a corresponding thread...
-   */  
-  cookies = load_cookies(my.cookies);
-  for (x = 0; x < my.cusers && crew_get_shutdown(crew) != TRUE; x++) {
-    char tmp[4096];
-    snprintf(tmp, 4096, "%d", x);
-    client[x].id              = x; 
-    client[x].bytes           = 0;
-    client[x].time            = 0.0;
-    client[x].hits            = 0;
-    client[x].code            = 0;
-    client[x].ok200           = 0;   
-    client[x].fail            = 0; 
-    if (cookies != NULL) {
-      if (hash_get(cookies, tmp) != NULL) {
-        client[x].cookies = (HASH)hash_get(cookies, tmp);
-      } 
-    }
-    if (my.reps > 0 ) {
-      /** 
-       * Traditional -r/--reps where each user
-       * loops through every URL in the file. 
-       */
-      client[x].urls = urls;
-    } else {
-      /**
-       * -r once/--reps=once where each URL
-       * in the file is hit only once...
-       */
-      int   len = (array_length(urls)/my.cusers); 
-      ARRAY tmp = new_array();
-      for ( ; j < ((x+1) * len) && j < (int)array_length(urls); j++) {
-        URL u = array_get(urls, j);
-        if (u != NULL && url_get_hostname(u) != NULL && strlen(url_get_hostname(u)) > 1) {
-          array_npush(tmp, array_get(urls, j), URLSIZE);    
-        }
-      } 
-      client[x].urls = tmp;
-    }
-    client[x].auth.www        = 0;
-    client[x].auth.proxy      = 0;
-    client[x].auth.type.www   = BASIC;
-    client[x].auth.type.proxy = BASIC;
-    client[x].rand_r_SEED     = urandom();
-    result = crew_add(crew, (void*)start_routine, &(client[x]));
+   * Display information about the siege to the user
+   * and prepare for verbose output if necessary.
+   */
+  if (!my.get && !my.quiet) {
+    fprintf(stderr, "** "); 
+    display_version(FALSE);
+    fprintf(stderr, "** Preparing %d concurrent users for battle.\n", my.cusers);
+    fprintf(stderr, "The server is now under siege...");
+    if (my.verbose) { fprintf(stderr, "\n"); }
+  } 
+
+  data = new_data();
+  data_set_start(data);
+  for (i = 0; i < my.cusers && crew_get_shutdown(crew) != TRUE; i++) {
+    BROWSER B = (BROWSER)array_get(browsers, i);
+    result = crew_add(crew, (void*)start, B);
     if (result == FALSE) { 
       my.verbose = FALSE;
       fprintf(stderr, "Unable to spawn additional threads; you may need to\n");
@@ -492,114 +475,72 @@ main(int argc, char *argv[])
       fprintf(stderr, "to exceed %d users.\n", my.cusers);
       NOTIFY(FATAL, "system resources exhausted"); 
     }
-  } /* end of for pthread_create */
-  crew_join(crew, TRUE, &statusp);
+  } 
+  crew_join(crew, TRUE, &status);
+  data_set_stop(data); 
 
 #ifdef HAVE_SSL
   SSL_thread_cleanup();
 #endif
 
-  /**
-   * collect all the data from all the threads that
-   * were spawned by the run.
-   */
-  for (x = 0; x < ((crew_get_total(crew) > my.cusers || 
-                    crew_get_total(crew)==0 ) ? my.cusers : crew_get_total(crew)); x++) {
-    data_increment_count(D, client[x].hits);
-    data_increment_bytes(D, client[x].bytes);
-    data_increment_total(D, client[x].time);
-    data_increment_code (D, client[x].code);
-    data_increment_ok200(D, client[x].ok200);
-    data_increment_fail (D, client[x].fail);
-    data_set_highest    (D, client[x].himark);
-    data_set_lowest     (D, client[x].lomark);
-    client[x].rand_r_SEED = urandom();
-  } /* end of stats accumulation */
-  
-  /**
-   * record stop time
-   */
-  data_set_stop(D);
+  for (i = 0; i < ((crew_get_total(crew) > my.cusers || 
+                    crew_get_total(crew) == 0) ? my.cusers : crew_get_total(crew)); i++) {
+    BROWSER B = (BROWSER)array_get(browsers, i);
+    data_increment_count(data, browser_get_hits(B));
+    data_increment_bytes(data, browser_get_bytes(B));
+    data_increment_total(data, browser_get_time(B));
+    data_increment_code (data, browser_get_code(B));
+    data_increment_okay (data, browser_get_okay(B));
+    data_increment_fail (data, browser_get_fail(B));
+    data_set_highest    (data, browser_get_himark(B));
+    data_set_lowest     (data, browser_get_lomark(B));
+  } crew_destroy(crew);
 
-  /**
-   * cleanup crew
-   */ 
-  crew_destroy(crew);
-
-  for (x = 0; x < my.cusers; x++) {
-    // XXX: TODO
-    //digest_challenge_destroy(client[x].auth.wwwchlg);
-    //digest_credential_destroy(client[x].auth.wwwcred);
-    //digest_challenge_destroy(client[x].auth.proxychlg);
-    //digest_credential_destroy(client[x].auth.proxycred);
-  }
-  URL u;
-  while ((u = (URL)array_pop(urls)) != NULL) {
-    u = url_destroy(u);
-  }
-  while ((u = (URL)array_pop(my.lurl)) != NULL) {
-    u = url_destroy(u);
-  }
-  array_destroy(urls);
-  array_destroy(my.lurl);
-  auth_destroy(my.auth);
-  hash_destroy(cookies);
-  cookies_destroy(my.cookies);
-  xfree(client);
-
-  if (my.get) {
-    if (data_get_ok200(D) > 0) {
-      exit(EXIT_SUCCESS);
-    } else {
-      if (!my.quiet) echo("[done]\n");
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  /**
-   * take a short nap  for  cosmetic  effect
-   * this does NOT affect performance stats.
-   */
   pthread_usleep_np(10000);
-  if (my.verbose)
+  if (my.verbose) {
     fprintf(stderr, "done.\n");
-  else
+  } else {
     fprintf(stderr, "\b      done.\n");
+  }
 
-  /**
-   * prepare and print statistics.
-   */
   if (my.failures > 0 && my.failed >= my.failures) {
     fprintf(stderr, "%s aborted due to excessive socket failure; you\n", program_name);
     fprintf(stderr, "can change the failure threshold in $HOME/.%src\n", program_name);
   }
-  fprintf(stderr, "\nTransactions:\t\t%12u hits\n",        data_get_count(D));
-  fprintf(stderr, "Availability:\t\t%12.2f %%\n",          data_get_count(D)==0 ? 0 :
-                                                           (double)data_get_count(D) /
-                                                           (data_get_count(D)+my.failed)
-                                                           *100
+  fprintf(stderr, "\nTransactions:\t\t%12u hits\n",        data_get_count(data));
+  fprintf(stderr, "Availability:\t\t%12.2f %%\n",          data_get_count(data)==0 ? 0 :
+                                                           (double)data_get_count(data) /
+                                                           (data_get_count(data)+my.failed)*100
   );
-  fprintf(stderr, "Elapsed time:\t\t%12.2f secs\n",        data_get_elapsed(D));
-  fprintf(stderr, "Data transferred:\t%12.2f MB\n",        data_get_megabytes(D)); /*%12llu*/
-  fprintf(stderr, "Response time:\t\t%12.2f secs\n",       data_get_response_time(D));
-  fprintf(stderr, "Transaction rate:\t%12.2f trans/sec\n", data_get_transaction_rate(D));
-  fprintf(stderr, "Throughput:\t\t%12.2f MB/sec\n",        data_get_throughput(D));
-  fprintf(stderr, "Concurrency:\t\t%12.2f\n",              data_get_concurrency(D));
-  fprintf(stderr, "Successful transactions:%12u\n",        data_get_code(D)); 
+  fprintf(stderr, "Elapsed time:\t\t%12.2f secs\n",        data_get_elapsed(data));
+  fprintf(stderr, "Data transferred:\t%12.2f MB\n",        data_get_megabytes(data)); /*%12llu*/
+  fprintf(stderr, "Response time:\t\t%12.2f secs\n",       data_get_response_time(data));
+  fprintf(stderr, "Transaction rate:\t%12.2f trans/sec\n", data_get_transaction_rate(data));
+  fprintf(stderr, "Throughput:\t\t%12.2f MB/sec\n",        data_get_throughput(data));
+  fprintf(stderr, "Concurrency:\t\t%12.2f\n",              data_get_concurrency(data));
+  fprintf(stderr, "Successful transactions:%12u\n",        data_get_code(data)); 
   if (my.debug) {
-    fprintf(stderr, "HTTP OK received:\t%12u\n",             data_get_ok200(D));
+    fprintf(stderr, "HTTP OK received:\t%12u\n",             data_get_okay(data));
   }
   fprintf(stderr, "Failed transactions:\t%12u\n",          my.failed);
-  fprintf(stderr, "Longest transaction:\t%12.2f\n",        data_get_highest(D));
-  fprintf(stderr, "Shortest transaction:\t%12.2f\n",       data_get_lowest(D));
+  fprintf(stderr, "Longest transaction:\t%12.2f\n",        data_get_highest(data));
+  fprintf(stderr, "Shortest transaction:\t%12.2f\n",       data_get_lowest(data));
   fprintf(stderr, " \n");
   if(my.mark)    mark_log_file(my.markstr);
-  if(my.logging) log_transaction(D);
+  if (my.logging) log_transaction(data);
 
-  data_destroy(D);
+  /**
+   * Let's clean up after ourselves....
+   */
+  data       = data_destroy(data);
+  urls       = array_destroyer(urls, (void*)url_destroy);
+  browsers   = array_destroyer(browsers, (void*)browser_destroy);
+  cookies    = hash_destroy(cookies);
+  my.cookies = cookies_destroy(my.cookies);
+
   if (my.url == NULL) {
-    for (x = 0; x < my.length; x++)
-      xfree(lines->line[x]);
+    for (i = 0; i < my.length; i++)
+      xfree(lines->line[i]);
     xfree(lines->line);
     xfree(lines);
   } else {
@@ -607,12 +548,5 @@ main(int argc, char *argv[])
     xfree(lines);
   }
 
-  /** 
-   * I should probably take a deeper look 
-   * at cookie content to free it but at 
-   * this point we're two lines from exit
-   */
-  xfree (my.url);
-  
   exit(EXIT_SUCCESS);  
 } /* end of int main **/
