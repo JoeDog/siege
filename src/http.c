@@ -586,6 +586,7 @@ http_read(CONN *C, RESPONSE resp)
   pthread_mutex_lock(&__mutex);
 
   if (C == NULL) NOTIFY(FATAL, "Connection is NULL! Unable to proceed"); 
+  memset(dest, '\0', sizeof dest);
 
   if (C->content.length > 0) {
     length = C->content.length;
