@@ -123,6 +123,22 @@ gmethod = HEAD
 parser = false
 
 #
+# No-follow 
+# When the parser is enabled, siege will grab HTML resources within
+# the page and download those elements as well. This directive allows
+# you to specify hostnames to which you do NOT want to make requests.
+# 
+# You can repeat this directive as many times as you like. Enter one
+# per line with 'key = value' syntax.
+# 
+# Example:  nofollow = www.joedog.org
+#
+nofollow = ad.doubleclick.net
+nofollow = pagead2.googlesyndication.com
+nofollow = ads.pubsqrd.com
+nofollow = ib.adnxs.com
+
+#
 # CSV Verbose format: with this option, you can choose to format
 # verbose output in traditional siege format or comma separated 
 # format. The latter will allow you to redirect output to a file
@@ -206,10 +222,24 @@ chunked = true
 # HTTP/1.1 200   0.00 secs:    2326 bytes ==> /apache_pb.gif
 # HTTP/1.1 304   0.00 secs:       0 bytes ==> /apache_pb.gif
 # HTTP/1.1 304   0.00 secs:       0 bytes ==> /apache_pb.gif
+#
+# Siege also supports Cache-control headers. Consider this server 
+# response: Cache-Control: max-age=3
+# That tells siege to cache the file for three seconds. While it
+# doesn't actually store the file, it will logically grab it from
+# its cache. In verbose output, it designates a cached resource 
+# with (c):
+#
+# HTTP/1.1 200     0.25 secs:     159 bytes ==> GET  /expires/
+# HTTP/1.1 200     1.48 secs:  498419 bytes ==> GET  /expires/Otter_in_Southwold.jpg
+# HTTP/1.1 200     0.24 secs:     159 bytes ==> GET  /expires/
+# HTTP/1.1 200(C)  0.00 secs:       0 bytes ==> GET  /expires/Otter_in_Southwold.jpg
+#
+# NOTE: with color enabled, cached URLs appear in green
 # 
 # ex: cache = true
 #
-cache = true
+cache = false
 
 #
 # Connection directive. Options "close" and "keep-alive" Starting with
