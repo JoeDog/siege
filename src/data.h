@@ -45,7 +45,7 @@ typedef struct DATA_T *DATA;
 
 /* constructor */
 DATA  new_data();
-void  data_destroy(DATA this);
+DATA  data_destroy(DATA this);
 
 /* setters */
 void  data_set_start      (DATA this);
@@ -57,7 +57,7 @@ void  data_increment_count(DATA this, unsigned long count);
 void  data_increment_total(DATA this, float total);
 void  data_increment_code (DATA this, int code);
 void  data_increment_fail (DATA this, int fail);
-void  data_increment_ok200 (DATA this, int ok200);
+void  data_increment_okay (DATA this, int ok200);
 
 /* getters */
 float    data_get_total(DATA this);
@@ -74,6 +74,6 @@ float    data_get_concurrency(DATA this);
 unsigned int data_get_count(DATA this);
 unsigned int data_get_code (DATA this);
 unsigned int data_get_fail (DATA this);
-unsigned int data_get_ok200(DATA this);
+unsigned int data_get_okay (DATA this);
 
 #endif/*__DATA_H*/
