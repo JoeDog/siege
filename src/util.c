@@ -148,7 +148,7 @@ stristr(const char* haystack, const char* needle) {
       return (char *) haystack;
     }
   } while (*haystack++);
-  return 0;
+  return NULL;
 }
 
 /**
