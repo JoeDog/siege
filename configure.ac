@@ -4,11 +4,6 @@ AC_PREREQ(2.63)
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-VERSION=`sed -e 's/^.*"\(.*\)";$/\1/' ${srcdir}/src/version.c`
-VERSION=`sed -ne 's/.*version_string.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
-PROGRAM=`sed -ne 's/.*program_name.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
-AUTHOR=`sed -ne 's/.*author_name.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
-EMAIL=`sed -ne 's/.*email_address.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
 AC_INIT(
   m4_esyscmd_s([sed -ne 's/.*program_name.*"\(.*\)"\;/\1/p' src/version.c]), 
   m4_esyscmd_s([sed -ne 's/.*version_string.*"\(.*\)"\;/\1/p' src/version.c]),
@@ -17,17 +12,21 @@ AC_CONFIG_AUX_DIR(utils)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/setup.h])
 AC_CONFIG_HEADERS(include/config.h)
+
+dnl canonicalize the host
+AC_CANONICAL_HOST
+
 DATE=`${CONFIG_SHELL} ${srcdir}/utils/mkstamp`
+VERSION=`sed -ne 's/.*version_string.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
+PROGRAM=`sed -ne 's/.*program_name.*"\(.*\)"\;/\1/p' src/version.c`
+AUTHOR=`sed -ne 's/.*author_name.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
+EMAIL=`sed -ne 's/.*email_address.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
+YEARS=`sed -ne 's/.*years.*"\(.*\)"\;/\1/p' ${srcdir}/src/version.c`
+PLATFORM="${host_vendor}-${host_cpu}-${host_os}"
 AC_SUBST(DATE)
 AC_SUBST(PROGRAM)
 AC_SUBST(AUTHOR)
 AC_SUBST(EMAIL)
-
-dnl
-dnl canonicalize the host
-dnl
-AC_CANONICAL_HOST
-PLATFORM="${host_vendor}-${host_cpu}-${host_os}"
 AC_SUBST(PLATFORM)
  
 dnl Check for AIX weirdos
@@ -136,6 +135,9 @@ then
   AC_MSG_RESULT(checking for ssl support... no)
 else
   AC_MSG_RESULT(checking for ssl support... yes)
+  if test "$MYSSL" = "off" ; then
+    MYSSL=""
+  fi
 fi
 
 dnl 
@@ -222,10 +224,13 @@ then
   AC_MSG_RESULT(checking for zlib support... no)
 else
   AC_MSG_RESULT(checking for zlib support... yes)
+  if test "$MYZ" = "off" ; then 
+    MYZ=""
+  fi
 fi
 
 dnl 
-dnl Check forzlib
+dnl Check for zlib
 dnl
 if test "$MYZ" = "no"
 then
@@ -433,7 +438,7 @@ AC_OUTPUT_COMMANDS([
 #define SIEGE_HOME     "$prefix"
 #define URL_FILE       "$sysconfdir/urls.txt"
 #define CNF_FILE       "$sysconfdir/siegerc"
-#define LOG_FILE       "$localstatedir/siege.log"
+#define LOG_FILE       "$localstatedir/log/siege.log"
 #define PLATFORM       "$platform"
 
 #endif/*JOEPATH_H*/
@@ -441,6 +446,7 @@ _EOF_
 ], [ prefix=$prefix sysconfdir=$sysconfdir localstatedir=$localstatedir platform=$PLATFORM ])
 
 echo "PLATFORM: $PLATFORM"
+echo "PROGRAM: $PROGRAM"
 dnl
 dnl update dates and versioning in doc
 dnl
@@ -449,12 +455,13 @@ AC_OUTPUT_COMMANDS([
               doc/siege2csv.1 doc/siegerc doc/urls_txt.5;
   do
     rm -f $file
-    sed -e "s|%_VERSION%|$VERSION|" \ 
-        -e "s|%_PROGRAM%|$PROGRAM|" \     
-        -e "s|%_DATE%|$DATE|" \     
-        -e "s|%_AUTHOR%|$AUTHOR|" \     
-        -e "s|%_EMAIL%|$EMAIL|" \     
-        < $file.in > $file 
+    sed -e "s|\$_VERSION|$VERSION|g" \
+        -e "s|\$_PROGRAM|$PROGRAM|g" \
+        -e "s|\$_DATE|$DATE|g" \
+        -e "s|\$_AUTHOR|$AUTHOR|g" \
+        -e "s|\$_YEARS|$YEARS|g" \
+        -e "s|\$_EMAIL|$EMAIL|g" \
+        < $file.in > $file
   done
 ], [ VERSION=$VERSION DATE="$DATE" PROGRAM="$PROGRAM" AUTHOR="$AUTHOR" EMAIL="$EMAIL" ])
 
