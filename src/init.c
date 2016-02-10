@@ -169,7 +169,7 @@ init_config( void )
 
   if (strlen(my.logfile) < 1) 
     snprintf( 
-      my.logfile, sizeof( my.logfile ),
+      my.logfile, sizeof(my.logfile),
       "%s", LOG_FILE 
     );
   return 0;  
