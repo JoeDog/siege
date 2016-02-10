@@ -136,17 +136,17 @@ display_help()
   puts("  -g, --get                 GET, pull down HTTP headers and display the");
   puts("                            transaction. Great for application debugging.");
   puts("  -c, --concurrent=NUM      CONCURRENT users, default is 10");
-  puts("  -i, --internet            INTERNET user simulation, hits URLs randomly." );
-  puts("  -b, --benchmark           BENCHMARK: no delays between requests." );
-  puts("  -t, --time=NUMm           TIMED testing where \"m\" is modifier S, M, or H" );
-  puts("                            ex: --time=1H, one hour test." );
   puts("  -r, --reps=NUM            REPS, number of times to run the test." );
+  puts("  -t, --time=NUMm           TIMED testing where \"m\" is modifier S, M, or H");
+  puts("                            ex: --time=1H, one hour test." );
+  puts("  -d, --delay=NUM           Time DELAY, random delay before each requst");
+  puts("  -b, --benchmark           BENCHMARK: no delays between requests." );
+  puts("  -i, --internet            INTERNET user simulation, hits URLs randomly.");
   puts("  -f, --file=FILE           FILE, select a specific URLS FILE." );
   printf("  -R, --rc=FILE             RC, specify an %src file\n",program_name);
   puts("  -l, --log[=FILE]          LOG to FILE. If FILE is not specified, the");
   printf("                            default is used: PREFIX/var/%s.log\n", program_name);
   puts("  -m, --mark=\"text\"         MARK, mark the log file with a string." );
-  puts("  -d, --delay=NUM           Time DELAY, random delay before each requst");
   puts("                            between .001 and NUM. (NOT COUNTED IN STATS)");
   puts("  -H, --header=\"text\"       Add a header to request (can be many)" ); 
   puts("  -A, --user-agent=\"text\"   Sets User-Agent in request" ); 
@@ -497,37 +497,39 @@ main(int argc, char *argv[])
   } crew_destroy(crew);
 
   pthread_usleep_np(10000);
-  if (my.verbose) {
-    fprintf(stderr, "done.\n");
-  } else {
-    fprintf(stderr, "\b      done.\n");
-  }
 
-  if (my.failures > 0 && my.failed >= my.failures) {
-    fprintf(stderr, "%s aborted due to excessive socket failure; you\n", program_name);
-    fprintf(stderr, "can change the failure threshold in $HOME/.%src\n", program_name);
+  if (!my.quiet) {
+    if (my.failures > 0 && my.failed >= my.failures) {
+      fprintf(stderr, "%s aborted due to excessive socket failure; you\n", program_name);
+      fprintf(stderr, "can change the failure threshold in $HOME/.%src\n", program_name);
+    }
+    fprintf(stderr, "\nTransactions:\t\t%12u hits\n",        data_get_count(data));
+    fprintf(stderr, "Availability:\t\t%12.2f %%\n",          data_get_count(data)==0 ? 0 :
+                                                             (double)data_get_count(data) /
+                                                             (data_get_count(data)+my.failed)*100
+    );
+    fprintf(stderr, "Elapsed time:\t\t%12.2f secs\n",        data_get_elapsed(data));
+    fprintf(stderr, "Data transferred:\t%12.2f MB\n",        data_get_megabytes(data)); /*%12llu*/
+    fprintf(stderr, "Response time:\t\t%12.2f secs\n",       data_get_response_time(data));
+    fprintf(stderr, "Transaction rate:\t%12.2f trans/sec\n", data_get_transaction_rate(data));
+    fprintf(stderr, "Throughput:\t\t%12.2f MB/sec\n",        data_get_throughput(data));
+    fprintf(stderr, "Concurrency:\t\t%12.2f\n",              data_get_concurrency(data));
+    fprintf(stderr, "Successful transactions:%12u\n",        data_get_code(data)); 
+    if (my.debug) {
+      fprintf(stderr, "HTTP OK received:\t%12u\n",             data_get_okay(data));
+    }
+    fprintf(stderr, "Failed transactions:\t%12u\n",          my.failed);
+    fprintf(stderr, "Longest transaction:\t%12.2f\n",        data_get_highest(data));
+    fprintf(stderr, "Shortest transaction:\t%12.2f\n",       data_get_lowest(data));
+    fprintf(stderr, " \n");
   }
-  fprintf(stderr, "\nTransactions:\t\t%12u hits\n",        data_get_count(data));
-  fprintf(stderr, "Availability:\t\t%12.2f %%\n",          data_get_count(data)==0 ? 0 :
-                                                           (double)data_get_count(data) /
-                                                           (data_get_count(data)+my.failed)*100
-  );
-  fprintf(stderr, "Elapsed time:\t\t%12.2f secs\n",        data_get_elapsed(data));
-  fprintf(stderr, "Data transferred:\t%12.2f MB\n",        data_get_megabytes(data)); /*%12llu*/
-  fprintf(stderr, "Response time:\t\t%12.2f secs\n",       data_get_response_time(data));
-  fprintf(stderr, "Transaction rate:\t%12.2f trans/sec\n", data_get_transaction_rate(data));
-  fprintf(stderr, "Throughput:\t\t%12.2f MB/sec\n",        data_get_throughput(data));
-  fprintf(stderr, "Concurrency:\t\t%12.2f\n",              data_get_concurrency(data));
-  fprintf(stderr, "Successful transactions:%12u\n",        data_get_code(data)); 
-  if (my.debug) {
-    fprintf(stderr, "HTTP OK received:\t%12u\n",             data_get_okay(data));
+  if (my.mark)    mark_log_file(my.markstr);
+  if (my.logging) {
+    log_transaction(data);
+    if (my.failures > 0 && my.failed >= my.failures) {
+      mark_log_file("siege aborted due to excessive socket failure.");
+    }
   }
-  fprintf(stderr, "Failed transactions:\t%12u\n",          my.failed);
-  fprintf(stderr, "Longest transaction:\t%12.2f\n",        data_get_highest(data));
-  fprintf(stderr, "Shortest transaction:\t%12.2f\n",       data_get_lowest(data));
-  fprintf(stderr, " \n");
-  if(my.mark)    mark_log_file(my.markstr);
-  if (my.logging) log_transaction(data);
 
   /**
    * Let's clean up after ourselves....
