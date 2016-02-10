@@ -1,6 +1,15 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/02/09 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE BETA             RELEASE_4-0-0_beta6_FEB_10_2016
+ * doc/siege.pod          Added to the distribution
+ * doc/siege.config.pod   Added to the distribution
+ * doc/bombardment.pod    Added to the distribution
+ * doc/siege2csv.pod      Added to the distribution
+ * src/init.c             Formatting changes
+ * src/main.c             Completely silenced the program with -q
+
 2016/02/04 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE BETA             RELEASE_4-0-0_beta5_FEB_04_2016
  * doc/siegerc.in         Added instructions for color = on | off
