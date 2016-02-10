@@ -2,37 +2,46 @@
 
 =head1 NAME
 
-$_PROGRAM is a HTTP/FTP load tester and benchmarking utility. 
+$_PROGRAM is a HTTP/FTP load tester and benchmarking utility.
 
 =head1 SYNOPSIS
 
-$_PROGRAM [I<option>]
+  $_PROGRAM [options]
+  $_PROGRAM [options] <URL>
+  $_PROGRAM [options] -g <URL>
+  $_PROGRAM [options] -f urls.txt
 
 =head1 DESCRIPTION
 
-$_PROGRAM is a multi-threaded HTTP/FTP load tester and benchmarking utility.
-It supports most of the features detailed in RFCs 2616 (HTTP) and 959 (FTP).
-Properties can be set at both from the command line and in a configuration
-file. When the same propertie is set in both locations, the command line takes
-precedent.
+$_PROGRAM is a multi-threaded HTTP/FTP load tester and benchmarking 
+utility. It supports most of the features detailed in RFCs 2616 (HTTP)
+and 959 (FTP). Properties can be set at both from the command line and
+in a configuration file. When the same propertie is set in both 
+locations, the command line takes precedent.
 
-The default configuration file is $HOME/.siege/siege.conf If you don't have
-a $HOME/.siege directory and a siege.conf and cookies.txt file, siege will 
-generate a new config directory when it runs. You can generate your configu
-directory with the following command: siege.config 
+The default configuration file is $HOME/.siege/siege.conf If you don't 
+have a $HOME/.siege directory and a siege.conf and cookies.txt file, 
+siege will generate a new config directory when it runs. You can 
+generate your configu directory with the following command: siege.config
 
 =head1 OPTIONS
 
 =head2 Option Syntax
 
+$_PROGRAM supports long and short options. Short options look like this:
+    -c 25
+    -c25
 
-=head2 Startup Options
+Long options look like this:
+    --concurrent=25
 
-=over 4
+=head2 Option Values
+
+=over
 
 =item B<-V>, B<--version>
 
-Displays the $_PROGRAM release version and copyright information. 
+Displays the $_PROGRAM release version and copyright information.
 
 =item B<-h>, B<--help>
 
@@ -40,28 +49,31 @@ Prints a help message describing $_PROGRAM's command-line options.
 
 =item B<-C>, B<--config>
 
-Prints a detailed summary of all the currently configured options, most of 
-which are sent in $HOME/.siege/siege.conf 
+Prints a detailed summary of all the currently configured options, most
+of which are sent in $HOME/.siege/siege.conf
 
 =item B<-v>, B<--vebose>
 
-This directive puts $_PROGRAM into verbose mode which is actually a default 
-setting. This command-line option is useful when the config file is set to
-'verbose = false' since it will allow you to override that.
+This directive puts $_PROGRAM into verbose mode which is actually a 
+default setting. This command-line option is useful when the config 
+file is set to 'verbose = false' since it will allow you to override 
+that.
 
-By default $_PROGRAM's verbose output is displayed in a color-coded style. 
+By default $_PROGRAM's verbose output is displayed in a color-coded 
+style.
   * HTTP 2xx is coded blue
   * HTTP 3xx is coded cyan
   * HTTP 4xx is coded magenta
   * HTTP 5xx is coded red
-  * HTTP cached is coded black
-You can turn off color in siege.conf like this: 'color = off'
+  * HTTP cached is coded black 
+
+NOTE: You can turn off color in siege.conf like this: 'color = off'
 
 =item B<-q>, B<--quiet>
 
 This directive silences $_PROGRAM. It is mostly used for scripting and 
 is often used in conjunction with -g/--get. You can detect the success 
-or failure of the run with its exit code. 
+or failure of the run with its exit code.
 
   siege --quiet -g www.joedog.org
   if [ $? -eq 0 ] ; then
@@ -72,9 +84,10 @@ or failure of the run with its exit code.
 
 =item B<-g URL>, B<--get=URL>
 
-This option allows you to request a URL and watch the header transaction. 
-There is a corresponding config file directive that allows you to set the
-request method for these requests: gmethod = HEAD|GET 
+This option allows you to request a URL and watch the header 
+transaction.  There is a corresponding config file directive that 
+allows you to set the request method for these requests: 
+gmethod = HEAD|GET
 
   $ siege -g "https://www.joedog.org/"
   HEAD / HTTP/1.0
@@ -82,7 +95,6 @@ request method for these requests: gmethod = HEAD|GET
   Accept: */*
   User-Agent: Mozilla/5.0 (unknown-x86_64-linux-gnu) Siege/4.0.0-beta5
   Connection: close
-
 
   HTTP/1.1 200 OK
   Server: cloudflare-nginx
@@ -105,96 +117,104 @@ number of users is technically limited to your computer's resources.
 
 You should not configure more users than your web server is configured 
 to handle. For example, the default apache configuration is capped at 
-255 threads. If you run siege with -c 1024, then 769 siege users are left
-waiting for an apache handler.
+255 threads. If you run siege with -c 1024, then 769 siege users are 
+left waiting for an apache handler.
 
-For this reason, the default siege configuration is capped at 255 users. 
-You can increase that number inside siege.conf but if you make a mess, then
-please don't complain to us.
+For this reason, the default siege configuration is capped at 255 users.
+You can increase that number inside siege.conf but if you make a mess, 
+then please don't complain to us.
 
 =item B<-r NUM>, B<--reps=NUM|once>
 
-This option tells each siege user how times it should run. The value should 
-generally be a number greater than zero but it may be the keyword 'once'. 
+This option tells each siege user how times it should run. The value 
+should generally be a number greater than zero but it may be the keyword
+'once'.
 
-If --reps=3 then each siege user will run three times before it exits. However, 
-if --reps=once, then each user will run through the urls.txt file exactly one
-time. 
+If --reps=3 then each siege user will run three times before it exits. 
+However, if --reps=once, then each user will run through the urls.txt 
+file exactly one time.
 
-For more information about the urls.txt file, see option -f <file>, --file=<file>
+For more information about the urls.txt file, see option -f <file>, 
+--file=<file>
 
 =item B<-t NUMm>, B<--time=NUMm>
 
-This option is similar to --reps but instead of specifying the number of times
-each user should run, it specifies the amount of time each should run.
+This option is similar to --reps but instead of specifying the number 
+of times each user should run, it specifies the amount of time each 
+should run.
 
-The value format is "NUMm", where "NUM" is an amount of time and the "m" modifier 
-is either S, M, or H for seconds, minutes and hours.  To run $_PROGRAM for an hour, 
-you could select any one of the following combinations: -t3600S, -t60M, -t1H. 
-The modifier is not case sensitive, but it does require no space between the number
-and itself.
+The value format is "NUMm", where "NUM" is an amount of time and the "m"
+modifier is either S, M, or H for seconds, minutes and hours. To run 
+$_PROGRAM for an hour, you could select any one of the following 
+combinations: -t3600S, -t60M, -t1H.  The modifier is not case sensitive, 
+but it does require no space between the number and itself.
 
 =item B<-d NUM>, B<--delay=NUM>
 
-This option instructs $_PROGRAM how long to delay between each page request.
-The value NUM represents the number of seconds between each one. This number
-can be a decimal value. In fact the default is half a second (--delay=0.5). 
+This option instructs $_PROGRAM how long to delay between each page 
+request.  The value NUM represents the number of seconds between each
+one. This number can be a decimal value. In fact the default is half a
+second (--delay=0.5).
 
-The time between delay requests is NOT applied toward the transaction time. 
-If two 0.1 second transactions have a 2 second delay between them, their average
-transaction time is run is 0.1 seconds. It is applied toward the total elapsed
-time. In this scenario, the elapsed time would be 2.2 seconds.
+The time between delay requests is NOT applied toward the transaction 
+time. If two 0.1 second transactions have a 2 second delay between them,
+their average transaction time is run is 0.1 seconds. It is applied 
+toward the total elapsed time. In this scenario, the elapsed time would 
+be 2.2 seconds.
 
-NOTE: when the parser is enabled (see: -p/--parser), there is no delay between
-the page and its elements, i.e., style sheets, javascripts, etc. The delay is 
-only between page requests.
+NOTE: when the parser is enabled (see: -p/--parser), there is no delay
+between the page and its elements, i.e., style sheets, javascripts, etc. 
+The delay is only between page requests.
 
 =item B<-b>, B<--benchmark>
 
-This directive tells siege to go into benchmark mode. This means there is no
-delay between iterations. 
+This directive tells siege to go into benchmark mode. This means there 
+is no delay between iterations.
 
 =item B<-i>, B<--internet>
 
-This option sets siege into what we call internet mode. It makes requests from the
-urls.txt file (see: -f <file> / --file=<file>) in random order.
+This option sets siege into what we call internet mode. It makes 
+requests from the urls.txt file (see: -f <file> / --file=<file>) in 
+random order.
 
 =item B<-f FILE>, B<--file=FILE>
 
-This option tells siege to work with a list of urls inside a text file. The URLs
-are listed one per line. Unlike URLs that are passed as a command-line argument,
-the URLs in this file should not be quoted.
+This option tells siege to work with a list of urls inside a text 
+file. The URLs are listed one per line. Unlike URLs that are passed as
+a command-line argument, the URLs in this file should not be quoted.
 
-$_PROGRAM's urls.txt parser supports comments and variables. 
+$_PROGRAM's urls.txt parser supports comments and variables.
 
 =item B<-R FILE>, B<--rc=FILE>
 
-This directive allows you to set an alternative resource file. By default, the
-siegerc file is $HOME/.siege/siege.conf With this directive, you can override 
-the default and use an alternative file.
+This directive allows you to set an alternative resource file. By 
+default, the siegerc file is $HOME/.siege/siege.conf With this 
+directive, you can override the default and use an alternative file.
 
 =item B<-L FILE>, B<--log=FILE>
 
-The default log file is $prefix/var/log/siege.log. This directive allows you to
-specify and alternative file for logging. 
+The default log file is $prefix/var/log/siege.log. This directive 
+allows you to specify and alternative file for logging.
 
 =item B<-m "string">, B<--mark="string">
 
-This option allows you to log a message to the log file before your stats are 
-written there. It is generally used to identify the proceding run. You could, 
-for example, mark the file with your command-line parameters so it's understood
-what configuration generated the following data.
+This option allows you to log a message to the log file before your 
+stats are written there. It is generally used to identify the 
+proceding run. You could, for example, mark the file with your 
+command-line parameters so it's understood what configuration 
+generated the following data.
 
 =item B<-H "header: value">, B<--header="Header: value">
 
-This options allows you to set a custom header in the request. Generally speaking, 
-this request will override an existing header. The Cookie header is a special case.
-If you set -H "Cookie: value" then siege will send that cookie in addition to the
-other ones.
+This options allows you to set a custom header in the request. 
+Generally speaking, this request will override an existing header. The
+Cookie header is a special case.  If you set -H "Cookie: value" then 
+siege will send that cookie in addition to the other ones.
 
 =item B<-A "string">, B<--agent="string">
 
-This option allows you to override the default user-agent with a custom one. 
+This option allows you to override the default user-agent with a custom 
+one.
 
   siege --agent="JoeDog Jr. in da hizzle"
 
@@ -202,11 +222,195 @@ Will set this header:
 
   User-agent: JoeDog Jr. in da hizzle
 
-Alternatively, you could set the User-agent with the -H/--header option above.
+Alternatively, you could set the User-agent with the -H/--header option 
+above.
 
 =item B<-T "text">, B<--content-type="text">
 
-This is another set header shortcut. You use this option to override the default
-Content-type request header.
+This is another set header shortcut. You use this option to override 
+the default Content-type request header.
 
-=cut
+=back
+
+=head1 URL FORMAT
+
+$_PROGRAM supports RFC 1738 URL formats but it takes pains to implement
+commonly used shortcuts for your convenience. In addition to RFC 1738 
+formats, siege introduces its own URL format to indicate protocol method.
+
+An RFC 1738 URL looks like this:
+  <scheme>://<username>:<password>@<hostname>:<port>/<path>;<params>?<query>#<frag>
+
+A $_PROGRAM URL with a method idicator looks like this:
+  <scheme>://<username>:<password>@<hostname>:<port>/<path> POST <query>
+
+You can also post the contents of a file using the redirect character
+like this:
+  <scheme>://<username>:<password>@<hostname>:<port>/<path> POST </home/jeff/haha.txt
+
+Here's two examples with the $_PROGRAM method indicator:
+  http://www.joedog.org/ POST haha=papa&dada=mama
+  ftp://ftp.armstrong.com/ PUT </home/jdfulmer/etc/tests/bbc.jpg
+
+NOTE: If you set URLs with method indicators at the command-line, then 
+you MUST quote the thing or your shell will treat it like three separate
+arguments. If the URL is in a urls.txt file, then you shouldn't quote it.
+
+As mentioned above, $_PROGRAM goes to great lengths to allow commonly 
+used shortcuts that you're used to from most browser implementations. 
+It treats many parts of the 1738 URL as optional. In this example, the 
+parts in brackets are optional:
+  [scheme://] host.domain.xxx [:port] [/path/file]
+
+When $_PROGRAM receives a host name it builds the URL with default 
+assumptions.  www.joedog.org becomes http://www.joedog.org:80/
+
+=head1 URLS.txt FILE
+
+From the section called Option Syntax above we learn that $_PROGRAM 
+can take a URL as an argument. $_PROGRAM -c -r2 www.joedog.org will 
+request the JoeDog index page twice.  But what if you want to hit
+large portions of the site? $_PROGRAM will allow you to fill a file 
+with URLs so that it can run through list.
+
+The format for the file is one URL per line:
+  https://www.joedog.org/
+  https://www.joedog.org/haha/
+  https://www.joedog.org/haha/ POST homer=simpson&marge=doestoo
+
+The file also supports UNIX-style commenting:
+  # Comment looks like this
+  https://www.joedog.org/
+  https://www.joedog.org/haha/
+  https://www.joedog.org/haha/ POST homer=simpson&marge=doestoo
+
+It supports shell-style variable declaration and references. This is 
+convenient if you want to run the same test on two different tiers or
+two different shemes:
+
+  SCHEME=https
+  HOST=bart.joedog.org
+  $(SCHEME)://$(HOST)/
+  $(SCHEME)://$(HOST)/haha/
+  $(SCHEME)://$(HOST)/haha/ POST homer=simpson&marge=doestoo
+
+You can tell siege about this file with the -f/--file option:
+  siege -c1 -r50 -f /home/jeff/urls.txt
+
+=head1 PERFORMANCE STATISTICS
+
+When its run is complete, siege will gather performance data from all
+its clients and summarize them after the run. (You can also choose to
+log these numbers). The command-line output is modeled after Lincoln 
+Stein's torture.pl script:
+
+  Transactions:                   2000 hits
+  Availability:                 100.00 %
+  Elapsed time:                  58.57 secs
+  Data transferred:               5.75 MB
+  Response time:                  0.25 secs
+  Transaction rate:              34.15 trans/sec
+  Throughput:                     0.10 MB/sec
+  Concurrency:                    8.45
+  Successful transactions:        2000
+  Failed transactions:               0
+  Longest transaction:            4.62
+  Shortest transaction:           0.00
+
+  Transactions
+      This number represents the total number of HTTP requests. In this
+      example, we ran 25 simulated users [-c25] and each ran ten times
+      [-r10]. Twenty-five times ten equals 250 so why is the transaction 
+      total 2000? That's because $_PROGRAM counts every request. This run 
+      included a META redirect, a 301 redirect and the page it requested 
+      contained several elements that were also downloaded.
+
+  Availability
+      This is the percentage of socket connections successfully handled 
+      by the server. It is the result of socket failures (including 
+      timeouts) divided by the sum of all connection attempts. This 
+      number does not include 400 and 500 level server errors which are
+      recorded in "Failed transactions" described below.  
+
+  Elapsed time
+      The duration of the entire siege test. This is measured from the 
+      time the user invokes $_PROGRAM until the last simulated user 
+      completes its transactions. Shown above, the test took 14.67 
+      seconds to complete.
+
+  Data transferred
+      The sum of data transferred to every siege simulated user. It 
+      includes the header information as well as content. Because it
+      includes header information, the number reported by siege will 
+      be larger then the number reported by the server. In internet 
+      mode, which hits random URLs in a configuration file, this 
+      number is expected to vary from run to run.
+
+  Response time
+      The average time it took to respond to each simulated user's requests.
+
+  Transaction rate
+      The average number of transactions the server was able to handle
+      per second, in a nutshell: it is the count of all transactions 
+      divided by elapsed time.
+
+  Throughput
+      The average number of bytes transferred every second from the 
+      server to all the simulated users.
+
+  Concurrency
+      This is the average number of simultaneous connections. The metric
+      is calculated like this: the sum of all transaction times divided
+      by elapsed time (how long siege ran) 
+
+  Successful transactions
+      The number of times the server responded with a return code < 400.
+
+  Failed transactions
+      The number of times the server responded with a return code >= 400 
+      plus the sum of all failed socket transactions which includes 
+      socket timeouts.
+
+  Longest transaction
+      The greatest amount of time that any single transaction took, out 
+      of all transactions.
+
+  Shortest transaction
+      The smallest amount of time that any single transaction took, out
+      of all transactions.
+
+=head1 AUTHOR
+
+$_AUTHOR <$_EMAIL> is the primary author of $_PROGRAM. Numerous people 
+throughout the globe also contributed to this program. Their 
+contributions are noted in the source code ChangeLog
+
+=head1 COPYRIGHT
+
+Copyright $_YEARS by $_AUTHOR <$_EMAIL>
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the 
+Free Software Foundation; either version 2 of the License, or (at your 
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but 
+WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along 
+with this program; if not, write to the Free Software Foundation, Inc., 
+675 Mass Ave, Cambridge, MA 02139, USA.
+
+=head1 AVAILABILITY
+
+The most recent released version of $_PROGRAM is available by HTTP 
+download:
+  http://download.joedog.org/pub/siege
+
+=head1 SEE ALSO
+
+siege.config(1) bombardment(1) siege2csv(1)
+
+
