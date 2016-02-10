@@ -25,26 +25,28 @@ AUTOMAKE_OPTIONS  =    foreign no-dependencies
 man_MANS          =    \
 siege.1                \
 siege.config.1         \
-layingsiege.7          \
-urls_txt.5             \
 bombardment.1          \
 siege2csv.1
 
-EXTRA_DIST        =    \
+man_SOURCE        =    \
+siege.pod              \
+siege.config.pod       \
+bombardment.pod        \
+siege2csv.pod
+
+man_SHELLS        =    \
 siege.1.in             \
 siege.config.1.in      \
-layingsiege.7.in       \
-urls_txt.5.in          \
 bombardment.1.in       \
-siege2csv.1.in         \
-urls.txt               \
-siegerc.in
+siege2csv.1.in         
 
-DISTCLEANFILES    =      siegerc $(man_MANS)
+EXTRA_DIST        =    $(man_SOURCE) $(man_SHELLS) urls.txt siegerc.in
 
-SIEGERC           =      $(sysconfdir)/siegerc
+DISTCLEANFILES    =    siegerc $(man_MANS) $(man_SHELLS)
 
-URLSTXT           =      $(sysconfdir)/urls.txt
+SIEGERC           =    $(sysconfdir)/siegerc
+
+URLSTXT           =    $(sysconfdir)/urls.txt
 
 install-exec-hook: 
 	@if test -f $(DESTDIR)$(SIEGERC); then \
