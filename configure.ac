@@ -451,8 +451,7 @@ dnl
 dnl update dates and versioning in doc
 dnl
 AC_OUTPUT_COMMANDS([
-  for file in doc/bombardment.1 doc/layingsiege.7 doc/siege.1 doc/siege.config.1 \
-              doc/siege2csv.1 doc/siegerc doc/urls_txt.5;
+  for file in doc/bombardment.1 doc/siege.1 doc/siege.config.1 doc/siege2csv.1 doc/siegerc;
   do
     rm -f $file
     sed -e "s|\$_VERSION|$VERSION|g" \
