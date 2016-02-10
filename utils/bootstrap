@@ -1,13 +1,17 @@
 #!/bin/sh
 # Jeffrey Fulmer <jdfulmer@armstrong.com>
-# Sat Jan  6 11:36:27 EST 2001
+# Sat Jan  6 11:36:27 EST 2001 - initial creation
+# Wed Feb 10 19:29:59 EST 2016 - added manifier
 #
 # part of siege distribution
 # automates the autotools
-
 set -x
 aclocal 
 autoheader
 automake --foreign --copy
 autoconf
+utils/manifier doc/siege.pod        doc/siege.1.in        'Siege Load Tester' 1
+utils/manifier doc/siege.config.pod doc/siege.config.1.in 'siege.config utility' 1
+utils/manifier doc/bombardment.pod  doc/bombardment.1.in  'bombardment' 1
+utils/manifier doc/bombardment.pod  doc/siege2csv.1.in    'siege2csv' 1
 
