@@ -1,0 +1,42 @@
+=pod 
+
+=head1 NAME
+
+bombardment - Run $_PROGRAM with an ever-increasing number of users
+
+=head2 SYNOPSIS
+
+bombardment [urlfile] [clients] [increment] [trials] [delay] bombardment urls.txt 5 10 20 1
+
+=head1 DESCRIPTION
+
+bombardment is part of the $_PROGRAM distribution. It calls $_PROGRAM with an initial number of
+clients. When that run finishes, it immediately calls siege again with that number of clients plus
+the increment.  It does this the number of times specified in the fourth argument.
+
+=head1 OPTIONS
+
+urlfile
+    The name of the file containing one or more URLs for siege to test.
+
+clients
+    The initial number of clients to be used on the first run.
+
+increment
+    The number of clients to add to each ensuing run.
+
+trials
+    The number of times to run siege.
+
+delay
+    The is the amount of time, in seconds, that each client will wait
+    between requests.  The $_PROGRAM default is overridden by bombardment
+
+=head1 SEE ALSO
+
+siege(1), siege2csv(1)
+
+=head1 AUTHOR
+
+Written by Peter Hutnick, et al.
+

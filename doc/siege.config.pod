@@ -1,0 +1,48 @@
+=head2 NAME
+
+$_PROGRAM.config - builds a siege.conf template in the user's home directory.
+
+=head2 INTRODUCTION
+
+$_PROGRAM's default settings are stored in $HOME/.siege/siege.conf. This 
+utility will create a new $_PROGRAM.conf if one does not already exist.
+Generally speaking you should not have to run this command with $_PROGRAM 
+releases equal or later to 4.0.0.
+
+At start up, $_PROGRAM checks for a $HOME/.$_PROGRAM/$_PROGRAM.conf. If 
+one does not exist, $_PROGRAM will run this command to create a new one
+then read that file to configure itself.
+
+=head2 INVOCATION
+
+The format for invoking siege.config is this:
+
+  $_PROGRAM.config [no arguments]
+
+=head2 AUTHOR
+
+$_AUTHOR <$_EMAIL>
+
+=head2 COPYRIGHT
+
+Copyright $_YEARS $_AUTHOR <$_EMAIL>
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not,
+write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+=head2 AVAILABILITY
+
+$_PROGRAM.config is distributed as part of $_PROGRAM
+
+=head2 SEE ALSO
+
+$_PROGRAM(1)
+
