@@ -519,8 +519,8 @@ main(int argc, char *argv[])
       fprintf(stderr, "HTTP OK received:\t%12u\n",             data_get_okay(data));
     }
     fprintf(stderr, "Failed transactions:\t%12u\n",          my.failed);
-    fprintf(stderr, "Longest transaction:\t%12.2f\n",        data_get_highest(data));
-    fprintf(stderr, "Shortest transaction:\t%12.2f\n",       data_get_lowest(data));
+    fprintf(stderr, "Longest transaction:\t%12.2f secs\n",        data_get_highest(data));
+    fprintf(stderr, "Shortest transaction:\t%12.2f secs\n",       data_get_lowest(data));
     fprintf(stderr, " \n");
   }
   if (my.mark)    mark_log_file(my.markstr);
