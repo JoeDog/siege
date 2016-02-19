@@ -127,7 +127,6 @@ size_t AUTHSIZE = sizeof(struct AUTH_T);
 
 private BOOLEAN       __basic_header(AUTH this, SCHEME scheme, CREDS creds);
 private BOOLEAN       __ntlm_header(AUTH this, SCHEME scheme, const char *header, CREDS creds);
-private void          __mkhash(const char *pass, unsigned char *nonce, unsigned char *lmresp, unsigned char *ntresp);
 private DCHLG *       __digest_challenge(const char *challenge);
 private DCRED *       __digest_credentials(CREDS creds, unsigned int *randseed);
 private KEY_HEADER_E  __get_keyval(const char *key);
@@ -135,6 +134,9 @@ private char *        __get_random_string(size_t length, unsigned int *randseed)
 private char *        __get_h_a1(const DCHLG *chlg, DCRED *cred, const char *nonce_value);
 private char *        __get_md5_str(const char *buf);
 private BOOLEAN       __str_list_contains(const char *str, const char *pattern, size_t pattern_len);
+#ifdef HAVE_SSL
+private void          __mkhash(const char *pass, unsigned char *nonce, unsigned char *lmresp, unsigned char *ntresp);
+#endif/*HAVE_SSL*/
 
 AUTH
 new_auth()
