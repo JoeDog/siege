@@ -37,6 +37,10 @@
 
 #define MAXFILE 0x10000 // 65536
 
+#ifndef HAVE_ZLIB
+#define MAX_WBITS 1024 // doesn't matter - we don't use it
+#endif/*HAVE_ZLIB*/
+
 pthread_mutex_t __mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  __cond  = PTHREAD_COND_INITIALIZER;
 
@@ -645,7 +649,7 @@ http_read(CONN *C, RESPONSE resp)
     } while (TRUE);
   }
 
-  if (response_get_content_encoding(resp) == GZIP) {
+  if(response_get_content_encoding(resp) == GZIP) {
     __gzip_inflate(MAX_WBITS+32, ptr, bytes, dest, sizeof(dest));
   }
   if (response_get_content_encoding(resp) == DEFLATE) {
@@ -668,8 +672,11 @@ __gzip_inflate(int window, const char *src, int srcLen, const char *dst, int dst
   int err=-1;
 
 #ifndef HAVE_ZLIB
+  NOTIFY(ERROR,
+    "gzip transfer-encoding requires zlib (%d, %d, %d)", window, srcLen, dstLen
+  );
   dst = strdup(src);
-  err = Z_OK;
+  (void)(dst); // shut the compiler up....
   return err;
 #else
   z_stream strm;
