@@ -153,6 +153,9 @@ SSL_initialize(CONN *C, const char *servername)
   return TRUE;
 #else
   C->nossl = TRUE;
+  NOTIFY(
+    ERROR, "HTTPS requires libssl: Unable to reach %s with this protocol", servername
+  ); // this message is mainly intended to silence the compiler
   return FALSE;
 #endif/*HAVE_SSL*/
 }
