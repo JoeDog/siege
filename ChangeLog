@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/02/26 Trent Oswald <trentoswald@DELETEtherebelrobot.com>
+ * src/load.c             Added: .csv .ico .md .svg .yml
+
 2016/02/19 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE BETA             RELEASE_4-0-0_beta8-Feb-19-2016
  * INSTALL                Updated for 4.0.0
@@ -32,7 +35,6 @@ To email a contributor remove "DELETE" from the email address.
  * src/cfg.c              Improved the urls.txt comment parser
  * src/ftp.c              Fixed a bug with unique file names
  * src/init.c             Added my.color to conf file parser
- * src/load.c             Added: .csv .ico .md .svg .yml
  * src/url.c              On POST/PUT changed path/file assignment
  * src/init.c             Added my.color on|off to my.config
 
