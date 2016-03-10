@@ -1,6 +1,17 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/02/19 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_4-0-0-Mar-10-2016
+ * doc/siegerc.in         Set parser to true by default
+ * src/version.c          Version increment: 4.0.0
+
+2016/03/09 vfilanovsky <notifications@github.com>
+ * SIEGE BETA             RELEASE_4-0-0_beta9-Mar-09-2016
+ * src/http.c             Expanded request size
+ * src/version.c          Version increment: 4.0.0-beta9
+ * src/Makefile.am        Removed KNOWNBUGS README.https from distro
+
 2016/02/26 Trent Oswald <trentoswald@DELETEtherebelrobot.com>
  * src/load.c             Added: .csv .ico .md .svg .yml
 
