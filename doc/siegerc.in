@@ -120,7 +120,7 @@ gmethod = HEAD
 # 
 # Example: parser = true
 #
-parser = false
+parser = true
 
 #
 # No-follow 
