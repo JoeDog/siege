@@ -30,6 +30,5 @@ SUBDIRS           =    . include lib src utils doc html
 
 DIST_SUBDIRS      =    $(SUBDIRS)
 
-EXTRA_DIST        =    KNOWNBUGS README.md README.https \
-                       acspecific.m4 aclocal.m4 acinclude.m4
+EXTRA_DIST        =    README.md acspecific.m4 aclocal.m4 acinclude.m4
 
