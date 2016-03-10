@@ -118,7 +118,7 @@ http_get(CONN *C, URL U)
   char   encoding[512];
   char   *request;
   char   portstr[16];
-  char   fullpath[4096];
+  char   fullpath[MAX_COOKIE_SIZE*2];
   char   cookie[MAX_COOKIE_SIZE+8];
   char * ifnon = NULL;
   char * ifmod = NULL; 
@@ -281,7 +281,7 @@ http_post(CONN *C, URL U)
   char   protocol[16]; 
   char   keepalive[16];
   char   cookie[MAX_COOKIE_SIZE];
-  char   fullpath[4096];
+  char   fullpath[MAX_COOKIE_SIZE*2];
 
   memset(hoststr,  '\0', sizeof(hoststr));
   memset(cookie,   '\0', MAX_COOKIE_SIZE);
