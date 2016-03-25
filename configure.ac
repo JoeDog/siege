@@ -476,7 +476,7 @@ AC_OUTPUT_COMMANDS([
       < $infile >    $outfile
   cat doc/siegerc >> $outfile
   echo "_EOF_"    >> $outfile
-  echo "echo \"New configuration template added to \$rcfile\"" >> $outfile
+  echo "echo \"New configuration template added to \$HOME/.siege\"" >> $outfile
   echo "echo \"Run siege -C to view the current settings in that file\"" >> $outfile
   echo "exit"     >> $outfile
   echo ""         >> $outfile
@@ -529,9 +529,6 @@ echo
 echo "Run the following commands to complete the installation:"
 echo "  make "
 echo "  make install"
-echo
-echo "To upgrade an old siegerc file (optional): "
-echo "  mv ~/.siegerc.new ~/.siegerc"
 echo
 echo "For complete documentation:        http://www.joedog.org"
 echo "--------------------------------------------------------" 
