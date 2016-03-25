@@ -101,17 +101,17 @@ logging = false
 gmethod = HEAD
 
 #
-# Parser (experimental feature)
+# Parser
 # This directive allows you to turn on the html parser. With this
 # feature enabled, siege will harvest resources like style sheets,
 # images, javascript, etc. and make additional requests for those 
 # items. 
 #
-# HTML parsing was added to version 4.0.0 and is considered an 
-# experimental feature. It is disabled by default. When the parser is
-# enabled, care must be given to other features. For example, we allow
-# to set accept-encoding to anything you'd like but if you want to 
-# parse those pages, then you MUST set the encoding to a supported one.
+# HTML parsing was added to version 4.0.0 It is enabled by default. 
+# When the parser is enabled, care must be given to other features. 
+# For example, we allow to set accept-encoding to anything you'd like
+# but if you want to parse those pages, then you MUST set the encoding
+# to a supported one.
 # 
 # With the default options set, you should be able to enable the parser
 # with success.
