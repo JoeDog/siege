@@ -60,12 +60,6 @@ cookies_destroy(COOKIES this)
   return NULL;
 }
 
-/*BOOLEAN
-cookies_add(COOKIES this, char *str, char *host)
-{
-  return cookies_add_id(this, str, host, pthread_self());
-}*/
-
 BOOLEAN
 cookies_add(COOKIES this, char *str, char *host)
 {
@@ -177,7 +171,9 @@ cookies_header(COOKIES this, char *host, char *newton)
   int   hlen;
   NODE  *pre;
   NODE  *cur;
+  time_t tmp;
   time_t now;
+  struct tm tm;
   char   oreo[MAX_COOKIES_SIZE];
   size_t id = pthread_self();
 
@@ -185,7 +181,10 @@ cookies_header(COOKIES this, char *host, char *newton)
   hlen = strlen(host);
 
   pthread_mutex_lock(&(this->mutex));
-  now = time(NULL);
+  tmp = time(NULL);
+  gmtime_r(&tmp, &tm);
+  tm.tm_isdst = -1; // force mktime to figure it out!
+  now = mktime(&tm);
 
   for (cur=pre=this->head; cur != NULL; pre=cur, cur=cur->next) {
     /**
