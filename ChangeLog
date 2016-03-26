@@ -1,6 +1,11 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/03/26 Warren Young <https://github.com/wyoung>
+ * src/cookie.c           Fixed delimiter handling in cookie expiration
+ 			  Suppressed cookie time zone offsetting for GMT/UTC
+ * src/cookies.c          Convert now to GMT for expires check
+
 2016/03/26 Jeffrey Fulmer <http://www.joedog.org/support/>
  * src/response.c         Transfer-ecoding parse (stupid akamai)
  * src/version.c          Version increment: 4.0.1
