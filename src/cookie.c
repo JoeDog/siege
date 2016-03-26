@@ -391,9 +391,9 @@ __parse_time(const char *str)
         return 0;
       }
       tm.tm_mday = strtol(s, &s, 10);
-      tm.tm_mon  = __mkmonth(s, &s);
+      tm.tm_mon  = __mkmonth(++s, &s);
       tm.tm_year = strtol(++s, &s, 10) - 1900;
-      tm.tm_hour = strtol(s, &s, 10);
+      tm.tm_hour = strtol(++s, &s, 10);
       tm.tm_min  = strtol(++s, &s, 10);
       tm.tm_sec  = strtol(++s, &s, 10);
     } else {  /* Second format */
