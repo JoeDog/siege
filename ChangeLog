@@ -1,6 +1,13 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/03/26 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * src/response.c         Transfer-ecoding parse (stupid akamai)
+ * src/version.c          Version increment: 4.0.1
+
+2016/03/15 Niklas Hambüchen<https://github.com/nh2>
+ * src/http.c             Improved efficiency for chunked reads
+
 2016/02/19 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_4-0-0-Mar-10-2016
  * doc/siegerc.in         Set parser to true by default
