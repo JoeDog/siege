@@ -391,9 +391,9 @@ __parse_time(const char *str)
         return 0;
       }
       tm.tm_mday = strtol(s, &s, 10);
-      tm.tm_mon  = __mkmonth(s, &s);
+      tm.tm_mon  = __mkmonth(++s, &s);
       tm.tm_year = strtol(++s, &s, 10) - 1900;
-      tm.tm_hour = strtol(s, &s, 10);
+      tm.tm_hour = strtol(++s, &s, 10);
       tm.tm_min  = strtol(++s, &s, 10);
       tm.tm_sec  = strtol(++s, &s, 10);
     } else {  /* Second format */
@@ -444,7 +444,11 @@ __parse_time(const char *str)
     return 0;
   }
   tm.tm_isdst = -1;
-  rv = mktime(&tm) + __utc_offset() * 3600;
+  rv = mktime(&tm);
+  if (!strstr(str, " GMT") && !strstr(str, " UTC")) {
+  	// It's not zulu time, so assume it's in local time
+	rv += __utc_offset() * 3600;
+  }
 
   if (rv == -1) {
     return rv;
