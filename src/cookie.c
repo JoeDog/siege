@@ -444,7 +444,11 @@ __parse_time(const char *str)
     return 0;
   }
   tm.tm_isdst = -1;
-  rv = mktime(&tm) + __utc_offset() * 3600;
+  rv = mktime(&tm);
+  if (!strstr(str, " GMT") && !strstr(str, " UTC")) {
+  	// It's not zulu time, so assume it's in local time
+	rv += __utc_offset() * 3600;
+  }
 
   if (rv == -1) {
     return rv;
