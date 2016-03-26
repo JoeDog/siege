@@ -456,8 +456,6 @@ http_read_headers(CONN *C, URL U)
     // string carriage return
     if (x > 0 && line[x-1] == '\r') line[x-1]='\0';
 
-    //printf("LINE: %s\n", line);
-
     if (strncasecmp(line, "http", 4) == 0) {
       response_set_code(resp, line);
     }
@@ -518,7 +516,7 @@ http_read_headers(CONN *C, URL U)
     } 
     if (strncasecmp(line, PROXY_AUTHENTICATE, strlen(PROXY_AUTHENTICATE)) == 0) {
       response_set_proxy_authenticate(resp, line);
-    }
+    }                     
     if (strncasecmp(line, TRANSFER_ENCODING, strlen(TRANSFER_ENCODING)) == 0) {
       response_set_transfer_encoding(resp, line);
     }
@@ -603,7 +601,6 @@ http_read(CONN *C, RESPONSE resp)
       bytes += n;
     } while (bytes < length); 
   } else if (my.chunked && response_get_transfer_encoding(resp) == CHUNKED) {
-    char c;
     int  r = 0;
     bytes  = 0;
     BOOLEAN done = FALSE;
@@ -620,25 +617,29 @@ http_read(CONN *C, RESPONSE resp)
         continue;
       }  
       while (n < chunk) {
-        r = socket_read(C, &c, 1);
+        int remaining_in_chunk = chunk - n;
+        int space_in_buf = size - bytes;
+        int to_read = remaining_in_chunk < space_in_buf ? remaining_in_chunk : space_in_buf;
+        r = socket_read(C, &ptr[bytes], to_read); 
+        bytes += r;
         if (r <= 0) {
           done = TRUE;
           break;
         }
         n += r;
         if (bytes >= size) {
-          tmp = realloc(ptr, size+MAXFILE);
+          tmp = realloc(ptr, size*2);
           if (tmp == NULL) {
             free(ptr);
             return -1; 
           }
-          ptr = tmp;
-          size += MAXFILE;
+          ptr   = tmp;
+          size *= 2;
         }
-        ptr[bytes++] = c;
       }
       n = 0;
     } while (! done);
+    ptr[bytes] = '\0';
   } else {
     ptr = xmalloc(size);
     memset(ptr, '\0', size);
