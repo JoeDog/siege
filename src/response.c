@@ -254,6 +254,7 @@ response_set_transfer_encoding(RESPONSE this, char *line)
   if (strncasecmp(line, TRANSFER_ENCODING, strlen(TRANSFER_ENCODING)) == 0) {
     memset(tmp, '\0', sizeof(tmp));
     ptr = line+(strlen(TRANSFER_ENCODING)+2);
+    ptr = trim(ptr);
     if (strmatch(ptr, "chunked")) {
       snprintf(tmp, sizeof(tmp), "%d", CHUNKED);
     } else if (strmatch(ptr, "trailer")) {
