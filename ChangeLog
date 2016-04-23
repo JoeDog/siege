@@ -1,6 +1,12 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/04/23 Valery Levental <vlevental@paloaltonetDELETEworks.com>
+ * src/browser.c          Fixed issue with Content-length: 0
+ * src/http.c             Improved handling of chunked transfers
+ * src/parser.c           Improved handling of data URI scheme
+ * src/sock.c             Code optimization
+
 2016/03/26 Warren Young <https://github.com/wyoung>
  * src/cookie.c           Fixed delimiter handling in cookie expiration
  			  Suppressed cookie time zone offsetting for GMT/UTC
