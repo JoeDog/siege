@@ -825,7 +825,7 @@ __init_connection(BROWSER this, URL U)
   this->conn->pos_ini              = 0;
   this->conn->inbuffer             = 0;
   this->conn->content.transfer     = NONE;
-  this->conn->content.length       = 0;
+  this->conn->content.length       = (size_t)~0L;// VL - issue #2, 0 is a legit.value
   this->conn->connection.keepalive = (this->conn->connection.max==1)?0:my.keepalive;
   this->conn->connection.reuse     = (this->conn->connection.max==1)?0:my.keepalive;
   this->conn->connection.tested    = (this->conn->connection.tested==0)?1:this->conn->connection.tested;
