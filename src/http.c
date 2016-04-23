@@ -438,22 +438,22 @@ http_read_headers(CONN *C, URL U)
   
   while (TRUE) {
     x = 0;
-    memset(&line, '\0', MAX_COOKIE_SIZE);
+    //memset(&line, '\0', MAX_COOKIE_SIZE); //VL issue #4
     while ((n = socket_read(C, &c, 1)) == 1) {
       if (x < MAX_COOKIE_SIZE - 1)
         line[x] = c; 
       else 
         line[x] = '\n';
-      echo("%c", c);  
-      if ((line[0] == '\n') || (line[1] == '\n')) { 
-        return resp;
+      echo("%c", c);
+      if (x <= 1 && line[x] == '\n') { //VL issue #4, changed from (line[0] == '\n' || line[1] == '\n')
+			return resp; 
       }
       if (line[x] == '\n') break;
       x ++;
     }
     line[x]='\0';
 
-    // string carriage return
+	// string carriage return
     if (x > 0 && line[x-1] == '\r') line[x-1]='\0';
 
     if (strncasecmp(line, "http", 4) == 0) {
@@ -585,11 +585,21 @@ http_read(CONN *C, RESPONSE resp)
   char   *ptr = NULL;
   char   *tmp = NULL;
   size_t size = MAXFILE; 
-  pthread_mutex_lock(&__mutex);
 
-  if (C == NULL) NOTIFY(FATAL, "Connection is NULL! Unable to proceed"); 
+  if (C == NULL) {
+	  NOTIFY(FATAL, "Connection is NULL! Unable to proceed"); 
+	  return 0;
+  }
+
+  if (C->content.length == 0) //VL
+	  return 0;
+  else if (C->content.length == (size_t)~0L)
+	  C->content.length = 0; //not to break code below...
+  
   memset(dest, '\0', sizeof dest);
 
+  pthread_mutex_lock(&__mutex);  //VL - moved
+  
   if (C->content.length > 0) {
     length = C->content.length;
     ptr    = xmalloc(length+1);
@@ -610,8 +620,10 @@ http_read(CONN *C, RESPONSE resp)
 
     do {
       chunk = http_chunk_size(C);
-      if (chunk == 0)
-        break;
+      if (chunk == 0){
+		socket_readline(C, C->chkbuf, sizeof(C->chkbuf)); //VL - issue #3
+		break;
+	  }
       else if (chunk < 0) {
         chunk = 0;
         continue;
