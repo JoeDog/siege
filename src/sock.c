@@ -459,6 +459,7 @@ __ssl_socket_write(CONN *C, const void *vbuf, size_t len)
         switch (err) {
           case SSL_ERROR_WANT_READ:
           case SSL_ERROR_WANT_WRITE:
+			NOTIFY(DEBUG, "SSL_write non-critical error %d", err);
           return 0;
         case SSL_ERROR_SYSCALL:
           NOTIFY(ERROR, "SSL_write() failed (syscall)");
@@ -497,7 +498,8 @@ socket_read(CONN *C, void *vbuf, size_t len)
         NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", (my.timeout)?my.timeout:15, __FILE__, __LINE__);
 	return -1;
       }
-      if ((r = SSL_read(C->ssl, buf, n)) < 0) {
+	  r = SSL_read(C->ssl, buf, n);
+      if (r < 0) {
         if (errno == EINTR || SSL_get_error(C->ssl, r) == SSL_ERROR_WANT_READ)
           r = 0;
         else
