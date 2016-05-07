@@ -20,7 +20,7 @@
 ## 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ##
 
-noinst_HEADERS  = joedog.h getopt.h boolean.h defs.h
+noinst_HEADERS  = getopt.h boolean.h path.h defs.h
 
-DISTCLEANFILES  = joepath.h
+DISTCLEANFILES  = path.h
 
