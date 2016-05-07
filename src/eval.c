@@ -24,12 +24,14 @@
 #ifdef  HAVE_CONFIG_H
 # include <config.h>
 #endif/*HAVE_CONFIG_H*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <eval.h>
 #include <hash.h>
-#include <joedog/joedog.h>
+#include <memory.h>
+#include <util.h>
 
 char *
 evaluate(HASH hash, char *buf)

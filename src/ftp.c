@@ -25,6 +25,9 @@
 #include <util.h>
 #include <ftp.h>
 #include <load.h>
+#include <perl.h>
+#include <memory.h>
+#include <notify.h>
 #include <pthread.h>
 #include <joedog/defs.h>
 

@@ -24,8 +24,10 @@
 #include <setup.h>
 #include <hash.h>
 #include <eval.h>
+#include <perl.h>
+#include <memory.h>
+#include <notify.h>
 #include <joedog/defs.h>
-#include <joedog/joedog.h>
 #include <joedog/boolean.h>
 
 BOOLEAN is_variable_line(char *line);

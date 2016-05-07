@@ -1,7 +1,7 @@
 /**
  * Storage for siege data
  *
- * Copyright (C) 2000-2014 by
+ * Copyright (C) 2000-2016 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege
  *
@@ -20,10 +20,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *--
  */
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif/*HAVE_CONFIG_H*/
+
 #include <data.h>
+#include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <joedog/joedog.h>
 
 #ifdef HAVE_SYS_TIMES_H
 # include <sys/times.h>

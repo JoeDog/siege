@@ -3,7 +3,6 @@
 
 #include <joedog/defs.h>
 #include <joedog/boolean.h>
-#include <stddef.h>
 #include <hash.h>
 #include <cookie.h>
 

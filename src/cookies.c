@@ -3,12 +3,15 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <cookies.h>
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <array.h>
 #include <hash.h>
+#include <perl.h>
+#include <memory.h>
+#include <notify.h>
+#include <cookies.h>
 
 typedef struct NODE {
   size_t threadID;

@@ -24,6 +24,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <setup.h>
+#include <notify.h>
 #include <joedog/boolean.h>
 
 void

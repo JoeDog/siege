@@ -46,6 +46,8 @@
 #include <crew.h>
 #include <data.h>
 #include <version.h>
+#include <memory.h>
+#include <notify.h>
 #include <sys/resource.h>
 #ifdef __CYGWIN__
 # include <getopt.h>

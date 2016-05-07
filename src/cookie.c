@@ -2,9 +2,12 @@
 #include <util.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <ctype.h>
+#include <memory.h>
+#include <notify.h>
+#include <perl.h>
 #include <joedog/defs.h>
-#include <joedog/joedog.h>
 
 struct COOKIE_T {
   char*     name;

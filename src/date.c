@@ -47,6 +47,7 @@
 #endif/*TIME_WITH_SYS_TIME*/
 
 #include <setup.h>
+#include <memory.h>
 #include <joedog/boolean.h>
 
 #define MAX_DATE_LEN 64

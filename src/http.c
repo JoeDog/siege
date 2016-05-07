@@ -32,6 +32,8 @@
 #include <util.h>
 #include <load.h>
 #include <page.h>
+#include <memory.h>
+#include <notify.h>
 #include <response.h>
 #include <joedog/defs.h>
 

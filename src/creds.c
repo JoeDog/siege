@@ -22,7 +22,7 @@
  */
 #include <stdlib.h>
 #include <string.h>
-#include <joedog/joedog.h>
+#include <memory.h>
 #include <joedog/defs.h>
 #include <joedog/boolean.h>
 #include <creds.h>

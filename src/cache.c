@@ -28,7 +28,8 @@
 #include <util.h>
 #include <hash.h>
 #include <cache.h>
-#include <joedog/joedog.h>
+#include <memory.h>
+#include <perl.h>
 #include <joedog/boolean.h>
 #include <joedog/defs.h>
 

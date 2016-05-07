@@ -23,7 +23,8 @@
 #include <setup.h>
 #include <pthread.h>
 #include <crew.h>
-#include <joedog/joedog.h>
+#include <memory.h>
+#include <notify.h>
 #include <joedog/defs.h>
 #include <joedog/boolean.h>
 

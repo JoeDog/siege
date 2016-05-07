@@ -27,7 +27,8 @@
 #include <setup.h> 
 #include <sock.h>
 #include <util.h>
-#include <joedog/joedog.h>
+#include <memory.h>
+#include <notify.h>
 #include <joedog/boolean.h>
 #include <joedog/defs.h>
 #include <pthread.h>

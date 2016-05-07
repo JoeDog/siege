@@ -32,8 +32,9 @@
 #include <date.h>
 #include <util.h>
 #include <hash.h>
+#include <memory.h>
+#include <perl.h>
 #include <response.h>
-#include <joedog/joedog.h>
 #include <joedog/boolean.h>
 #include <joedog/defs.h>
 

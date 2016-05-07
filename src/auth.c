@@ -1,7 +1,7 @@
 /**
  * HTTP Authentication
  *
- * Copyright (C) 2002-2015 by
+ * Copyright (C) 2002-2016 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege
  *
@@ -32,7 +32,8 @@
 #include <util.h>
 #include <pthread.h>
 #include <setup.h>
-#include <joedog/joedog.h>
+#include <memory.h>
+#include <notify.h>
 
 #ifdef HAVE_SSL
 #include <openssl/des.h>

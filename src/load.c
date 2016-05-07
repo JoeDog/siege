@@ -29,10 +29,12 @@
 #include <sys/types.h>
 #include <fcntl.h> 
 #include <load.h>
+#include <notify.h>
+#include <memory.h>
+#include <perl.h>
 #include <errno.h>
 #include <util.h>
 #include <http.h>
-#include <joedog/joedog.h>
 #include <joedog/boolean.h>
 
 struct ContentType {

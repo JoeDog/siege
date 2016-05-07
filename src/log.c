@@ -23,6 +23,7 @@
 #include <setup.h>
 #include <fcntl.h>
 #include <log.h>
+#include <notify.h>
 #include <data.h>
 #include <locale.h>
 

@@ -32,9 +32,11 @@
 #include <setup.h>
 #include <url.h>
 #include <load.h>
+#include <perl.h>
 #include <date.h>
 #include <util.h>
-#include <joedog/joedog.h>
+#include <memory.h>
+#include <notify.h>
 #include <joedog/boolean.h>
 #include <joedog/defs.h>
 

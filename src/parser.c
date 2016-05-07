@@ -32,7 +32,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <array.h>
-#include <joedog/joedog.h>
+#include <memory.h>
 #include <joedog/defs.h>
 
 #define CONTROL_TOKENS      " ="

@@ -33,7 +33,6 @@
 #include <auth.h>
 #include <url.h>
 #include <response.h>
-#include <joedog/joedog.h>
 #include <joedog/boolean.h>
 
 #ifndef HAVE_SNPRINTF

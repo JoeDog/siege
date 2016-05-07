@@ -1,7 +1,7 @@
 /**
  * SSL Thread Safe Setup Functions.
  *
- * Copyright (C) 2002-2015 by
+ * Copyright (C) 2002-2016 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege
  *
@@ -44,7 +44,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stralloc.h>
+#include <memory.h>
 #include <pthread.h>
+#include <notify.h>
 #include <errno.h>
 #include <joedog/defs.h>
 

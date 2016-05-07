@@ -30,10 +30,6 @@ AM_LDFLAGS         =   $(SSL_LDFLAGS) $(Z_LDFLAGS) $(PTHREAD_LDFLAGS)
 
 LIBS               =   $(SSL_LIBS) $(Z_LIBS)
 
-siege_LDADD        =   $(top_srcdir)/lib/joedog/libjoedog.la
-
-siege_DEPENDENCIES =   $(top_srcdir)/lib/joedog/libjoedog.la 
-
 siege_SOURCES      =   \
 ansidecl.h             \
 array.c    array.h     \
@@ -59,11 +55,15 @@ load.c     load.h      \
 log.c      log.h       \
 main.c     setup.h     \
 md5.c      md5.h       \
+memory.c   memory.h    \
+notify.c   notify.h    \
 page.c     page.h      \
 parser.c   parser.h    \
+perl.c     perl.h      \
 response.c response.h  \
 sock.c     sock.h      \
 ssl.c      ssl.h       \
+stralloc.c stralloc.h  \
 timer.c    timer.h     \
 url.c      url.h       \
 util.c     util.h      \

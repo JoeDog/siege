@@ -1,7 +1,26 @@
 #ifndef __COOKIE_H
 #define __COOKIE_H
 
-#include <joedog/joedog.h>
+#ifdef  HAVE_CONFIG_H
+# include <config.h>
+#endif/*HAVE_CONFIG_H*/
+
+#ifdef  HAVE_SYS_TIMES_H
+# include <sys/times.h>
+#endif/*HAVE_SYS_TIMES_H*/
+
+#if  TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# if HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif/*TIME_WITH_SYS_TIME*/
+
+#include <stddef.h>
 #include <joedog/defs.h>
 #include <joedog/boolean.h>
 

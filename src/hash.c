@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <hash.h>
-#include <joedog/joedog.h>
+#include <memory.h>
 #include <joedog/defs.h>
 
 typedef struct NODE

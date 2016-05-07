@@ -34,7 +34,10 @@
 #include <array.h>
 #include <util.h>
 #include <parser.h>
+#include <perl.h>
 #include <response.h>
+#include <memory.h>
+#include <notify.h>
 #include <browser.h>
 
 #if defined(hpux) || defined(__hpux) || defined(WINDOWS)

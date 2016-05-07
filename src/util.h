@@ -23,9 +23,12 @@
 #ifndef  UTIL_H
 #define  UTIL_H
 
+#include <setup.h>
 #include <joedog/boolean.h>
 
 void    parse_time(char *p);
+float   elapsed_time(clock_t time);
+char *  substring(char *str, int start, int len);
 void    pthread_sleep_np(unsigned int seconds); 
 void    pthread_usleep_np(unsigned long usec); 
 int     pthread_rand_np(unsigned int *ctx); 
@@ -36,14 +39,14 @@ BOOLEAN endswith(const char *suffix, const char *str);
 BOOLEAN okay(int code);
 void    echo(const char *fmt, ...);
 void    debug (const char *fmt, ...);
-char    *uppercase(char *s, size_t len);
-char    *lowercase(char *s, size_t len);
-char    *stristr(const char *haystack, const char *needle);
+char *  uppercase(char *s, size_t len);
+char *  lowercase(char *s, size_t len);
+char *  stristr(const char *haystack, const char *needle);
 #ifndef strnlen
 size_t  strnlen(const char *str, size_t len);
 #endif
 #ifndef strncasestr
-char    *strncasestr(const char *str1, const char *str2, size_t len);
+const char * strncasestr(const char *str1, const char *str2, size_t len);
 #endif
 
 #endif /*UTIL_H*/
