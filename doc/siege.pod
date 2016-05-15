@@ -367,8 +367,7 @@ Stein's torture.pl script:
       The number of times the server responded with a return code < 400.
 
   Failed transactions
-      The number of times the server responded with a return code >= 400 
-      plus the sum of all failed socket transactions which includes 
+      The number of times the socket transactions failed which includes 
       socket timeouts.
 
   Longest transaction
