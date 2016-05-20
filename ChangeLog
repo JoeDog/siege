@@ -2,6 +2,13 @@ To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
 2016/05/07 Jeffrey Fulmer <http://www.joedog.org/support/>
+ * SIEGE RELEASE          RELEASE_4-0-2-MAY-20-2016
+ * src/version.c          Version increment: 4.0.2
+
+2016/05/20 Danylo Hlynskyi <https://github.com/danbst>
+ * doc/siege.pod          Documentation improvements
+
+2016/05/07 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_4-0-2-beta2-MAY-07-2016
  * lib/joedog             Moved to src
  * src/perl.c             Moved from lib/joedog
