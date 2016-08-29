@@ -171,7 +171,7 @@ __parse_control(ARRAY array, URL base, char *html)
       }
     } else if (strncasecmp(ptr, "img", 3) == 0) {
       ptr = strtok_r(NULL, CONTROL_TOKENS, &aid);
-      if (ptr != NULL) {
+      if (ptr != NULL && aid != NULL) {
         if (! strncasecmp(aid, "\"\"", 2)) {
           // empty string, i.e., img src=""
           continue;
