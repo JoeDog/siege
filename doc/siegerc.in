@@ -444,8 +444,8 @@ benchmark = false
 # ex: accept-encoding = 
 #     accept-encoding = gzip
 #     accept-encoding = deflate
-#     accept-encoding = gzip;deflate
-accept-encoding = gzip;deflate
+#     accept-encoding = gzip, deflate
+accept-encoding = gzip, deflate
 
 #
 # URL escaping was first added to version 3.0.3. It was considered
