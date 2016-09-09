@@ -1,6 +1,15 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/08/29 Jeffrey Fulmer http://www.joedog.org/support/
+2016/08/29 Aaron Peschel  https://github.com/apeschel
+2016/08/29 Wuvist         https://github.com/Wuvist
+2016/08/29 Christian Blades <cblades@pindropsecurity.com>
+ * src/parser.c           Added a check to ensure aid is not NULL
+ * utils/bombardment.in   Switched to BSD date format 
+ * doc/siegerc.in         Fixed typo in the config file template
+ * src/browser.c          Enable payload for PUT request
+
 2016/05/07 Jeffrey Fulmer <http://www.joedog.org/support/>
  * SIEGE RELEASE          RELEASE_4-0-2-MAY-20-2016
  * src/version.c          Version increment: 4.0.2
