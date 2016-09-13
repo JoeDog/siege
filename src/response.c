@@ -118,7 +118,7 @@ int
 response_get_code(RESPONSE this)
 { 
   if (this == NULL || this->headers == NULL || (char *)hash_get(this->headers, RESPONSE_CODE) == NULL) {
-    return -1;
+    return 418; //  I'm a teapot (RFC 2324)
   }
   return atoi((char *)hash_get(this->headers, RESPONSE_CODE));
 }
@@ -144,7 +144,7 @@ int
 response_failure(RESPONSE this)
 {
   if ((char *)hash_get(this->headers, RESPONSE_CODE) == NULL) {
-    return 0;
+    return 1;
   }
   int code = atoi((char *)hash_get(this->headers, RESPONSE_CODE));
   return (code >= 400 && code != 401 && code != 407) ? 1 : 0;
