@@ -4,6 +4,9 @@ To email a contributor remove "DELETE" from the email address.
 2016/09/10 Jeffrey Fulmer http://www.joedog.org/support/
  * Based on a bug report from Lennart Braun
  * src/response.c         Added integrity checks in success|failure
+ * src/http.c             Added handling for non-HTTP servers
+ * src/browser.c          Added handling for non-HTTP servers
+ * src/version.c          Version increment: 4.0.3rc1
 
 2016/08/29 Jeffrey Fulmer http://www.joedog.org/support/
 2016/08/29 Aaron Peschel  https://github.com/apeschel
