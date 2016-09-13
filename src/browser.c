@@ -494,6 +494,24 @@ __http(BROWSER this, URL U)
     return FALSE;
   }
 
+  if (response_get_code(resp) == 418) {
+    /**
+     * I don't know what server we're talking to but I 
+     * know what it's not. It's not an HTTP server....
+     */
+    this->conn->connection.reuse = 0;
+    socket_close(this->conn);
+    stop  =  times(&t_stop);
+    etime =  elapsed_time(stop - start);
+    this->hits ++;
+    this->time += etime;
+    this->fail += 1;
+
+    __display_result(this, resp, U, 0, etime);
+    resp = response_destroy(resp);
+    return FALSE;
+  }
+
   bytes = http_read(this->conn, resp);
 
   if (my.parser == TRUE) {
