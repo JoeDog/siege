@@ -179,6 +179,7 @@ struct CONFIG
   BOOLEAN chunked;      /* boolean, accept chunked encoding        */
   BOOLEAN unique;       /* create unique files for upload          */
   BOOLEAN get;          /* get header information for debugging    */ 
+  BOOLEAN print;        /* get header and page for debugging       */ 
   BOOLEAN mark;         /* signifies a log file mark req.          */ 
   char    *markstr;     /* user defined string value to mark file  */
   int     protocol;     /* 0=HTTP/1.0; 1=HTTP/1.1                  */
