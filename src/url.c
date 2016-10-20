@@ -373,6 +373,8 @@ url_get_method_name(URL this) {
   switch (this->method){
     case POST:
       return "POST";
+    case PATCH:
+      return "PATCH";
     case PUT:
       return "PUT";
     case DELETE:
@@ -571,8 +573,13 @@ __url_parse(URL this, char *url)
   ptr = __url_set_scheme(this, ptr);
 
   post = strstr(this->url, " POST");
+
   if (! post) {
     post = strstr(this->url, " PUT");
+  }
+	
+  if (! post) {
+    post = strstr(this->url, " PATCH");
   }
 
   if (post != NULL){
@@ -580,10 +587,14 @@ __url_parse(URL this, char *url)
       this->method = PUT;
       *post = '\0';
       post += 4;
-    } else {
+    } else if (!strncasecmp(post," POST", 5)) {
       this->method = POST;
       *post = '\0';
       post += 5;
+    } else {
+      this->method = PATCH;
+      *post = '\0';
+      post += 6;
     }
     __parse_post_data(this, post);
   } else {
@@ -1135,7 +1146,7 @@ __url_has_method(const char *url)
    unsigned int i = 0;
    const char * r = NULL;
    static const char* const methods[] = {
-     " GET", " HEAD", " POST", " PUT", " TRACE", " DELETE", " OPTIONS", " CONNECT"
+     " GET", " HEAD", " POST", " PUT", " TRACE", " DELETE", " OPTIONS", " CONNECT", " PATCH"
    };
 
    for (i = 0; i < sizeof(methods) / sizeof(methods[0]); i++) {
