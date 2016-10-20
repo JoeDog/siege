@@ -67,7 +67,10 @@ static struct option long_options[] =
   { "config",       no_argument,       NULL, 'C' },
   { "debug",        no_argument,       NULL, 'D' },
   { "get",          no_argument,       NULL, 'g' },
+  { "print",        no_argument,       NULL, 'p' },
   { "concurrent",   required_argument, NULL, 'c' },
+  { "no-parser",    no_argument,       NULL, 'N' },
+  { "no-follow",    no_argument,       NULL, 'F' },
   { "internet",     no_argument,       NULL, 'i' },
   { "benchmark",    no_argument,       NULL, 'b' },
   { "reps",         required_argument, NULL, 'r' },
@@ -137,6 +140,7 @@ display_help()
   puts("  -q, --quiet               QUIET turns verbose off and suppresses output.");
   puts("  -g, --get                 GET, pull down HTTP headers and display the");
   puts("                            transaction. Great for application debugging.");
+  puts("  -p, --print               PRINT, like GET only it prints the entire page.");
   puts("  -c, --concurrent=NUM      CONCURRENT users, default is 10");
   puts("  -r, --reps=NUM            REPS, number of times to run the test." );
   puts("  -t, --time=NUMm           TIMED testing where \"m\" is modifier S, M, or H");
@@ -145,6 +149,8 @@ display_help()
   puts("  -b, --benchmark           BENCHMARK: no delays between requests." );
   puts("  -i, --internet            INTERNET user simulation, hits URLs randomly.");
   puts("  -f, --file=FILE           FILE, select a specific URLS FILE." );
+  puts("      --no-parser           NO PARSER, turn off the HTML page parser");
+  puts("      --no-follow           NO FOLLOW, do not follow HTTP redirects");
   printf("  -R, --rc=FILE             RC, specify an %src file\n",program_name);
   puts("  -l, --log[=FILE]          LOG to FILE. If FILE is not specified, the");
   printf("                            default is used: PREFIX/var/%s.log\n", program_name);
@@ -173,7 +179,7 @@ parse_rc_cmdline(int argc, char *argv[])
   strcpy(my.rc, "");
   
   while( a > -1 ){
-    a = getopt_long(argc, argv, "VhvqCDgl::ibr:t:f:d:c:m:H:R:A:T:", long_options, (int*)0);
+    a = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:", long_options, (int*)0);
     if(a == 'R'){
       strcpy(my.rc, optarg);
       a = -1;
@@ -192,7 +198,7 @@ parse_cmdline(int argc, char *argv[])
 {
   int c = 0;
   int nargs;
-  while ((c = getopt_long(argc, argv, "VhvqCDgl::ibr:t:f:d:c:m:H:R:A:T:", long_options, (int *)0)) != EOF) {
+  while ((c = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:", long_options, (int *)0)) != EOF) {
   switch (c) {
       case 'V':
         display_version(TRUE);
@@ -225,6 +231,11 @@ parse_cmdline(int argc, char *argv[])
         break;
       case 'g':
         my.get = TRUE;
+        break;
+      case 'p':
+        my.print  = TRUE;
+        my.cusers = 1;
+        my.reps   = 1;
         break;
       case 'l':
         my.logging = TRUE;
@@ -264,6 +275,12 @@ parse_cmdline(int argc, char *argv[])
         break;
       case 'T':
         strncpy(my.conttype, optarg, 255);
+        break;
+      case 'N':
+        my.parser = FALSE;
+        break;
+      case 'F':
+        my.follow = FALSE;
         break;
       case 'R':  
         /**
