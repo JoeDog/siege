@@ -50,6 +50,7 @@ typedef enum {
   TRACE    =  6,
   OPTIONS  =  7,
   CONNECT  =  8,
+  PATCH    =  9,
 } METHOD;
   
 /**
