@@ -453,7 +453,7 @@ __http(BROWSER this, URL U)
   }
 
   if (url_get_scheme(U) == UNSUPPORTED) {
-    if (my.verbose && !my.get) {
+    if (my.verbose && !my.get && !my.print) {
       NOTIFY (
         ERROR,
         "%s %d %6.2f secs: %7d bytes ==> %s\n",
@@ -513,6 +513,9 @@ __http(BROWSER this, URL U)
   }
 
   bytes = http_read(this->conn, resp);
+  if (my.print) {
+    printf("%s\n", page_value(this->conn->page));
+  }
 
   if (my.parser == TRUE) {
     if (strmatch(response_get_content_type(resp), "text/html") && response_get_code(resp) < 300) {
@@ -948,7 +951,7 @@ __display_result(BROWSER this, RESPONSE resp, URL U, unsigned long bytes, float 
   /**
    * verbose output, print statistics to stdout
    */
-  if ((my.verbose && !my.get) && (!my.debug)) {
+  if ((my.verbose && !my.get && !my.print) && (!my.debug)) {
     int  color   = (my.color == TRUE) ? __select_color(response_get_code(resp)) : -1;
     DATE date    = new_date(NULL);
     char *stamp  = (my.timestamp)?date_stamp(date):"";
