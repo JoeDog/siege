@@ -1,6 +1,12 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/10/20 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/setup.h            Added my.print, my.nofollow, my.noparser
+ * src/main.c             Added --print, --no-follow, --no-parser
+ * src/browser.c          Added support for new cmd line options
+ * src/http.c             Added support for new cmd line options
+
 2016/09/10 Jeffrey Fulmer http://www.joedog.org/support/
  * Based on a bug report from Lennart Braun
  * src/response.c         Added integrity checks in success|failure
