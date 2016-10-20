@@ -110,6 +110,36 @@ gmethod = HEAD|GET
 NOTE: It's best practice to quote the URL when it's passed to $_PROGRAM 
 from the the command-line.
 
+=item B<-p URL>, B<--print=URL>
+
+This option is similar to -g / --get but it PRINTS the page it received 
+from the server.
+
+  $ siege -p http://www.joedog.org/
+  GET / HTTP/1.0
+  Host: www.joedog.org
+  Accept: */*
+  User-Agent: Mozilla/5.0 (unknown-x86_64-linux-gnu) Siege/4.0.3rc1
+  Connection: close
+
+  HTTP/1.1 301 Moved Permanently
+  Date: Wed, 19 Oct 2016 16:58:13 GMT
+  Content-Type: text/html; charset=iso-8859-1
+  Location: https://www.joedog.org/
+  Server: cloudflare-nginx
+  Connection: close
+
+
+  <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+  <html><head>
+  <title>301 Moved Permanently</title>
+  </head><body>
+  <h1>Moved Permanently</h1>
+  <p>The document has moved <a href="https://www.joedog.org/">here</a>.</p>
+  <hr>
+  <address>Apache/2.2.31 (Amazon) Server at www.joedog.org Port 80</address>
+  </body></html>
+
 =item B<-c NUM>, B<--concurrent=NUM>
 
 This option allows you to set the concurrent number of users. The total 
