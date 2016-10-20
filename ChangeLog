@@ -1,6 +1,12 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2016/10/20 David Morán https://github.com/david-moran
+ * src/browser.c          Added PATCH conditionals
+ * src/url.h              Added PATCH to enum
+ * src/url.c              Added PATCH parsing
+ * src/version.c          Version increment: 4.0.3rc2
+
 2016/10/20 Jeffrey Fulmer http://www.joedog.org/support/
  * src/setup.h            Added my.print, my.nofollow, my.noparser
  * src/main.c             Added --print, --no-follow, --no-parser
