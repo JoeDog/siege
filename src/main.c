@@ -149,8 +149,6 @@ display_help()
   puts("  -b, --benchmark           BENCHMARK: no delays between requests." );
   puts("  -i, --internet            INTERNET user simulation, hits URLs randomly.");
   puts("  -f, --file=FILE           FILE, select a specific URLS FILE." );
-  puts("      --no-parser           NO PARSER, turn off the HTML page parser");
-  puts("      --no-follow           NO FOLLOW, do not follow HTTP redirects");
   printf("  -R, --rc=FILE             RC, specify an %src file\n",program_name);
   puts("  -l, --log[=FILE]          LOG to FILE. If FILE is not specified, the");
   printf("                            default is used: PREFIX/var/%s.log\n", program_name);
@@ -159,6 +157,8 @@ display_help()
   puts("  -H, --header=\"text\"       Add a header to request (can be many)" ); 
   puts("  -A, --user-agent=\"text\"   Sets User-Agent in request" ); 
   puts("  -T, --content-type=\"text\" Sets Content-Type in request" ); 
+  puts("      --no-parser           NO PARSER, turn off the HTML page parser");
+  puts("      --no-follow           NO FOLLOW, do not follow HTTP redirects");
   puts("");
   puts(copyright);
   /**
