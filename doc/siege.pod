@@ -260,6 +260,17 @@ above.
 This is another set header shortcut. You use this option to override 
 the default Content-type request header.
 
+=item B<--no-parser>
+
+Turn off the HTML parser. When siege downloads a page, it parses it for
+additional page elements such as style-sheets, javascript and images. It 
+will make additional requests for any elements it finds. With this option
+enabled, siege will stop after it pulls down the main page.
+
+=item B<--no-follow>
+
+This directive instructs siege not to follow 3xx redirects.
+
 =back
 
 =head1 URL FORMAT
