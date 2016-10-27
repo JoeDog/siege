@@ -1,6 +1,10 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+Anton Blanchard https://github.com/antonblanchard
+ * util/config.guess      Updated to the latest upstream version
+ * util/config.sub        Updated to the latest upstream version
+
 2016/10/20 David Morán https://github.com/david-moran
  * src/browser.c          Added PATCH conditionals
  * src/url.h              Added PATCH to enum
