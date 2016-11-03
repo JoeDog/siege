@@ -44,13 +44,13 @@ parse_time(char *p)
   size_t x = 0;
   my.time = my.secs = 0;
 
-  while(ISDIGIT(p[x]))
+  while (ISDIGIT(p[x]))
     x++;
   if (x==0) return;
   my.time = atoi(substring(p, 0, x));
 
-  for(; x < strlen(p); x ++)
-    switch(TOLOWER(p[x])){
+  for (; x < strlen(p); x ++)
+    switch (TOLOWER(p[x])) {
       case 's':
         my.secs = my.time;
         my.time = 1;
@@ -66,7 +66,7 @@ parse_time(char *p)
       default:
         break;
     }
-  if((my.time > 0) && (my.secs <= 0)){
+  if ((my.time > 0) && (my.secs <= 0)) {
     my.secs = my.time * 60;
   }
 
@@ -112,7 +112,7 @@ okay(int code)
 BOOLEAN
 strmatch(char *option, char *param)
 {
-  if(!strncasecmp(option,param,strlen(param))&&strlen(option)==strlen(param))
+  if (!strncasecmp(option,param,strlen(param))&&strlen(option)==strlen(param))
     return TRUE;
   else
     return FALSE;
@@ -145,7 +145,7 @@ uppercase(char *s, size_t len){
   c = (unsigned char*)s;
   e = c+len;
 
-  while(c < e){
+  while (c < e) {
     *c = TOUPPER((unsigned char)(*c));
     c++;
   }
@@ -160,7 +160,7 @@ lowercase(char *s, size_t len){
   c = (unsigned char*)s;
   e = c+len;
 
-  while(c < e){
+  while (c < e) {
     *c = TOLOWER((unsigned char)(*c));
     c++;
   }
