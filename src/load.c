@@ -1,7 +1,7 @@
 /**
  * Load Post Data
  *
- * Copyright (C) 2002-2014 by
+ * Copyright (C) 2002-2016 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege
  *
@@ -213,16 +213,25 @@ static const struct ContentType tmap[] = {
   {"zip",     FALSE, "application/zip"}
 };
 
+char *
+get_file_extension(char *file) 
+{
+  char *dot = strrchr(file, '.');
+  if (!dot || dot == file)
+    return "";
+  return dot + 1;
+}
+
 char * 
 get_content_type(char *file)
 {
-  int i;
+  int   i;
+  char *ext;
 
-  for(i=0; i < (int)sizeof(tmap) / (int)sizeof(tmap[0]); i++) {
-    if(strlen(file) >= strlen(tmap[i].ext)) {
-      if(strmatch(((char*)file + strlen(file) - strlen(tmap[i].ext)), (char*)tmap[i].ext)) {
-        return tmap[i].type;
-      }
+  ext = get_file_extension(file);
+  for (i=0; i < (int)sizeof(tmap) / (int)sizeof(tmap[0]); i++) {
+    if (strmatch(ext, tmap[i].ext)) {
+      return tmap[i].type;
     }
   }
   return tmap[0].type;
@@ -231,13 +240,13 @@ get_content_type(char *file)
 BOOLEAN
 is_ascii(char *file) 
 {
-  int i;
+  int   i;
+  char *ext;
 
-  for(i=0; i < (int)sizeof(tmap) / (int)sizeof(tmap[0]); i++) {
-    if(strlen(file) >= strlen(tmap[i].ext)) {
-      if(strmatch(((char*)file + strlen(file) - strlen(tmap[i].ext)), (char*)tmap[i].ext)) {
-        return tmap[i].ascii;
-      }
+  ext = get_file_extension(file);
+  for (i=0; i < (int)sizeof(tmap) / (int)sizeof(tmap[0]); i++) {
+    if (strmatch(ext, tmap[i].ext)) {
+      return tmap[i].ascii;
     }
   }
   return tmap[0].ascii;
@@ -259,6 +268,7 @@ load_file(URL U, char *file)
   filename = trim(file);
 
   memset(mode, '\0', sizeof(mode));
+  printf("IS ASCII: %s\n", is_ascii(filename) ? "TRUE" : "FALSE");
   snprintf(mode, sizeof(mode), "%s", (is_ascii(filename))?"r":"rb");
   fp = fopen(filename, mode);
   if (! fp) {
