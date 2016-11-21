@@ -76,6 +76,8 @@ cache_contains(CACHE this, CTYPE type, URL U)
   char   *key;
   BOOLEAN found = FALSE;
 
+  if (!my.cache) return FALSE;
+
   key = __build_key(type, U);
   if (key == NULL) {
     return FALSE;
