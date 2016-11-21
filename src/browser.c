@@ -417,7 +417,7 @@ private BOOLEAN
 __http(BROWSER this, URL U)
 {
   unsigned long bytes  = 0;
-  int      code, fail;
+  int      code, okay, fail;
   float    etime;
   clock_t  start, stop;
   struct   tms t_start, t_stop;
@@ -494,7 +494,9 @@ __http(BROWSER this, URL U)
     return FALSE;
   }
 
-  if (response_get_code(resp) == 418) {
+  code = response_get_code(resp);
+
+  if (code == 418) {
     /**
      * I don't know what server we're talking to but I 
      * know what it's not. It's not an HTTP server....
@@ -518,7 +520,7 @@ __http(BROWSER this, URL U)
   }
 
   if (my.parser == TRUE) {
-    if (strmatch(response_get_content_type(resp), "text/html") && response_get_code(resp) < 300) {
+    if (strmatch(response_get_content_type(resp), "text/html") && code < 300) {
       int   i;
       html_parser(this->parts, U, page_value(this->conn->page));
       for (i = 0; i < (int)array_length(this->parts); i++) {
@@ -541,16 +543,16 @@ __http(BROWSER this, URL U)
   }
   stop     =  times(&t_stop);
   etime    =  elapsed_time(stop - start);
-  code     =  response_success(resp);
+  okay     =  response_success(resp);
   fail     =  response_failure(resp);
   /**
    * quantify the statistics for this client.
    */
   this->bytes += bytes;
   this->time  += etime;
-  this->code  += code;
+  this->code  += okay;
   this->fail  += fail;
-  if (response_get_code(resp) == 200) {
+  if (code == 200) {
     this->okay++;
   }
  
@@ -578,7 +580,7 @@ __http(BROWSER this, URL U)
     socket_close(this->conn);
   }
 
-  switch (response_get_code(resp)) {
+  switch (code) {
     case 200:
       if (meta != NULL && strlen(meta) > 2) {
         /**
@@ -616,7 +618,7 @@ __http(BROWSER this, URL U)
         if (empty(url_get_hostname(redirect_url))) {
           url_set_hostname(redirect_url, url_get_hostname(U));
         }
-        if (response_get_code(resp) == 307) {
+        if (code == 307) {
           url_set_conttype(redirect_url,url_get_conttype(U));
           url_set_method(redirect_url, url_get_method(U));
 
