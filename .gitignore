@@ -8,6 +8,7 @@ config.log
 include/config.h
 include/config.h.in
 include/joedog/joepath.h
+include/joedog/path.h
 include/stamp-h1
 lib/joedog/.libs/
 lib/joedog/libjoedog.la
@@ -22,10 +23,14 @@ src/siege
 
 # Generated
 doc/bombardment.1
+doc/bombardment.1.in
 doc/layingsiege.7
 doc/siege.1
+doc/siege.1.in
 doc/siege.config.1
+doc/siege.config.1.in
 doc/siege2csv.1
+doc/siege2csv.1.in
 doc/siegerc
 doc/urls_txt.5
 utils/bombardment
