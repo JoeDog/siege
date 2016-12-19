@@ -293,8 +293,10 @@ __parse_input(COOKIE this, char *str, char *host)
     } else if (!strncasecmp(key, "secure", 6)) {
       this->secure = TRUE;
     } else {
-      this->name  = strdup(key);
-      this->value = strdup(val);
+      if (!this->name)
+        this->name  = strdup(key);
+      if (!this->value)
+        this->value = strdup(val);
     }
   }
   if (this->expires < 1000) {
