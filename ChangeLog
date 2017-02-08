@@ -2,6 +2,12 @@ To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
 2016/11/02 Jeffrey Fulmer http://www.joedog.org/support/
+ * doc/siegerc.in         Changed the default delay to zero point zero
+ * src/cache.c            Implement disable cache option
+ * src/browser.c          Reduce dependence on hash lookups
+ * src/version.c          Version increment: 4.0.3rc4
+
+2016/11/02 Jeffrey Fulmer http://www.joedog.org/support/
  * src/load.c             Fixed a bug in content-type selection
  * src/util.c             Formatting enhancements
  * src/version.c          Version increment: 4.0.3rc3
