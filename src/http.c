@@ -455,7 +455,7 @@ http_read_headers(CONN *C, URL U)
     }
     line[x]='\0';
 
-	// string carriage return
+    // string carriage return
     if (x > 0 && line[x-1] == '\r') line[x-1]='\0';
 
     if (strncasecmp(line, "http", 4) == 0) {
@@ -600,7 +600,7 @@ http_read(CONN *C, RESPONSE resp)
   
   memset(dest, '\0', sizeof dest);
 
-  pthread_mutex_lock(&__mutex);  //VL - moved
+  //pthread_mutex_lock(&__mutex);  //VL - moved
   
   if (C->content.length > 0) {
     length = C->content.length;
@@ -623,10 +623,9 @@ http_read(CONN *C, RESPONSE resp)
     do {
       chunk = http_chunk_size(C);
       if (chunk == 0){
-		socket_readline(C, C->chkbuf, sizeof(C->chkbuf)); //VL - issue #3
-		break;
-	  }
-      else if (chunk < 0) {
+        socket_readline(C, C->chkbuf, sizeof(C->chkbuf)); //VL - issue #3
+        break;
+      } else if (chunk < 0) {
         chunk = 0;
         continue;
       }  
@@ -679,7 +678,7 @@ http_read(CONN *C, RESPONSE resp)
   }
   xfree(ptr);
   echo ("\n");
-  pthread_mutex_unlock(&__mutex);
+  //pthread_mutex_unlock(&__mutex);
   return bytes;
 }
 
