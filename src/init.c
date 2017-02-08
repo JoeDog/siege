@@ -219,6 +219,7 @@ show_config(int EXIT)
   else
     printf("repetitions:                    n/a\n" );
   printf("socket timeout:                 %d\n", my.timeout);
+  printf("cache enabled:                  %s\n", my.cache==TRUE ? "true" : "false");
   printf("accept-encoding:                %s\n", my.encoding);
   printf("delay:                          %.3f sec%s\n", my.delay, (my.delay > 1) ? "s" : "");
   printf("internet simulation:            %s\n", my.internet?"true":"false");
