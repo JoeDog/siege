@@ -371,7 +371,7 @@ __socket_block(int sock, BOOLEAN block)
 #else 
   return sock;
 #endif
-return sock;
+// return sock;
   if (sock==-1) {
     return sock;
   }
