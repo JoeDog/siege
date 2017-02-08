@@ -271,7 +271,9 @@ hash_destroy(HASH this)
   int x;
   NODE *t1, *t2;
 
-  if (this == NULL) return this;
+  if (this == NULL) {
+    return this;
+  } 
 
   if (this->free == NULL) {
     this->free = free;
