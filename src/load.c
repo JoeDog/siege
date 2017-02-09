@@ -110,6 +110,7 @@ static const struct ContentType tmap[] = {
   {"man",     FALSE, "application/x-troff-man"},
   {"md",      TRUE,  "text/x-markdown"},
   {"me",      FALSE, "application/x-troff-me"},
+  {"md",      TRUE,  "text/x-markdown"},
   {"mesh",    FALSE, "model/mesh"},
   {"mid",     FALSE, "audio/midi"},
   {"midi",    FALSE, "audio/midi"},
