@@ -52,7 +52,7 @@ Prints a help message describing $_PROGRAM's command-line options.
 Prints a detailed summary of all the currently configured options, most
 of which are sent in $HOME/.siege/siege.conf
 
-=item B<-v>, B<--vebose>
+=item B<-v>, B<--verbose>
 
 This directive puts $_PROGRAM into verbose mode which is actually a 
 default setting. This command-line option is useful when the config 
