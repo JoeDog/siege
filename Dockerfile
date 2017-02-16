@@ -26,5 +26,6 @@ RUN apk add --no-cache $BUILD_DEPS \
     && apk del $BUILD_DEPS
 
 ENTRYPOINT ["siege"]
+
 CMD ["--help"]
 
