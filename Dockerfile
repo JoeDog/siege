@@ -12,6 +12,7 @@ ENV BUILD_DEPS autoconf \
          perl
 
 RUN apk add --no-cache $BUILD_DEPS \
+    && apk add --no-cache zlib zlib-dev \
     && curl -fSL https://github.com/jstarcher/siege/archive/v$SIEGE_VERSION.tar.gz -o siege.tar.gz \
     && mkdir -p /usr/src \
     && tar -zxC /usr/src -f siege.tar.gz \
