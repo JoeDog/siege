@@ -1,9 +1,7 @@
 FROM alpine:3.5
 
-ENV SIEGE_VERSION v4.0.3rc3
-
-RUN apk add --no-cache --virtual .build-dep \
-         autoconf \
+ENV SIEGE_VERSION 4.0.3rc4
+ENV BUILD_DEPS autoconf \
          automake \
          curl \
          file \
@@ -11,18 +9,21 @@ RUN apk add --no-cache --virtual .build-dep \
          libc-dev \
          libtool \
          make \
-         perl \
-    && curl -fSL https://github.com/JoeDog/siege/archive/$SIEGE_VERSION.tar.gz -o siege.tar.gz \
+         perl
+
+RUN apk add --no-cache $BUILD_DEPS \
+    && curl -fSL https://github.com/jstarcher/siege/archive/v$SIEGE_VERSION.tar.gz -o siege.tar.gz \
     && mkdir -p /usr/src \
     && tar -zxC /usr/src -f siege.tar.gz \
     && rm siege.tar.gz \
-    && cd /usr/src/siege-${SIEGE_VERSION:1} \
+    && cd /usr/src/siege-$SIEGE_VERSION \
     && utils/bootstrap \
     && ./configure \
     && make \
     && make install \
+    && cd / \
     && rm -rf /usr/src/siege-$SIEGE_VERSION \
-    && apk del .build-deps
+    && apk del $BUILD_DEPS
 
 ENTRYPOINT ["siege"]
 CMD ["--help"]
