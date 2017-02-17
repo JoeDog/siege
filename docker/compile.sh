@@ -8,7 +8,7 @@ apt-get update \
 && ./configure \
 && make \
 && make install \
-&& cp src/siege /opt/siege
-&& cp src/bombardment /opt/siege
+&& cp src/siege /opt/siege \
+&& cp src/bombardment /opt/siege \
 && cp src/siege.config /opt/siege
 
