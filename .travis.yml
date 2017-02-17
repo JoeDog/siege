@@ -7,7 +7,8 @@ services:
 
 before_install:
   - docker pull ubuntu
-  - bash docker/run.sh
+  - cd docker
+  - ./run.sh
   - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
   - export REPO=jstarcher/siege
   - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
