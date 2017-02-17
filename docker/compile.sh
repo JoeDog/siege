@@ -8,6 +8,7 @@ apt-get update \
 && ./configure \
 && make \
 && make install \
-&& cp /usr/local/etc/siegerc /opt/siege/siegerc \
-&& cp src/siege /opt/siege/siege
+&& cp src/siege /opt/siege
+&& cp src/bombardment /opt/siege
+&& cp src/siege.config /opt/siege
 
