@@ -10,5 +10,5 @@ apt-get update \
 && make install \
 && cp /usr/local/bin/siege /opt/siege \
 && cp /usr/local/bin/bombardment /opt/siege \
-&& cp /usr/local/bin/seige.config /opt/siege
+&& cp /usr/local/bin/siege.config /opt/siege
 
