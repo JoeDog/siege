@@ -97,6 +97,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   char port_str[10];
   struct addrinfo hints;
   struct addrinfo *addr_res;
+  struct addrinfo *r;
 #else
   struct sockaddr_in cli;
   struct hostent     *hp;
@@ -230,6 +231,30 @@ new_socket(CONN *C, const char *hostparam, int portparam)
    */ 
   conn = connect(C->sock, s_addr, addrlen);
   pthread_testcancel();
+#if defined(__GLIBC__)
+  /**
+    * The result of getaddrinfo is a linked list. Attempt
+    * to connect to each result until successful
+    */
+  if (conn < 0 && errno != EINPROGRESS) {
+    addr_res = addr_res->ai_next;
+    for (r = addr_res; r; r = r->ai_next) {
+      /* close previously opened socket */
+      socket_close(C);
+
+      /* create a socket, return -1 on failure */
+      if (__socket_create(C, domain) < 0) {
+        return -1;
+      }
+
+      conn = connect(C->sock, s_addr, addrlen);
+      pthread_testcancel();
+      if (conn == 0) {
+        break;
+      }
+    }
+  }
+#endif
   if (conn < 0 && errno != EINPROGRESS) {
     switch (errno) {
       case EACCES:        {NOTIFY(ERROR, "socket: %d EACCES",                  pthread_self()); break;}
