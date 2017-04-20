@@ -62,6 +62,8 @@
 # include <openssl/rand.h>
 #endif/*HAVE_SSL*/
 
+#define MAX_PORT_NO 65535
+
 /** 
  * local prototypes 
  */
@@ -86,15 +88,21 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   int conn;
   int res;
   int opt;
-  int herrno;
-  struct sockaddr_in cli; 
-  struct hostent     *hp;
+  int addrlen;
+  struct sockaddr *s_addr;
   char   hn[512];
   int    port;
+  int    domain;
 #if defined(__GLIBC__)
-  struct hostent hent;
-  char hbf[8192];
-#elif defined(sun)
+  char port_str[10];
+  struct addrinfo hints;
+  struct addrinfo *addr_res;
+#else
+  struct sockaddr_in cli;
+  struct hostent     *hp;
+  int herrno;
+#endif
+#if defined(sun)
 # ifndef HAVE_GETIPNODEBYNAME
   struct hostent hent;
   char hbf[8192];
@@ -126,28 +134,31 @@ new_socket(CONN *C, const char *hostparam, int portparam)
     port = portparam;
   }
 
-  /* create a socket, return -1 on failure */
-  if ((C->sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    switch (errno) {
-      case EPROTONOSUPPORT: { NOTIFY(ERROR, "unsupported protocol %s:%d",  __FILE__, __LINE__); break; }
-      case EMFILE:          { NOTIFY(ERROR, "descriptor table full %s:%d", __FILE__, __LINE__); break; }
-      case ENFILE:          { NOTIFY(ERROR, "file table full %s:%d",       __FILE__, __LINE__); break; }
-      case EACCES:          { NOTIFY(ERROR, "permission denied %s:%d",     __FILE__, __LINE__); break; }
-      case ENOBUFS:         { NOTIFY(ERROR, "insufficient buffer %s:%d",   __FILE__, __LINE__); break; }
-      default:              { NOTIFY(ERROR, "unknown socket error %s:%d",  __FILE__, __LINE__); break; }
-    } socket_close(C); return -1;
-  }
-  if (fcntl(C->sock, F_SETFD, O_NDELAY) < 0) {
-    NOTIFY(ERROR, "unable to set close control %s:%d", __FILE__, __LINE__);
+  /* sanity check */
+  if (port < 1 || port > MAX_PORT_NO) {
+    NOTIFY(ERROR, "invalid port number %d in %s:%d", port, __FILE__, __LINE__);
+    return -1;
   }
 
 #if defined(__GLIBC__)
   {
-    memset(hbf, '\0', sizeof hbf);
-    /* for systems using GNU libc */
-    if ((gethostbyname_r(hostparam, &hent, hbf, sizeof(hbf), &hp, &herrno) < 0)) {
-      hp = NULL;
+    snprintf(port_str, sizeof(port_str), "%d", port);
+
+    /* hints for address lookup */
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family=AF_UNSPEC;
+    hints.ai_socktype=SOCK_STREAM;
+    hints.ai_protocol=IPPROTO_TCP;
+
+    res = getaddrinfo(hn, port_str, &hints, &addr_res);
+    if (res != 0) {
+      NOTIFY(ERROR, "Address resolution failed at %s:%d with the following error:", __FILE__, __LINE__);
+      NOTIFY(ERROR, "%s", gai_strerror(res));
+      return -1;
     }
+    s_addr = addr_res->ai_addr;
+    addrlen = addr_res->ai_addrlen;
+    domain = addr_res->ai_family;
   }
 #elif defined(sun)
 # ifdef HAVE_GETIPNODEBYNAME
@@ -174,6 +185,10 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   herrno = h_errno;
 #endif/*OS SPECIFICS*/ 
 
+#if !defined(__GLIBC__)
+  /* gethostbyname only offers IPv4 support */
+  domain = AF_INET;
+
   /**
    * If hp is NULL, then we did not get good information
    * from the name server. Let's notify the user and bail
@@ -199,6 +214,25 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   cli.sin_family = AF_INET;
   cli.sin_port = htons(port);
 
+  s_addr = (struct sockaddr *)&cli;
+  addrlen = sizeof(struct sockaddr_in);
+#endif /* end of __GLIBC__ not defined */
+
+  /* create a socket, return -1 on failure */
+  if ((C->sock = socket(domain, SOCK_STREAM, 0)) < 0) {
+    switch (errno) {
+      case EPROTONOSUPPORT: { NOTIFY(ERROR, "unsupported protocol %s:%d",  __FILE__, __LINE__); break; }
+      case EMFILE:          { NOTIFY(ERROR, "descriptor table full %s:%d", __FILE__, __LINE__); break; }
+      case ENFILE:          { NOTIFY(ERROR, "file table full %s:%d",       __FILE__, __LINE__); break; }
+      case EACCES:          { NOTIFY(ERROR, "permission denied %s:%d",     __FILE__, __LINE__); break; }
+      case ENOBUFS:         { NOTIFY(ERROR, "insufficient buffer %s:%d",   __FILE__, __LINE__); break; }
+      default:              { NOTIFY(ERROR, "unknown socket error %s:%d",  __FILE__, __LINE__); break; }
+    } socket_close(C); return -1;
+  }
+  if (fcntl(C->sock, F_SETFD, O_NDELAY) < 0) {
+    NOTIFY(ERROR, "unable to set close control %s:%d", __FILE__, __LINE__);
+  }
+
   if (C->connection.keepalive) {
     opt = 1; 
     if (setsockopt(C->sock,SOL_SOCKET,SO_KEEPALIVE,(char *)&opt,sizeof(opt))<0) {
@@ -222,7 +256,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
    * evaluate the server response and check for
    * readability/writeability of the socket....
    */ 
-  conn = connect(C->sock, (struct sockaddr *)&cli, sizeof(struct sockaddr_in));
+  conn = connect(C->sock, s_addr, addrlen);
   pthread_testcancel();
   if (conn < 0 && errno != EINPROGRESS) {
     switch (errno) {
@@ -244,7 +278,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
       /**
        * If we reconnect and receive EISCONN, then we have a successful connection
        */
-      res = connect(C->sock, (struct sockaddr *)&cli, sizeof(struct sockaddr_in)); 
+      res = connect(C->sock, s_addr, addrlen);
       if((res < 0)&&(errno != EISCONN)){
         NOTIFY(ERROR, "socket: unable to connect %s:%d", __FILE__, __LINE__);
         socket_close(C);
