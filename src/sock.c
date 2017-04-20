@@ -71,6 +71,7 @@ private int     __socket_block(int socket, BOOLEAN block);
 private ssize_t __socket_write(int sock, const void *vbuf, size_t len);  
 private BOOLEAN __socket_check(CONN *C, SDSET mode);
 private BOOLEAN __socket_select(CONN *C, SDSET mode);
+private int     __socket_create(CONN *C, int domain);
 #ifdef  HAVE_POLL
 private BOOLEAN __socket_poll(CONN *C, SDSET mode);
 #endif/*HAVE_POLL*/
@@ -87,7 +88,6 @@ new_socket(CONN *C, const char *hostparam, int portparam)
 {
   int conn;
   int res;
-  int opt;
   int addrlen;
   struct sockaddr *s_addr;
   char   hn[512];
@@ -219,36 +219,8 @@ new_socket(CONN *C, const char *hostparam, int portparam)
 #endif /* end of __GLIBC__ not defined */
 
   /* create a socket, return -1 on failure */
-  if ((C->sock = socket(domain, SOCK_STREAM, 0)) < 0) {
-    switch (errno) {
-      case EPROTONOSUPPORT: { NOTIFY(ERROR, "unsupported protocol %s:%d",  __FILE__, __LINE__); break; }
-      case EMFILE:          { NOTIFY(ERROR, "descriptor table full %s:%d", __FILE__, __LINE__); break; }
-      case ENFILE:          { NOTIFY(ERROR, "file table full %s:%d",       __FILE__, __LINE__); break; }
-      case EACCES:          { NOTIFY(ERROR, "permission denied %s:%d",     __FILE__, __LINE__); break; }
-      case ENOBUFS:         { NOTIFY(ERROR, "insufficient buffer %s:%d",   __FILE__, __LINE__); break; }
-      default:              { NOTIFY(ERROR, "unknown socket error %s:%d",  __FILE__, __LINE__); break; }
-    } socket_close(C); return -1;
-  }
-  if (fcntl(C->sock, F_SETFD, O_NDELAY) < 0) {
-    NOTIFY(ERROR, "unable to set close control %s:%d", __FILE__, __LINE__);
-  }
-
-  if (C->connection.keepalive) {
-    opt = 1; 
-    if (setsockopt(C->sock,SOL_SOCKET,SO_KEEPALIVE,(char *)&opt,sizeof(opt))<0) {
-      switch (errno) {
-        case EBADF:       { NOTIFY(ERROR, "invalid descriptor %s:%d",    __FILE__, __LINE__); break; }
-        case ENOTSOCK:    { NOTIFY(ERROR, "not a socket %s:%d",          __FILE__, __LINE__); break; }
-        case ENOPROTOOPT: { NOTIFY(ERROR, "not a protocol option %s:%d", __FILE__, __LINE__); break; }
-        case EFAULT:      { NOTIFY(ERROR, "setsockopt unknown %s:%d",    __FILE__, __LINE__); break; }
-        default:          { NOTIFY(ERROR, "unknown sockopt error %s:%d", __FILE__, __LINE__); break; }
-      } socket_close(C); return -1;
-    }
-  }
-
-  if ((__socket_block(C->sock, FALSE)) < 0) {
-    NOTIFY(ERROR, "socket: unable to set socket to non-blocking %s:%d", __FILE__, __LINE__);
-    return -1; 
+  if (__socket_create(C, domain) < 0) {
+    return -1;
   }
 
   /**
@@ -388,6 +360,48 @@ __socket_select(CONN *C, SDSET mode)
     C->state = mode;
     return TRUE;
   }
+}
+
+/**
+ * Create new socket and set socket options.
+ * Handle possible error codes.
+ */
+private int
+__socket_create(CONN *C, int domain)
+{
+  if ((C->sock = socket(domain, SOCK_STREAM, 0)) < 0) {
+    switch (errno) {
+      case EPROTONOSUPPORT: { NOTIFY(ERROR, "unsupported protocol %s:%d",  __FILE__, __LINE__); break; }
+      case EMFILE:          { NOTIFY(ERROR, "descriptor table full %s:%d", __FILE__, __LINE__); break; }
+      case ENFILE:          { NOTIFY(ERROR, "file table full %s:%d",       __FILE__, __LINE__); break; }
+      case EACCES:          { NOTIFY(ERROR, "permission denied %s:%d",     __FILE__, __LINE__); break; }
+      case ENOBUFS:         { NOTIFY(ERROR, "insufficient buffer %s:%d",   __FILE__, __LINE__); break; }
+      default:              { NOTIFY(ERROR, "unknown socket error %s:%d",  __FILE__, __LINE__); break; }
+    } socket_close(C); return -1;
+  }
+  if (fcntl(C->sock, F_SETFD, O_NDELAY) < 0) {
+    NOTIFY(ERROR, "unable to set close control %s:%d", __FILE__, __LINE__);
+  }
+
+  if (C->connection.keepalive) {
+    int opt = 1;
+    if (setsockopt(C->sock,SOL_SOCKET,SO_KEEPALIVE,(char *)&opt,sizeof(opt))<0) {
+      switch (errno) {
+        case EBADF:       { NOTIFY(ERROR, "invalid descriptor %s:%d",    __FILE__, __LINE__); break; }
+        case ENOTSOCK:    { NOTIFY(ERROR, "not a socket %s:%d",          __FILE__, __LINE__); break; }
+        case ENOPROTOOPT: { NOTIFY(ERROR, "not a protocol option %s:%d", __FILE__, __LINE__); break; }
+        case EFAULT:      { NOTIFY(ERROR, "setsockopt unknown %s:%d",    __FILE__, __LINE__); break; }
+        default:          { NOTIFY(ERROR, "unknown sockopt error %s:%d", __FILE__, __LINE__); break; }
+      } socket_close(C); return -1;
+    }
+  }
+
+  if ((__socket_block(C->sock, FALSE)) < 0) {
+    NOTIFY(ERROR, "socket: unable to set socket to non-blocking %s:%d", __FILE__, __LINE__);
+    return -1;
+  }
+
+  return 0;
 }
 
 /**
