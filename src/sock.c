@@ -72,6 +72,7 @@ private ssize_t __socket_write(int sock, const void *vbuf, size_t len);
 private BOOLEAN __socket_check(CONN *C, SDSET mode);
 private BOOLEAN __socket_select(CONN *C, SDSET mode);
 private int     __socket_create(CONN *C, int domain);
+private void   __hostname_strip(char *hn, int len);
 #ifdef  HAVE_POLL
 private BOOLEAN __socket_poll(CONN *C, SDSET mode);
 #endif/*HAVE_POLL*/
@@ -134,6 +135,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
     snprintf(hn, sizeof(hn), "%s", hostparam);
     port = portparam;
   }
+  __hostname_strip(hn, 512);
 
   /* sanity check */
   if (port < 1 || port > MAX_PORT_NO) {
@@ -427,6 +429,27 @@ __socket_create(CONN *C, int domain)
   }
 
   return 0;
+}
+
+/**
+ * remove square bracket
+ * around IPv6 addresses
+ */
+private void
+__hostname_strip(char *hn, int len)
+{
+  int i;
+
+  if (startswith("[", hn)) {
+    memmove(hn, hn + 1, len - 1);
+
+    /* skip to matching square bracket */
+    for (i = 0; hn[i] && hn[i] != ']'; i++);
+
+    if (hn[i] == ']') {
+      memmove(hn + i, hn + i + 1, len - i - 1);
+    }
+  }
 }
 
 /**
