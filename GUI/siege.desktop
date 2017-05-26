@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Siege
+Comment=http load testing and benchmarking utility
+Exec=terminator -xm /usr/bin/siegeGUI.sh
+Icon=/usr/share/icons/6atranj-icons/siege.gif
+Terminal=false
+Type=Application
+Encoding=UTF-8
+Categories=Network;Knight;
