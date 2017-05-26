@@ -70,7 +70,7 @@ After install siege you can use as a cli in command line or use it's GUI. In 6at
  3. copy /GUI/siege.gif to /usr/share/icons/6atranj-icons/siege.gif
 
 
-![siege simple GUI](https://github.com/6atranj/siege/GUI/siege.png)
+![siege simple GUI](https://github.com/6atranj/siege/blob/master/GUI/siege.png)
 
 
 
