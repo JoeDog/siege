@@ -15,14 +15,14 @@ $_PROGRAM is a HTTP/FTP load tester and benchmarking utility.
 
 $_PROGRAM is a multi-threaded HTTP/FTP load tester and benchmarking 
 utility. It supports most of the features detailed in RFCs 2616 (HTTP)
-and 959 (FTP). Properties can be set at both from the command line and
-in a configuration file. When the same propertie is set in both 
-locations, the command line takes precedent.
+and 959 (FTP). Properties can be set both from the command line and
+in a configuration file. When the same property is set in both
+locations, the command line takes precedence.
 
 The default configuration file is $HOME/.siege/siege.conf If you don't 
 have a $HOME/.siege directory and a siege.conf and cookies.txt file, 
-siege will generate a new config directory when it runs. You can 
-generate your configu directory with the following command: siege.config
+siege will generate a new config directory when it runs. You can generate
+your configuration directory with the following command: siege.config
 
 =head1 OPTIONS
 
