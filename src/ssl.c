@@ -221,7 +221,6 @@ SSL_thread_cleanup(void)
     OPENSSL_free(lock_count); 
     lock_count=(long *)NULL; 
   }
-  sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
   CRYPTO_cleanup_all_ex_data();
   ERR_remove_state(0);
   ERR_free_strings();
