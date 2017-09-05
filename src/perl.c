@@ -55,8 +55,14 @@ rtrim(char *str)
   char *ptr;
   int   len;
  
+  if (str == NULL) { 
+    return NULL;
+  }
+ 
+  for (ptr = str; *ptr && isspace((int)*ptr); ++ptr);
+ 
   len = strlen(str);
-  for(ptr = str + len - 1; ptr >= str && isspace((int)*ptr ); --ptr);
+  for (ptr = str + len - 1; ptr >= str && isspace((int)*ptr ); --ptr);
   
   ptr[1] = '\0';
  
@@ -71,8 +77,12 @@ ltrim(char *str)
 {
   char *ptr;
   int  len;
+  
+  if (str == NULL) { 
+    return NULL;
+  }
  
-  for(ptr = str; *ptr && isspace((int)*ptr); ++ptr);
+  for (ptr = str; *ptr && isspace((int)*ptr); ++ptr);
  
   len = strlen(ptr);
   memmove(str, ptr, len + 1);
@@ -87,6 +97,7 @@ char *
 trim(char *str)
 {
   char *ptr;
+  if (str == NULL) return NULL;
   ptr = rtrim(str);
   str = ltrim(ptr);
   return str;
