@@ -1,6 +1,10 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2017/09/05 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/perl.c             Added integrity checks
+ * src/version.c          Version increment: 4.0.3rc6
+
 2017/07/11 Matijs van Zuijlen https://github.com/mvz
  * src/ssl.c              mvz:fix-crash 
  * src/version.c          Version increment: 4.0.3rc5
