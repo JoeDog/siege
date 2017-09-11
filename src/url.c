@@ -847,8 +847,22 @@ __url_set_hostname(URL this, char *str)
     memmove(str, str+n, len - n + 1);
   }
 
-  /* skip to end, slash, or port colon */
-  for (i = 0; str[i] && str[i] != '/' && str[i] != '#' && str[i] != ':'; i++);
+  /**
+   * Check for IPv6 address. The convention here is to use square brackets
+   * around the IPv6 address in order to have a clear delimitation between
+   * address and port
+   */
+  if (startswith("[", str)) {
+    /* skip to matching square bracket */
+    for (i = 0; str[i] && str[i] != ']'; i++);
+
+    if (str[i] == ']') {
+      i++;
+    }
+  } else {
+    /* skip to end, slash, or port colon */
+    for (i = 0; str[i] && str[i] != '/' && str[i] != '#' && str[i] != ':'; i++);
+  }
 
   this->hostname = xmalloc(i + 1);
   memset(this->hostname, '\0', i+1);
