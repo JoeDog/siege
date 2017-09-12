@@ -1,6 +1,10 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2017/09/11 Florin Papa <notifications@github.com>
+ * src/sock.c             Added support for IPv6
+ * src/url.c              Added support for parsing IPv6 addresses
+
 2017/09/05 Jeffrey Fulmer http://www.joedog.org/support/
  * src/perl.c             Added integrity checks
  * src/version.c          Version increment: 4.0.3rc6
