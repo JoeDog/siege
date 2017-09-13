@@ -1,9 +1,14 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
-2017/09/11 Florin Papa <notifications@github.com>
+2017/09/13 Florin Papa <https://github.com/florinpapa>
+ * src/url.c              Skipped URL escaping for the host and port 
+ * src/version.c          Version increment: 4.0.4r2
+
+2017/09/11 Florin Papa <https://github.com/florinpapa>
  * src/sock.c             Added support for IPv6
  * src/url.c              Added support for parsing IPv6 addresses
+ * src/version.c          Version increment: 4.0.4r1
 
 2017/09/05 Jeffrey Fulmer http://www.joedog.org/support/
  * src/perl.c             Added integrity checks
