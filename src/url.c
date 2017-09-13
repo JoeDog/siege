@@ -1176,7 +1176,8 @@ __url_escape(const char *s)
 {
   const char *p1;
   char *newstr, *p2;
-  int oldlen, newlen;
+  int oldlen, newlen, host_len;
+  char *path_start, *host_start;
 
   int encode_count = 0;
   int decode_count = 0;
@@ -1190,9 +1191,24 @@ __url_escape(const char *s)
     return (char *)s;
   }  
 
+  /* skip directly to path */
+  host_start = strstr(s, "//");
+  if (host_start) {
+    host_start += 2;
+  } else {
+    host_start = (char *)s;
+  }
+
+  path_start = strstr(host_start, "/");
+  if (path_start) {
+    path_start += 1;
+  } else { /* there is no path to escape */
+    return (char *)s;
+  }
+
   /* First, pass through the string to see if there's anything to do,
      and to calculate the new length.  */
-  for (p1 = s; *p1; p1++) {
+  for (p1 = path_start; *p1; p1++) {
     switch (decide_copy_method (p1)) {
       case CM_ENCODE:
         ++encode_count;
@@ -1209,13 +1225,16 @@ __url_escape(const char *s)
     return (char *)s; /* C const model sucks. */
 
   oldlen = p1 - s;
+  host_len = path_start - s;
   /* Each encoding adds two characters (hex digits), while each
      decoding removes two characters.  */
   newlen = oldlen + 2 * (encode_count - decode_count);
   newstr = xmalloc (newlen + 1);
 
-  p1 = s;
-  p2 = newstr;
+  /* copy unmodified to new_str up to path_start */
+  memcpy(newstr, s, host_len);
+  p1 = path_start;
+  p2 = newstr + host_len;
 
   while (*p1) {
     switch (decide_copy_method (p1)) {
