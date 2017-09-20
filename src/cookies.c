@@ -39,7 +39,9 @@ new_cookies() {
   if (pthread_mutex_init( &(this->mutex), NULL) != 0) {
     NOTIFY(FATAL, "cookies: pthread_mutex_init");
   } 
-  int len    = strlen(getenv("HOME")) + 20;
+  int len;
+  char *p = getenv("HOME");
+  len = p ? strlen(p) : 20;
   this->file = malloc(sizeof (char*) * len);
   memset(this->file, '\0', len);
   snprintf(this->file, len, "%s/.siege/cookies.txt", getenv("HOME"));
