@@ -173,8 +173,10 @@ response_set_content_type(RESPONSE this, char *line) {
   if (strstr(line, ";") != NULL) {
     ptr  = line+(strlen(CONTENT_TYPE)+2);
     type = strtok_r(ptr, ";", &aid);
-    hash_add(this->headers, CONTENT_TYPE, type);
-    res = TRUE;
+    if (type != NULL) {
+      hash_add(this->headers, CONTENT_TYPE, type);
+      res = TRUE;
+    }
 
     /** 
      * We found a ';', do we have a charset?
