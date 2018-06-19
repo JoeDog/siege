@@ -15,14 +15,14 @@ $_PROGRAM is a HTTP/FTP load tester and benchmarking utility.
 
 $_PROGRAM is a multi-threaded HTTP/FTP load tester and benchmarking 
 utility. It supports most of the features detailed in RFCs 2616 (HTTP)
-and 959 (FTP). Properties can be set at both from the command line and
-in a configuration file. When the same propertie is set in both 
-locations, the command line takes precedent.
+and 959 (FTP). Properties can be set both from the command line and in
+a configuration file. When the same property is set in both locations,
+the command line takes precedence.
 
 The default configuration file is $HOME/.siege/siege.conf If you don't 
 have a $HOME/.siege directory and a siege.conf and cookies.txt file, 
 siege will generate a new config directory when it runs. You can 
-generate your configu directory with the following command: siege.config
+generate your config directory with the following command: siege.config
 
 =head1 OPTIONS
 
@@ -52,7 +52,7 @@ Prints a help message describing $_PROGRAM's command-line options.
 Prints a detailed summary of all the currently configured options, most
 of which are sent in $HOME/.siege/siege.conf
 
-=item B<-v>, B<--vebose>
+=item B<-v>, B<--verbose>
 
 This directive puts $_PROGRAM into verbose mode which is actually a 
 default setting. This command-line option is useful when the config 
@@ -107,7 +107,7 @@ gmethod = HEAD|GET
   Vary: Accept-Encoding,Cookie
   CF-RAY: 27219407eeff084a-IAD
 
-NOTE: It's best practice to quote the URL when it's passed to $_PROGRAM 
+NOTE: It's a best practice to quote the URL when it's passed to $_PROGRAM 
 from the the command-line.
 
 =item B<-p URL>, B<--print=URL>
@@ -156,7 +156,7 @@ then please don't complain to us.
 
 =item B<-r NUM>, B<--reps=NUM|once>
 
-This option tells each siege user how times it should run. The value 
+This option tells each siege user how many times it should run. The value 
 should generally be a number greater than zero but it may be the keyword
 'once'.
 
@@ -188,9 +188,9 @@ second (--delay=0.5).
 
 The time between delay requests is NOT applied toward the transaction 
 time. If two 0.1 second transactions have a 2 second delay between them,
-their average transaction time is run is 0.1 seconds. It is applied 
-toward the total elapsed time. In this scenario, the elapsed time would 
-be 2.2 seconds.
+their average transaction time is 0.1 seconds. It is applied toward the
+total elapsed time. In this scenario, the elapsed time would be 2.2 
+seconds.
 
 NOTE: when the parser is enabled (see: -p/--parser), there is no delay
 between the page and its elements, i.e., style sheets, javascripts, etc. 
@@ -224,7 +224,7 @@ directive, you can override the default and use an alternative file.
 =item B<-L FILE>, B<--log=FILE>
 
 The default log file is $prefix/var/log/siege.log. This directive 
-allows you to specify and alternative file for logging.
+allows you to specify an alternative file for logging.
 
 =item B<-m "string">, B<--mark="string">
 
@@ -237,7 +237,7 @@ generated the following data.
 =item B<-H "header: value">, B<--header="Header: value">
 
 This options allows you to set a custom header in the request. 
-Generally speaking, this request will override an existing header. The
+Generally speaking, this header will override an existing header. The
 Cookie header is a special case.  If you set -H "Cookie: value" then 
 siege will send that cookie in addition to the other ones.
 
@@ -282,14 +282,14 @@ formats, siege introduces its own URL format to indicate protocol method.
 An RFC 1738 URL looks like this:
   <scheme>://<username>:<password>@<hostname>:<port>/<path>;<params>?<query>#<frag>
 
-A $_PROGRAM URL with a method idicator looks like this:
+A $_PROGRAM URL with a method indicator looks like this:
   <scheme>://<username>:<password>@<hostname>:<port>/<path> POST <query>
 
 You can also post the contents of a file using the redirect character
 like this:
   <scheme>://<username>:<password>@<hostname>:<port>/<path> POST </home/jeff/haha.txt
 
-Here's two examples with the $_PROGRAM method indicator:
+Here are two examples with the $_PROGRAM method indicator:
   http://www.joedog.org/ POST haha=papa&dada=mama
   ftp://ftp.armstrong.com/ PUT </home/jdfulmer/etc/tests/bbc.jpg
 
@@ -327,7 +327,7 @@ The file also supports UNIX-style commenting:
 
 It supports shell-style variable declaration and references. This is 
 convenient if you want to run the same test on two different tiers or
-two different shemes:
+two different schemes:
 
   SCHEME=https
   HOST=bart.joedog.org
