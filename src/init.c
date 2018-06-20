@@ -160,12 +160,6 @@ init_config( void )
       "Mozilla/5.0 (%s) Siege/%s", PLATFORM, version_string 
     );
 
-  if (strlen(my.conttype) < 1) 
-    snprintf( 
-      my.conttype, sizeof(my.conttype),
-      "application/x-www-form-urlencoded"
-    );
-
   if (strlen(my.encoding) < 1)
     snprintf(
       my.encoding, sizeof(my.encoding), "*"
