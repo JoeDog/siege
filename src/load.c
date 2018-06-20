@@ -140,6 +140,7 @@ static const struct ContentType tmap[] = {
   {"ppt",     FALSE, "application/mspowerpoint"},
   {"ppz",     FALSE, "application/mspowerpoint"},
   {"pre",     FALSE, "application/x-freelance"},
+  {"proto",   FALSE, "application/x-protobuf"},
   {"prt",     FALSE, "application/pro_eng"},
   {"ps",      FALSE, "application/postscript"},
   {"qt",      FALSE, "video/quicktime"},
