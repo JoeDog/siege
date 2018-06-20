@@ -294,7 +294,11 @@ load_file(URL U, char *file)
   fclose(fp); 
 
   if (len > 0) {
-    url_set_conttype(U, get_content_type(filename));
+    if (strlen(my.conttype) < 1) {
+      url_set_conttype(U, my.conttype);
+    } else {
+      url_set_conttype(U, get_content_type(filename));
+    }
     url_set_postdata(U, buf, len);
   } 
 
