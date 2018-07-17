@@ -394,8 +394,8 @@ http_post(CONN *C, URL U)
     "%s"
     "User-Agent: %s\015\012%s"
     "Connection: %s\015\012"
-    "Content-type: %s\015\012"
-    "Content-length: %ld\015\012\015\012",
+    "Content-Type: %s\015\012"
+    "Content-Length: %ld\015\012\015\012",
     url_get_method_name(U), fullpath, protocol, hoststr,
     (C->auth.www==TRUE)?authwww:"",
     (C->auth.proxy==TRUE)?authpxy:"",
