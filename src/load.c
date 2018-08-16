@@ -269,7 +269,6 @@ load_file(URL U, char *file)
   filename = trim(file);
 
   memset(mode, '\0', sizeof(mode));
-  printf("IS ASCII: %s\n", is_ascii(filename) ? "TRUE" : "FALSE");
   snprintf(mode, sizeof(mode), "%s", (is_ascii(filename))?"r":"rb");
   fp = fopen(filename, mode);
   if (! fp) {
@@ -294,7 +293,12 @@ load_file(URL U, char *file)
   fclose(fp); 
 
   if (len > 0) {
-    url_set_conttype(U, get_content_type(filename));
+    if (! empty(my.conttype)) {
+      // We're overriding the content-type at the cmd line
+      url_set_conttype(U, my.conttype);
+    } else {
+      url_set_conttype(U, get_content_type(filename));
+    }
     url_set_postdata(U, buf, len);
   } 
 
