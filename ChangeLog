@@ -1,6 +1,10 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2017/09/13 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/load.c             Bug fix - allow content-type override at cmd line
+ * src/version.c          Version increment: 4.0.4r3
+
 2017/09/13 Florin Papa <https://github.com/florinpapa>
  * src/url.c              Skipped URL escaping for the host and port 
  * src/version.c          Version increment: 4.0.4r2
