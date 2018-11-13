@@ -171,7 +171,7 @@ If that is the case, then follow the steps in item #1 below...
     -r, --reps=NUM            REPS, number of times to run the test.
     -t, --time=NUMm           TIMED testing where "m" is modifier S, M, or H
                               ex: --time=1H, one hour test.
-    -d, --delay=NUM           Time DELAY, random delay before each requst
+    -d, --delay=NUM           Time DELAY, random delay before each request
     -b, --benchmark           BENCHMARK: no delays between requests.
     -i, --internet            INTERNET user simulation, hits URLs randomly.
     -f, --file=FILE           FILE, select a specific URLS FILE.

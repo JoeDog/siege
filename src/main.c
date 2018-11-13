@@ -145,7 +145,7 @@ display_help()
   puts("  -r, --reps=NUM            REPS, number of times to run the test." );
   puts("  -t, --time=NUMm           TIMED testing where \"m\" is modifier S, M, or H");
   puts("                            ex: --time=1H, one hour test." );
-  puts("  -d, --delay=NUM           Time DELAY, random delay before each requst");
+  puts("  -d, --delay=NUM           Time DELAY, random delay before each request");
   puts("  -b, --benchmark           BENCHMARK: no delays between requests." );
   puts("  -i, --internet            INTERNET user simulation, hits URLs randomly.");
   puts("  -f, --file=FILE           FILE, select a specific URLS FILE." );
