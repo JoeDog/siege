@@ -32,5 +32,9 @@ utils/bombardment
 utils/siege.config
 utils/siege2csv.pl
 
+# Docker
+docker/build/
+
 # Others
 tags
+
