@@ -1,5 +1,4 @@
 
-                       Siege README
 
 WHAT IS IT?
 -----------
@@ -61,6 +60,18 @@ user sleeps for a random number  of seconds between 1 and NUM.
 Through your server logs you should be able to get the average
 amount of time spent on a page. It is recommended that you use 
 that number for your delay when simulating internet activity.
+
+HOW TO USE IT?
+---------------
+After install siege you can use as a cli in command line or use it's GUI. In 6atranj group I ([Mehrdad Dadkhah](https://github.com/Mehrdad-Dadkhah)) write an GUI for it. you can run /GUI/siegeGUI.sh and use it simple GUI. if you have Ubuntu and want to add it's icon you should:
+
+ 1. copy /GUI/siege.desktop to /usr/share/applicaions folder
+ 2. copy /GUI/siegeGUI.sh to /usr/bin/siegeGUI.sh
+ 3. copy /GUI/siege.gif to /usr/share/icons/6atranj-icons/siege.gif
+
+
+![siege simple GUI](https://github.com/6atranj/siege/blob/master/GUI/siege.png)
+
 
 
 WHERE IS IT?
@@ -140,5 +151,6 @@ your version of the file(s), but you are not obligated to do so.
 If you do  not wish  to do so,  delete this exception  statement 
 from your version. If you delete  this exception  statement from 
 all source files in the program, then also delete it here.  
+
 
 
