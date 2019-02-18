@@ -23,7 +23,6 @@ new_page(char *str)
   this->len  = strlen(str);
   this->size = this->len + 24576;
   this->buf = calloc(1,   this->size);
-  memset(this->buf, '\0', this->size);
   memcpy(this->buf,  str, this->len);
  
   return this;
