@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2018/02/18 James Wang <https://github.com/wjn740>
+ * src/cookies.c          Bug fix - prevent segfault when getenv(HOME) is null
+
 2017/09/13 Jeffrey Fulmer http://www.joedog.org/support/
  * src/load.c             Bug fix - allow content-type override at cmd line
  * src/version.c          Version increment: 4.0.4r3
