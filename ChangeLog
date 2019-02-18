@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2018/02/18 Viktor Szepe <viktor@szepe.net>
+ * README.md              Make readme's title nice
+
 2018/02/18 Michael McConville <mmcco@mykolab.com>
  * src/page.c             Remove needless memset(2)
 
