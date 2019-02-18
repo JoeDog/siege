@@ -379,6 +379,8 @@ url_get_method_name(URL this) {
       return "PUT";
     case DELETE:
       return "DELETE";
+    case OPTIONS:
+      return "OPTIONS";
     case HEAD:
      return "HEAD";
     case GET:
@@ -581,6 +583,14 @@ __url_parse(URL this, char *url)
   if (! post) {
     post = strstr(this->url, " PATCH");
   }
+	
+  if (! post) {
+    post = strstr(this->url, " OPTIONS");
+  }
+	
+  if (! post) {
+    post = strstr(this->url, " DELETE");
+  }
 
   if (post != NULL){
     if (!strncasecmp(post," PUT", 4)) {
@@ -591,6 +601,14 @@ __url_parse(URL this, char *url)
       this->method = POST;
       *post = '\0';
       post += 5;
+    } else if (!strncasecmp(post," DELETE", 7)) {
+      this->method = DELETE;
+      *post = '\0';
+      post += 7;
+    } else if (!strncasecmp(post," OPTIONS", 8)) {
+      this->method = OPTIONS;
+      *post = '\0';
+      post += 8;
     } else {
       this->method = PATCH;
       *post = '\0';
