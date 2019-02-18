@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2018/02/18 root <root@tester.gc-system.cz>
+ * src/response.c        Handle case of incorrect server response header
+
 2018/02/18 Viktor Szepe <viktor@szepe.net>
  * README.md              Make readme's title nice
 
