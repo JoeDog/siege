@@ -235,28 +235,15 @@ dnl
 if test "$MYZ" = "no"
 then
   AC_MSG_RESULT(Encoding: gzip/compress support disabled)
+elif test "$MYZ" = ""; then
+  AC_CHECK_HEADERS(zlib.h, zfound=yes, zfound=locate)
+  if test $zfound = "yes"; then
+    AC_MSG_CHECKING([for ZLIB version])
+    AC_DEFINE([HAVE_ZLIB], 1, [Discovered ZLIB for gzip/compress encoding])
+  fi
 else
   AC_CHECK_HEADERS($MYZ/include/zlib.h, zfound=yes, zfound=locate)
-  if test $zfound = "locate"; then
-     dnl the user probably misunderstood the option....
-     for dir in /usr /usr/local /usr/local/ssl /usr/pkg /usr/lib/zlib /usr/include/zlib /usr/include; do
-       AC_CHECK_HEADERS($dir/include/zlib.h, zfound=yes, zfound=no)
-       if test $zfound = "yes" ; then
-         Z_CFLAGS=""
-         Z_LDFLAGS="-L$dir/lib"
-         Z_INCLUDE="-I$MYZ/include/zlib -I$MYZ/include"
-         Z_LIBS="-lz"
-         AC_MSG_CHECKING([for ZLIB version])
-         CPPFLAGS="$Z_INCLUDE"
-         AC_SUBST(Z_CFLAGS)
-         AC_SUBST(Z_INCLUDE)
-         AC_SUBST(Z_LDFLAGS)
-         AC_SUBST(Z_LIBS)
-         AC_DEFINE([HAVE_ZLIB], 1, [Discovered ZLIB for gzip/compress encoding])
-         break
-      fi
-    done
-  else
+  if test $zfound = "yes"; then
     echo "found ssl in $MYZ"
     Z_CFLAGS=""
     Z_LDFLAGS="-L$MYZ/lib"
