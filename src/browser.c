@@ -470,7 +470,8 @@ __http(BROWSER this, URL U)
   /**
    * write to socket with a GET/POST/PUT/DELETE/HEAD
    */
-  if (url_get_method(U) == POST || url_get_method(U) == PUT || url_get_method(U) == PATCH || url_get_method(U) == DELETE || url_get_method(U) == OPTIONS) {
+  if (url_get_method(U) == POST   || url_get_method(U) == PUT || url_get_method(U) == PATCH || 
+      url_get_method(U) == DELETE || url_get_method(U) == OPTIONS) {
     if ((http_post(this->conn, U)) == FALSE) {
       this->conn->connection.reuse = 0;
       socket_close(this->conn);
@@ -622,7 +623,9 @@ __http(BROWSER this, URL U)
           url_set_conttype(redirect_url,url_get_conttype(U));
           url_set_method(redirect_url, url_get_method(U));
 
-          if (url_get_method(redirect_url) == POST || url_get_method(redirect_url) == PUT || url_get_method(redirect_url) == PATCH || url_get_method(U) == DELETE || url_get_method(U) == OPTIONS) {
+          if (url_get_method(redirect_url) == POST  || url_get_method(redirect_url) == PUT || 
+              url_get_method(redirect_url) == PATCH || url_get_method(U) == DELETE         || 
+              url_get_method(U) == OPTIONS) {
             url_set_postdata(redirect_url, url_get_postdata(U), url_get_postlen(U));
           }
         }
@@ -664,6 +667,7 @@ __http(BROWSER this, URL U)
           this->auth.type.www =  BASIC;
           auth_set_basic_header(my.auth, HTTP, response_get_www_auth_realm(resp));
         }
+        printf("%s %d\n", url_get_absolute(U), url_get_method(U));
         if ((__request(this, U)) == FALSE) {
           fprintf(stderr, "ERROR from http_request\n");
           return FALSE;
@@ -797,7 +801,8 @@ __ftp(BROWSER this, URL U)
       return FALSE;
     }
   }
-  if (url_get_method(U) == POST || url_get_method(U) == PUT || url_get_method(U) == PATCH || url_get_method(U) == DELETE || url_get_method(U) == OPTIONS) {
+  if (url_get_method(U) == POST   || url_get_method(U) == PUT || url_get_method(U) == PATCH || 
+      url_get_method(U) == DELETE || url_get_method(U) == OPTIONS) {
     ftp_stor(this->conn, U);
     bytes = ftp_put(D, U);
     code  = this->conn->ftp.code;
