@@ -244,8 +244,8 @@ show_config(int EXIT)
       printf(" - %s\n", my.nomap->line[i]);
     } 
   }
-  //printf("proxy auth:                     " ); display_authorization(PROXY);printf("\n");
-  //printf("www auth:                       " ); display_authorization(WWW); 
+  printf("proxy auth:                     " ); auth_display(my.auth, PROXY);printf("\n");
+  printf("www auth:                       " ); auth_display(my.auth, HTTP); 
   printf("\n");
 
   xfree(method);
