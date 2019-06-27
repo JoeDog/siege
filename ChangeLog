@@ -1,6 +1,10 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2018/02/18 Benjamin Pearson <bpearson@squiz.com.au>
+ * src/url.c              Adding DELETE and OPTIONS support.
+ * src/browser.c          Adding DELETE and OPTIONS support.
+
 2018/02/18 "Mr. Baileys" <ivo@vangeertruyen.be>
  * src/http.c            Correct capitalization for Content-Type & Content-Length
 
