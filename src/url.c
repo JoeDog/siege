@@ -643,7 +643,7 @@ __parse_post_data(URL this, char *datap)
   for (; isspace((unsigned int)*datap); datap++) {
     /* Advance past white space */
   }
-  if (*datap == '<') {
+  if (*datap == '<' && *(datap+1) != '?') {
     datap++;
     load_file(this, datap);
     datap = __url_set_path(this, datap);
