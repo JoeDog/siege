@@ -690,12 +690,14 @@ ds_module_check(void)
 
   if (my.json_output) {
     if (my.verbose) {
-      fprintf(stderr, "Verbose mode is disabled for JSON output.\n");
       my.verbose = FALSE;
+      if (!my.quiet)
+        fprintf(stderr, "Verbose mode is disabled for JSON output.\n");
     }
     if (my.debug) {
-      fprintf(stderr, "Debug mode is disabled for JSON output.\n");
       my.debug = FALSE;
+      if (!my.quiet)
+        fprintf(stderr, "Debug mode is disabled for JSON output.\n");
     }
   }
 
