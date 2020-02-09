@@ -119,6 +119,7 @@ init_config( void )
   my.timestamp      = FALSE;
   my.chunked        = FALSE;
   my.unique         = TRUE;
+  my.json_output    = FALSE;
   my.extra[0]       = 0;
   my.follow         = TRUE;
   my.zero_ok        = TRUE; 
@@ -237,6 +238,7 @@ show_config(int EXIT)
   printf("allow zero byte data:           %s\n", my.zero_ok?"true":"false"); 
   printf("allow chunked encoding:         %s\n", my.chunked?"true":"false"); 
   printf("upload unique files:            %s\n", my.unique?"true":"false"); 
+  printf("json output:                    %s\n", my.json_output?"true":"false");
   if (my.parser == TRUE && my.nomap->index > 0) {
     int i;
     printf("no-follow:\n"); 
@@ -586,6 +588,12 @@ load_conf(char *filename)
       else
         my.unique = FALSE;  
     }
+    else if (strmatch(option, "json_output")) {
+      if (!strncasecmp(value, "true", 4))
+        my.json_output = TRUE;
+      else
+        my.json_output = FALSE;
+    }
     else if (strmatch(option, "header")) {
       if (!strchr(value,':')) NOTIFY(FATAL, "no ':' in http-header");
       if ((strlen(value) + strlen(my.extra) + 3) > 512) NOTIFY(FATAL, "too many headers");
@@ -679,8 +687,19 @@ ds_module_check(void)
     my.logging = FALSE;
     my.bench   = TRUE;
   }
-  
-  if (my.quiet) { 
+
+  if (my.json_output) {
+    if (my.verbose) {
+      fprintf(stderr, "Verbose mode is disabled for JSON output.\n");
+      my.verbose = FALSE;
+    }
+    if (my.debug) {
+      fprintf(stderr, "Debug mode is disabled for JSON output.\n");
+      my.debug = FALSE;
+    }
+  }
+
+  if (my.quiet) {
     my.verbose = FALSE; // Why would you set quiet and verbose???
     my.debug   = FALSE; // why would you set quiet and debug?????
   }

@@ -540,6 +540,16 @@ url-escaping = true
 unique = true
 
 #
+# JSON output - With this feature enabled, siege will print the final stats as
+# JSON to stdout. It monopolizes stdout, superceding verbose and debug modes.
+#
+# The default value is false.
+#
+# ex: json_output = true | false
+#
+json_output = false
+
+#
 # SSL-cert: This optional feature allows you to specify a path to a client
 # certificate. It is not neccessary to specify a certificate in order to use
 # https. If you don't know why you would want one, then you probably don't need
