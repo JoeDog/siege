@@ -541,7 +541,7 @@ unique = true
 
 #
 # JSON output - With this feature enabled, siege will print the final stats as
-# JSON to stdout. It monopolizes stdout, superceding verbose and debug modes.
+# JSON to stdout. Setting this to true implies quiet mode.
 #
 # The default value is false.
 #
