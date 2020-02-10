@@ -70,7 +70,9 @@ sig_handler(CREW crew)
    */
   sigwait(&sigs, &gotsig);
   my.verbose = FALSE;
-  fprintf(stderr, "\nLifting the server siege..."); 
+  if (!my.quiet) {
+    fprintf(stderr, "\nLifting the server siege...");
+  }
   crew_cancel(crew);
 
   /**
