@@ -35,7 +35,6 @@ verbose = true
 # 
 color = on
 
-
 #
 # Quiet mode: With this featured enabled, siege goes mostly silent.
 # It will display the opening message and the final stats but nothing
@@ -59,6 +58,17 @@ color = on
 # Ex: quiet = true
 #
 quiet = false
+
+#
+# JSON output - With this feature enabled, siege will print the final stats as
+# JSON to stdout. It monopolizes stdout, superceding verbose and debug modes.
+#
+# The default value is false.
+#
+# ex: json_output = true | false
+#
+json_output = true
+
 
 #
 # Show logfile location. By default, siege displays the logfile 
