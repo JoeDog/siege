@@ -1,20 +1,26 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
-2018/02/18 Benjamin Pearson <bpearson@squiz.com.au>
+2020/02/10 Ben Baker-Smith <ben@DELETEbaker-smith.net>
+ * src/main.c             Added -j/--json-output 
+ * src/init.c             Added -j/--json-output - force quiet mode
+ * src/setup.h            Added variable for json output
+ * doc/siegerc.in         Added documentation to the config file
+
+2018/02/18 Benjamin Pearson <bpearson@DELETEsquiz.com.au>
  * src/url.c              Adding DELETE and OPTIONS support.
  * src/browser.c          Adding DELETE and OPTIONS support.
 
-2018/02/18 "Mr. Baileys" <ivo@vangeertruyen.be>
+2018/02/18 "Mr. Baileys" <ivo@DELETEvangeertruyen.be>
  * src/http.c            Correct capitalization for Content-Type & Content-Length
 
-2018/02/18 root <root@tester.gc-system.cz>
+2018/02/18 root <root@DELETEtester.gc-system.cz>
  * src/response.c        Handle case of incorrect server response header
 
-2018/02/18 Viktor Szepe <viktor@szepe.net>
+2018/02/18 Viktor Szepe <viktor@DELETEszepe.net>
  * README.md              Make readme's title nice
 
-2018/02/18 Michael McConville <mmcco@mykolab.com>
+2018/02/18 Michael McConville <mmcco@DELETEmykolab.com>
  * src/page.c             Remove needless memset(2)
 
 2018/02/18 James Wang <https://github.com/wjn740>
