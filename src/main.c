@@ -142,7 +142,8 @@ display_help()
   puts("  -g, --get                 GET, pull down HTTP headers and display the");
   puts("                            transaction. Great for application debugging.");
   puts("  -p, --print               PRINT, like GET only it prints the entire page.");
-  puts("  -c, --concurrent=NUM      CONCURRENT users, default is 10");
+  puts("  -c, --concurrent=NUM      CONCURRENT users, default is default is 25 or");
+  puts("                              whatever is specified in ~/.siegerc");
   puts("  -r, --reps=NUM            REPS, number of times to run the test." );
   puts("  -t, --time=NUMm           TIMED testing where \"m\" is modifier S, M, or H");
   puts("                            ex: --time=1H, one hour test." );
