@@ -9,6 +9,7 @@
 #include <array.h>
 #include <hash.h>
 #include <perl.h>
+#include <setup.h>
 #include <memory.h>
 #include <notify.h>
 #include <cookies.h>
@@ -23,7 +24,6 @@ struct COOKIES_T {
   NODE *          head;
   size_t          size;
   char *          file;
-  pthread_mutex_t mutex;
 };
 
 private NODE *  __delete_node(NODE *node);
@@ -32,14 +32,11 @@ private BOOLEAN __save_cookies(COOKIES this);
 
 COOKIES
 new_cookies() {
+  int len;
   COOKIES this;
 
   this = calloc(sizeof(struct COOKIES_T), 1);
   this->size = 0;
-  if (pthread_mutex_init( &(this->mutex), NULL) != 0) {
-    NOTIFY(FATAL, "cookies: pthread_mutex_init");
-  } 
-  int len;
   char *p = getenv("HOME");
   len = p ? strlen(p) : 20;
   this->file = malloc(sizeof (char*) * len);
@@ -52,15 +49,12 @@ COOKIES
 cookies_destroy(COOKIES this) 
 {
   NODE *cur     = NULL; 
-  pthread_mutex_lock(&(this->mutex));
   __save_cookies(this);
   cur = this->head;
   while (cur) {
     cur = __delete_node(cur);
   }
   xfree(this->file);
-  pthread_mutex_unlock(&(this->mutex));
-  pthread_mutex_destroy(&(this->mutex));
   free(this);
   return NULL;
 }
@@ -81,7 +75,7 @@ cookies_add(COOKIES this, char *str, char *host)
   if (oreo == NULL) return FALSE;
   if (cookie_get_name(oreo) == NULL || cookie_get_value(oreo) == NULL) return FALSE;
 
-  pthread_mutex_lock(&(this->mutex));
+  //pthread_mutex_lock(&(my.lock));
   for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
     const char *domainptr = cookie_get_domain(cur->cookie);
     if (*domainptr == '.') ++domainptr;
@@ -111,7 +105,8 @@ cookies_add(COOKIES this, char *str, char *host)
     else
       pre->next  = new;
   }
-  pthread_mutex_unlock(&(this->mutex));
+  //pthread_cond_wait(&my.cond, &my.lock);
+  //pthread_mutex_unlock(&(my.lock));
 
   return TRUE;
 }
@@ -128,7 +123,6 @@ cookies_delete(COOKIES this, char *str)
     if (cur->threadID == id) {
       char *name    = cookie_get_name(cur->cookie);
       if (!strcasecmp(name, str)) {
-        //NOTIFY(DEBUG, "%s:%d cookie deleted: %ld => %s\n",__FILE__, __LINE__, (long)id, str);
         cur->cookie = cookie_destroy(cur->cookie);
         pre->next   = cur->next;
         if (cur == this->head) {
@@ -185,7 +179,7 @@ cookies_header(COOKIES this, char *host, char *newton)
   memset(oreo, '\0', sizeof oreo);
   hlen = strlen(host);
 
-  pthread_mutex_lock(&(this->mutex));
+  //pthread_mutex_lock(&(my.lock));
   tmp = time(NULL);
   gmtime_r(&tmp, &tm);
   tm.tm_isdst = -1; // force mktime to figure it out!
@@ -228,7 +222,8 @@ cookies_header(COOKIES this, char *host, char *newton)
     strncat(newton, oreo,       MAX_COOKIE_SIZE);
     strncat(newton, "\015\012", 2);
   }
-  pthread_mutex_unlock(&(this->mutex));
+  //pthread_cond_wait(&my.cond, &my.lock);
+  //pthread_mutex_unlock(&(my.lock));
 
   return newton;
 }
@@ -398,16 +393,19 @@ __exists(char *file)
 {
   int  fd;
 
-  /* open the file read only  */
   if ((fd = open(file, O_RDONLY)) < 0) {
-  /* the file does NOT exist  */
-    close(fd);
+    /**
+     * The file does NOT exist so the descriptor is -1
+     * No need to close it.
+     */
     return FALSE;
   } else {
-  /* party on Garth... */
+    /** 
+     * Party on Garth... 
+     */
     close(fd);
     return TRUE;
   }
-
   return FALSE;
 }
+
