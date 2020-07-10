@@ -667,7 +667,6 @@ __http(BROWSER this, URL U)
           this->auth.type.www =  BASIC;
           auth_set_basic_header(my.auth, HTTP, response_get_www_auth_realm(resp));
         }
-        printf("%s %d\n", url_get_absolute(U), url_get_method(U));
         if ((__request(this, U)) == FALSE) {
           fprintf(stderr, "ERROR from http_request\n");
           return FALSE;
