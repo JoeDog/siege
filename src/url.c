@@ -91,10 +91,29 @@ URL
 new_url(char *str)
 {
   URL this;
-  this = xcalloc(sizeof(struct URL_T), 1);
-  this->ID = 0;
+  this = xmalloc(URLSIZE);
+  this->ID        = 0;
+  this->scheme    = HTTP;
   this->hasparams = FALSE;
   this->params    = NULL;
+  this->redir     = FALSE;
+  this->method    = GET;
+  this->username  = NULL;
+  this->password  = NULL;
+  this->hostname  = NULL;
+  this->port      = 80;
+  this->path      = NULL;
+  this->file      = NULL;
+  this->params    = NULL;
+  this->hasparams = FALSE;
+  this->query     = NULL;
+  this->frag      = NULL;
+  this->request   = NULL;
+  this->postlen   = 0;
+  this->postdata  = NULL;
+  this->posttemp  = NULL;
+  this->conttype  = NULL;
+  this->cached    = FALSE;
   this->redir     = FALSE;
   __url_parse(this, str); 
   return this;
