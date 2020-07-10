@@ -146,11 +146,11 @@ new_auth()
 
   this = calloc(AUTHSIZE, 1);
   this->creds  = new_array();
-  this->basic.encode  = xstrdup("");
-  this->digest.encode = xstrdup("");
-  this->ntlm.encode   = xstrdup("");
+  this->basic.encode  = NULL;
+  this->digest.encode = NULL;
+  this->ntlm.encode   = NULL;
   this->ntlm.state    = TYPE_N;
-  this->proxy.encode  = xstrdup("");
+  this->proxy.encode  = NULL;
   return this;
 }
 
