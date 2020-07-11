@@ -1,6 +1,14 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2020/07/11 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/creds.c            Fixed an initialization problem
+ * src/cookies.c          Fixed locking issue
+ * src/url.c              Fixed an initialization problem
+ * src/init.c             Fixed an initialization problem
+ * src/memory.c           Formatting change
+ * src/version.c          Version increment: 4.0.5
+
 2020/02/10 Ben Baker-Smith <ben@DELETEbaker-smith.net>
  * src/main.c             Added -j/--json-output 
  * src/init.c             Added -j/--json-output - force quiet mode
