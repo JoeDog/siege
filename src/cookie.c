@@ -45,6 +45,9 @@ new_cookie(char *str, char *host)
   COOKIE this;
 
   this = calloc(sizeof(struct COOKIE_T), 1);
+  this->name    = NULL;
+  this->value   = NULL;
+  this->domain  = NULL;
   this->expires = 0;
   this->expstr  = NULL;
   this->string  = NULL;
@@ -286,6 +289,29 @@ __parse_input(COOKIE this, char *str, char *host)
         this->session = FALSE;
         this->expires = expires;
       } // else this->expires was initialized 0 in the constructor
+    } else if (!strncasecmp(key, "max-age", 7)) {
+      struct tm *gmt;
+      long   max = -1;
+      time_t now = time(NULL);
+      gmt = gmtime(&now);
+      now = mktime(gmt);
+      max = atof(val);
+      if (max != -1) {
+        /**
+         * XXX: This "works" but I can't implement it until I understand the hour diff
+         *
+        time_t tmp = now+max-3600;
+        char buf1[20];
+        char buf2[20];
+        strftime(buf1, 20, "%Y-%m-%d %H:%M:%S", localtime(&this->expires));
+        strftime(buf2, 20, "%Y-%m-%d %H:%M:%S", localtime(&tmp));
+        printf("!!!!!!!!!!!!!!! %ld  %ld !!!!!!!!!!!!!!!\n", this->expires, tmp);
+        printf("expires: %s\n", buf1);
+        printf("max-age: %s\n", buf2);
+        this->expires = tmp; // I can't use this until I understand the hour diff
+         */
+        this->session = FALSE;
+      }
     } else if (!strncasecmp(key, "path", 4))   {
       this->path = strdup(val);
     } else if (!strncasecmp(key, "domain", 6)) {
