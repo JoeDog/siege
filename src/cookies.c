@@ -34,14 +34,16 @@ COOKIES
 new_cookies() {
   int len;
   COOKIES this;
+  char    name[] = "/.siege/cookies.txt";
 
   this = calloc(sizeof(struct COOKIES_T), 1);
   this->size = 0;
   char *p = getenv("HOME");
-  len = p ? strlen(p) : 20;
-  this->file = malloc(sizeof (char*) * len);
+  len = p ? strlen(p) : 60;
+  len += strlen(name)+1;
+  this->file = xmalloc(sizeof (char*) * len);
   memset(this->file, '\0', len);
-  snprintf(this->file, len, "%s/.siege/cookies.txt", getenv("HOME"));
+  snprintf(this->file, len, "%s%s", getenv("HOME"), name);
   return this;
 }
 
@@ -179,7 +181,6 @@ cookies_header(COOKIES this, char *host, char *newton)
   memset(oreo, '\0', sizeof oreo);
   hlen = strlen(host);
 
-  //pthread_mutex_lock(&(my.lock));
   tmp = time(NULL);
   gmtime_r(&tmp, &tm);
   tm.tm_isdst = -1; // force mktime to figure it out!
@@ -222,8 +223,6 @@ cookies_header(COOKIES this, char *host, char *newton)
     strncat(newton, oreo,       MAX_COOKIE_SIZE);
     strncat(newton, "\015\012", 2);
   }
-  //pthread_cond_wait(&my.cond, &my.lock);
-  //pthread_mutex_unlock(&(my.lock));
 
   return newton;
 }
@@ -353,6 +352,7 @@ __save_cookies(COOKIES this)
   now = time(NULL);
   fp  = fopen(this->file, "w");
   if (fp == NULL) {
+    fprintf(stderr, "ERROR: Unable to open cookies file: %s\n", this->file);
     return FALSE;
   }
   fputs("#\n", fp);
