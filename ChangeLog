@@ -2,6 +2,11 @@ To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
 2020/07/11 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/cookie.c           Fixed an issue with expires
+ * src/cookies.c          Fixed an issue with persistence
+ * src/version.c          Version increment: 4.0.7
+
+2020/07/11 Jeffrey Fulmer http://www.joedog.org/support/
  * src/init.c             Minor bug fix
  * src/auth.c             Fixed initialization error
  * src/version.c          Version increment: 4.0.6
