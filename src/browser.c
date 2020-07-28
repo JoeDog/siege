@@ -240,15 +240,7 @@ start(BROWSER this)
     pthread_cleanup_push((void*)__signal_cleanup, this->conn);
   #endif
 
-  #if defined(sun)
-    pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
-  #elif defined(_AIX)
-    pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
-  #elif defined(hpux) || defined(__hpux)
-    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &this->type);
-  #else
-    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &this->type);
-  #endif
+  pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &this->state);
 #endif/*SIGNAL_CLIENT_PLATFORM*/
 
