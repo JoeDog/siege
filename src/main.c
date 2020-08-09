@@ -256,6 +256,8 @@ parse_cmdline(int argc, char *argv[])
         break;
       case 'v':
         my.verbose = TRUE;
+        my.json_output = FALSE;
+        my.quiet   = FALSE;
         break;
       case 'r':
         if(strmatch(optarg, "once")){
