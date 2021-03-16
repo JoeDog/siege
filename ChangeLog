@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2021/03/16 Zosecer https://github.com/zosecer
+ * src/parser.c           Added handling for null pointer detection
+
 2020/07/11 Jeffrey Fulmer http://www.joedog.org/support/
  * src/cookie.c           Fixed an issue with expires
  * src/cookies.c          Fixed an issue with persistence
