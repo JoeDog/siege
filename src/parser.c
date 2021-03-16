@@ -211,6 +211,9 @@ __parse_control(ARRAY array, URL base, char *html)
       for (ptr = strtok_r(NULL, CONTROL_TOKENS, &aid); ptr != NULL; ptr = strtok_r(NULL, CONTROL_TOKENS, &aid)) {
         if (strncasecmp(ptr, "rel", 3) == 0) {
           ptr = strtok_r(NULL, CONTROL_TOKENS_PLUS, &aid);
+		  if (ptr == NULL) {
+			  continue;
+		  }
           if (strncasecmp(ptr, "stylesheet", 10) == 0) {
             okay = TRUE; 
           }  
