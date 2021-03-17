@@ -1,6 +1,10 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2021/03/17 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/hash.c             Added explicit include of sys/types.h
+ * src/version.c          Version increment: 4.0.8; Copyright 2021
+
 2021/03/16 Zosecer https://github.com/zosecer
  * src/parser.c           Added handling for null pointer detection
 
