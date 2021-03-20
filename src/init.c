@@ -39,6 +39,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#include <signal.h>
+#endif
 
 #define LINESZ 1024
 
