@@ -550,7 +550,7 @@ main(int argc, char *argv[])
 
   if (my.json_output) {
     fprintf(stderr, "\n");
-    printf("{");
+    printf("{\n");
     printf("\t\"transactions\":\t\t\t%12u,\n", data_get_count(data));
 
     double availability;
