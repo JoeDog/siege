@@ -128,7 +128,7 @@ cookie_set_expires(COOKIE this, time_t expires)
 char *
 cookie_get_name(COOKIE this) 
 {
-  if (this->name == NULL) 
+  if (this == NULL && this->name == NULL) 
     return this->none;
   return this->name;
 }
@@ -141,7 +141,7 @@ cookie_get_name(COOKIE this)
 char * 
 cookie_get_value(COOKIE this) 
 {
-  if (this->value == NULL) 
+  if (this == NULL && this->value == NULL) 
     return this->none;
   return this->value;
 }
@@ -152,7 +152,7 @@ cookie_get_value(COOKIE this)
 char *
 cookie_get_domain(COOKIE this)
 {
-  if (this->domain == NULL) 
+  if (this == NULL && this->domain == NULL) 
     return this->none;
   return this->domain;
 }
@@ -163,7 +163,7 @@ cookie_get_domain(COOKIE this)
 char * 
 cookie_get_path(COOKIE this)
 {
-  if (this->path == NULL)
+  if (this == NULL && this->path == NULL)
     return this->none;
   return this->path;
 }
@@ -171,12 +171,16 @@ cookie_get_path(COOKIE this)
 time_t 
 cookie_get_expires(COOKIE this)
 {
+  if (this == NULL) 
+    return -1;
   return this->expires;
 }
 
 BOOLEAN
 cookie_get_session(COOKIE this)
 {
+  if (this == NULL) 
+    return TRUE;
   return this->session;
 }
 
