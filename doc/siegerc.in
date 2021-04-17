@@ -67,7 +67,7 @@ quiet = false
 #
 # ex: json_output = true | false
 #
-json_output = true
+json_output = false
 
 
 #
