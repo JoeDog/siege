@@ -176,12 +176,15 @@ auth_add(AUTH this, CREDS creds)
 void
 auth_display(AUTH this, SCHEME scheme)
 {
-  size_t i;
+  size_t  i;
+  char    space[] = "                                ";
+  BOOLEAN first   = TRUE;
   //XXX: Needs to be reformatted for siege -C
   for (i = 0; i < array_length(this->creds); i++) {
     CREDS tmp = array_get(this->creds, i);
     if (creds_get_scheme(tmp) == scheme) {
-      printf("credentials:  %s:%s:%s\n", creds_get_username(tmp), creds_get_password(tmp), creds_get_realm(tmp));
+      printf("%scredentials:  %s:%s:%s\n", first==TRUE?"":space, creds_get_username(tmp), creds_get_password(tmp), creds_get_realm(tmp));
+      first = FALSE;
     }
   } 
 }
