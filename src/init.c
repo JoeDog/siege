@@ -262,12 +262,14 @@ show_config(int EXIT)
 int
 readline(char **s, FILE *fp)
 {
-  int  c;
-  int  i;
-  int  len  = 0;
-  int  size = 0;
-  char *tmp = NULL;
-  char *ptr = NULL;
+  int     c;
+  int     i;
+  int     len  = 0;
+  int     size = 0;
+  char    *tmp = NULL;
+  char    *ptr = NULL;
+  char    *txt = NULL;
+  BOOLEAN lop  = TRUE;
 
   ptr  = xmalloc(LINESZ);
   size = LINESZ;
@@ -305,9 +307,22 @@ readline(char **s, FILE *fp)
     ptr = tmp;
   }
   ptr[len] = '\0';
-
+ 
+  /**
+   * This condition is a band-aid. Some passwords 
+   * contain '#' which are treated like comments in
+   * the siege.conf file. So if a line begins with 
+   * login, we won't treat '#' as a comment. If lop
+   * is FALSE, we won't null out the line. 
+   */
+  txt = strdup(ptr);
+  trim(txt);
+  if (strncmp(txt, "login", 5) == 0) {
+    lop = FALSE;
+  } 
+  xfree(txt);
   for (i = 0; ptr[i] != '\0'; i++) {
-    if (ptr[i] == '#') {
+    if (ptr[i] == '#' && lop == TRUE) {
       ptr[i] = '\0';
     }
   }
