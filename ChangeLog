@@ -1,6 +1,11 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2021/07/04 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/init.c             Fixed password parsing # can be in pwd
+ * src/auth.c             Prettified credentials output for siege -C
+ * src/version.c          Version increment: 4.1.0
+
 2021/04/17 Jeffrey Fulmer http://www.joedog.org/support/
  * src/cookie.c           Added NULL checks for getters
  * version.c              Version increment: 4.0.9
