@@ -2,8 +2,8 @@
  * SIEGE socket library
  *
  * Copyright (C) 2000-2015 by
- * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
- * This file is distributed as part of Siege 
+ * Jeffrey Fulmer - <jeff@joedog.org>, et al.
+ * This file is distributed as part of Siege
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 # include <config.h>
 #endif/*HAVE_CONFIG_H*/
 
-#include <setup.h> 
+#include <setup.h>
 #include <sock.h>
 #include <util.h>
 #include <memory.h>
@@ -33,6 +33,10 @@
 #include <joedog/defs.h>
 #include <pthread.h>
 #include <fcntl.h>
+
+#if defined(__GLIBC__) || (defined(__APPLE_CC__) && defined(__APPLE__))
+#define USE_GETADDRINFO
+#endif
 
 #ifdef HAVE_POLL
 # include <poll.h>
@@ -45,15 +49,15 @@
 #ifdef  HAVE_ARPA_INET_H
 # include <arpa/inet.h>
 #endif/*HAVE_ARPA_INET_H*/
- 
+
 #ifdef  HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
-#endif/*HAVE_SYS_SOCKET_H*/ 
+#endif/*HAVE_SYS_SOCKET_H*/
 
 #ifdef  HAVE_NETINET_IN_H
 # include <netinet/in.h>
 #endif/*HAVE_NETINET_IN_H*/
- 
+
 #ifdef  HAVE_NETDB_H
 # include <netdb.h>
 #endif/*HAVE_NETDB_H*/
@@ -64,11 +68,11 @@
 
 #define MAX_PORT_NO 65535
 
-/** 
- * local prototypes 
+/**
+ * local prototypes
  */
 private int     __socket_block(int socket, BOOLEAN block);
-private ssize_t __socket_write(int sock, const void *vbuf, size_t len);  
+private ssize_t __socket_write(int sock, const void *vbuf, size_t len);
 private BOOLEAN __socket_check(CONN *C, SDSET mode);
 private BOOLEAN __socket_select(CONN *C, SDSET mode);
 private int     __socket_create(CONN *C, int domain);
@@ -94,7 +98,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   char   hn[512];
   int    port;
   int    domain;
-#if defined(__GLIBC__)
+#if defined(USE_GETADDRINFO)
   char port_str[10];
   struct addrinfo hints;
   struct addrinfo *addr_res;
@@ -116,7 +120,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
 
   if (hostparam == NULL) {
     NOTIFY(ERROR, "Unable to resolve host %s:%d",  __FILE__, __LINE__);
-    return -1; 
+    return -1;
   }
 
   C->encrypt  = (C->scheme == HTTPS) ? TRUE: FALSE;
@@ -125,9 +129,9 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   C->ftp.size = 0;
 
   memset(hn, '\0', sizeof hn);
- 
+
   /* if we are using a proxy, then we make a socket
-     connection to that server rather then a httpd */ 
+     connection to that server rather then a httpd */
   if (auth_get_proxy_required(my.auth)) {
     snprintf(hn, sizeof(hn), "%s", auth_get_proxy_host(my.auth));
     port = auth_get_proxy_port(my.auth);
@@ -143,7 +147,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
     return -1;
   }
 
-#if defined(__GLIBC__)
+#if defined(USE_GETADDRINFO)
   {
     snprintf(port_str, sizeof(port_str), "%d", port);
 
@@ -169,7 +173,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
 # else /* default use gethostbyname_r*/
   {
     memset(hbf, '\0', sizeof hbf);
-    hp = gethostbyname_r(hn, &hent, hbf, sizeof(hbf), &herrno); 
+    hp = gethostbyname_r(hn, &hent, hbf, sizeof(hbf), &herrno);
   }
 # endif/*HAVE_GETIPNODEBYNAME*/
 #elif defined(_AIX)
@@ -186,9 +190,9 @@ new_socket(CONN *C, const char *hostparam, int portparam)
    */
   hp = gethostbyname(hn);
   herrno = h_errno;
-#endif/*OS SPECIFICS*/ 
+#endif/*OS SPECIFICS*/
 
-#if !defined(__GLIBC__)
+#if !defined(USE_GETADDRINFO)
   /* gethostbyname only offers IPv4 support */
   domain = AF_INET;
 
@@ -204,22 +208,22 @@ new_socket(CONN *C, const char *hostparam, int portparam)
       case TRY_AGAIN:      { NOTIFY(ERROR, "A temporary resolution error for %s\n", hostparam);          break; }
       default:             { NOTIFY(ERROR, "Unknown error code from gethostbyname for %s\n", hostparam); break; }
     }
-    return -1; 
-  } 
+    return -1;
+  }
 
   memset((void*) &cli, 0, sizeof(cli));
   memcpy(&cli.sin_addr, hp->h_addr, hp->h_length);
 #if defined(sun)
 # ifdef  HAVE_FREEHOSTENT
   freehostent(hp);
-# endif/*HAVE_FREEHOSTENT*/ 
+# endif/*HAVE_FREEHOSTENT*/
 #endif
   cli.sin_family = AF_INET;
   cli.sin_port = htons(port);
 
   s_addr = (struct sockaddr *)&cli;
   addrlen = sizeof(struct sockaddr_in);
-#endif /* end of __GLIBC__ not defined */
+#endif /* end of USE_GETADDRINFO not defined */
 
   /* create a socket, return -1 on failure */
   if (__socket_create(C, domain) < 0) {
@@ -227,13 +231,13 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   }
 
   /**
-   * connect to the host 
+   * connect to the host
    * evaluate the server response and check for
    * readability/writeability of the socket....
-   */ 
+   */
   conn = connect(C->sock, s_addr, addrlen);
   pthread_testcancel();
-#if defined(__GLIBC__)
+#if defined(USE_GETADDRINFO)
   /**
     * The result of getaddrinfo is a linked list. Attempt
     * to connect to each result until successful
@@ -272,8 +276,8 @@ new_socket(CONN *C, const char *hostparam, int portparam)
       pthread_testcancel();
       NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", my.timeout, __FILE__, __LINE__);
       socket_close(C);
-      return -1; 
-    } else { 
+      return -1;
+    } else {
       /**
        * If we reconnect and receive EISCONN, then we have a successful connection
        */
@@ -281,18 +285,18 @@ new_socket(CONN *C, const char *hostparam, int portparam)
       if((res < 0)&&(errno != EISCONN)){
         NOTIFY(ERROR, "socket: unable to connect %s:%d", __FILE__, __LINE__);
         socket_close(C);
-        return -1; 
+        return -1;
       }
-      C->status = S_READING; 
+      C->status = S_READING;
     }
   } /* end of connect conditional */
 
   if ((__socket_block(C->sock, TRUE)) < 0) {
     NOTIFY(ERROR, "socket: unable to set socket to non-blocking %s:%d", __FILE__, __LINE__);
-    return -1; 
+    return -1;
   }
 
-  C->connection.status = 1; 
+  C->connection.status = 1;
   return(C->sock);
 }
 
@@ -301,7 +305,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
  * This function calls __socket_poll if HAVE_POLL is defined in
  * config.h, else it uses __socket_select
  */
-private BOOLEAN 
+private BOOLEAN
 __socket_check(CONN *C, SDSET mode)
 {
 #ifdef HAVE_POLL
@@ -309,8 +313,8 @@ __socket_check(CONN *C, SDSET mode)
    return __socket_poll(C, mode);
  } else {
    return __socket_select(C, mode);
- } 
-#else 
+ }
+#else
  return __socket_select(C, mode);
 #endif/*HAVE_POLL*/
 }
@@ -335,11 +339,11 @@ __socket_poll(CONN *C, SDSET mode)
   if (res == 0) {
     errno = ETIMEDOUT;
   }
- 
+
   if (res <= 0) {
     C->state = UNDEF;
-    NOTIFY(WARNING, 
-      "socket: polled(%d) and discovered it's not ready %s:%d", 
+    NOTIFY(WARNING,
+      "socket: polled(%d) and discovered it's not ready %s:%d",
       (my.timeout)?my.timeout:15, __FILE__, __LINE__
     );
     return FALSE;
@@ -459,12 +463,12 @@ __hostname_strip(char *hn, int len)
 private int
 __socket_block(int sock, BOOLEAN block)
 {
-#if HAVE_FCNTL_H 
+#if HAVE_FCNTL_H
   int flags;
   int retval;
 #elif defined(FIONBIO)
   ioctl_t status;
-#else 
+#else
   return sock;
 #endif
 // return sock;
@@ -472,7 +476,7 @@ __socket_block(int sock, BOOLEAN block)
     return sock;
   }
 
-#if HAVE_FCNTL_H 
+#if HAVE_FCNTL_H
   if ((flags = fcntl(sock, F_GETFL, 0)) < 0) {
     switch (errno) {
       case EACCES: { NOTIFY(ERROR, "EACCES %s:%d",                 __FILE__, __LINE__); break; }
@@ -482,7 +486,7 @@ __socket_block(int sock, BOOLEAN block)
     } return -1;
   }
 
-  if (block) { 
+  if (block) {
     flags &= ~O_NDELAY;
   } else {
     flags |=  O_NDELAY;
@@ -495,14 +499,14 @@ __socket_block(int sock, BOOLEAN block)
   if ((retval = fcntl(sock, F_SETFL, flags)) < 0) {
     NOTIFY(ERROR, "unable to set fcntl flags %s:%d", __FILE__, __LINE__);
     return -1;
-  } 
+  }
   return retval;
 
 #elif defined(FIONBIO)
   status = block ? 0 : 1;
   return ioctl(sock, FIONBIO, &status);
 #endif
-}  
+}
 
 /**
  * returns ssize_t
@@ -514,7 +518,7 @@ __socket_write(int sock, const void *vbuf, size_t len)
   size_t      n;
   ssize_t     w;
   const char *buf;
- 
+
   buf = vbuf;
   n   = len;
   while (n > 0) {
@@ -583,9 +587,9 @@ socket_read(CONN *C, void *vbuf, size_t len)
   ssize_t     r;
   char *buf;
   int ret_eof = 0;
- 
+
   pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type);
- 
+
   buf = vbuf;
   n   = len;
   if (C->encrypt == TRUE) {
@@ -607,7 +611,7 @@ socket_read(CONN *C, void *vbuf, size_t len)
       buf += r;
     }   /* end of while    */
   #endif/*HAVE_SSL*/
-  } else { 
+  } else {
     while (n > 0) {
       if (C->inbuffer < len) {
         if (__socket_check(C, READ) == FALSE) {
@@ -652,14 +656,14 @@ socket_read(CONN *C, void *vbuf, size_t len)
       if (ret_eof) break;
     } /* end of while */
   }   /* end of else  */
- 
+
   pthread_setcanceltype(type,NULL);
   pthread_testcancel();
   return (len - n);
-}                                                                                                    
+}
 /**
  * this function is used for chunked
- * encoding transfers to acquire the 
+ * encoding transfers to acquire the
  * size of the message check.
  */
 ssize_t
@@ -670,7 +674,7 @@ socket_readline(CONN *C, char *ptr, size_t maxlen)
   char c;
 
   len = maxlen;
-  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type); 
+  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type);
 
   for (n = 1; n < len; n ++) {
     if ((res = socket_read(C, &c, 1)) == 1) {
@@ -678,19 +682,19 @@ socket_readline(CONN *C, char *ptr, size_t maxlen)
       if (c=='\n') break;
     }
     else if (res == 0) {
-      if (n == 1) 
-        return 0; 
-      else 
-        break; 
+      if (n == 1)
+        return 0;
+      else
+        break;
     } else {
       return -1; /* something bad happened */
     }
   } /* end of for loop */
 
   *ptr=0;
-  
+
   pthread_setcanceltype(type,NULL);
-  pthread_testcancel(); 
+  pthread_testcancel();
 
   return n;
 }
@@ -705,21 +709,21 @@ socket_write(CONN *C, const void *buf, size_t len)
   int     type;
   size_t bytes;
 
-  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type); 
+  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type);
 
   if (C->encrypt == TRUE) {
     /* handle HTTPS protocol */
     #ifdef HAVE_SSL
-    /** 
-     * Yeah, sure, this looks like a potential 
-     * endless loop, (see: Loop, endless), but 
+    /**
+     * Yeah, sure, this looks like a potential
+     * endless loop, (see: Loop, endless), but
      * a socket timeout will break it...
      */
     do {
       if ((bytes = __ssl_socket_write(C, buf, len)) != len) {
         if (bytes == 0)
           ;
-        else 
+        else
           return -1;
       }
     } while (bytes == 0);
@@ -735,11 +739,11 @@ socket_write(CONN *C, const void *buf, size_t len)
     }
   }
 
-  pthread_setcanceltype(type,NULL); 
-  pthread_testcancel(); 
+  pthread_setcanceltype(type,NULL);
+  pthread_testcancel();
 
   return bytes;
-} 
+}
 
 /**
  * returns void
@@ -756,8 +760,8 @@ socket_close(CONN *C)
 #endif/*HAVE_SSL*/
   if (C==NULL) return;
 
-  /* XXX Is this necessary? */ 
-  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type); 
+  /* XXX Is this necessary? */
+  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type);
 
   if (C->encrypt == TRUE) {
 #ifdef  HAVE_SSL
@@ -765,9 +769,9 @@ socket_close(CONN *C)
       if (C->ssl != NULL) {
         do {
           ret = SSL_get_shutdown(C->ssl);
-          if (ret < 0) { 
+          if (ret < 0) {
             NOTIFY(WARNING, "socket: SSL Socket closed by server: %s:%d", __FILE__, __LINE__);
-            break; //what an asshole; is this IIS? 
+            break; //what an asshole; is this IIS?
           }
 
           ret = SSL_shutdown(C->ssl);
@@ -806,9 +810,7 @@ socket_close(CONN *C)
   }
   C = NULL;
   pthread_setcanceltype(type,NULL);
-  pthread_testcancel(); 
+  pthread_testcancel();
 
   return;
-} 
-
-
+}
