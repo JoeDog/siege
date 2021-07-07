@@ -220,6 +220,7 @@ start(BROWSER this)
 {
   int x;
   int y;
+  int max_y;
   int ret;
   int len; 
   this->conn  = NULL;
@@ -260,6 +261,7 @@ start(BROWSER this)
 
   len = (my.reps == -1) ? (int)array_length(this->urls) : my.reps;
   y   = (my.reps == -1) ? 0 : this->id * (my.length / my.cusers);
+  max_y = (int)array_length(this->urls);
   for (x = 0; x < len; x++, y++) {
     x = ((my.secs > 0) && ((my.reps <= 0)||(my.reps == MAXREPS))) ? 0 : x;
     if (my.internet == TRUE) {
@@ -273,14 +275,14 @@ start(BROWSER this)
        * with clean slate, ie. reset (delete) cookies (eg. to let a new
        * session start)
        */
-      if (y >= my.length) {
+      if (y >= max_y) {
         y = 0;
         if (my.expire) {
           cookies_delete_all(my.cookies);
         }
       }
     }
-    if (y >= my.length || y < 0) {
+    if (y >= max_y || y < 0) {
       y = 0;
     }
 
