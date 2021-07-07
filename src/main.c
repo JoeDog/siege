@@ -449,15 +449,19 @@ main(int argc, char *argv[])
       /**
        * Scenario: -r once/--reps=once 
        */
-      int   len = (array_length(urls)/my.cusers); 
-      ARRAY tmp = new_array();
-      for (j = 0; j < ((i+1) * len) && j < (int)array_length(urls); j++) {
+      int n_urls = array_length(urls);
+      int per_user = n_urls / my.cusers;
+      int remainder = n_urls % my.cusers;
+      int begin_url = i * per_user + ((i < remainder) ? i : remainder);
+      int end_url = (i + 1) * per_user + ((i < remainder) ? (i + 1) : remainder);
+      ARRAY url_slice = new_array();
+      for (j = begin_url; j < end_url && j < n_urls; j++) {
         URL u = array_get(urls, j);
         if (u != NULL && url_get_hostname(u) != NULL && strlen(url_get_hostname(u)) > 1) {
-          array_npush(tmp, array_get(urls, j), URLSIZE);    
+          array_npush(url_slice, u, URLSIZE);
         }
-      } 
-      browser_set_urls(B, urls);
+      }
+      browser_set_urls(B, url_slice);
     }
     array_npush(browsers, B, BROWSERSIZE);
   }
