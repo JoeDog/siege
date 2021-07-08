@@ -127,7 +127,9 @@ url_destroy(URL this)
     xfree(this->username);
     xfree(this->password);
     xfree(this->hostname);
-    xfree(this->path);
+    if (this->path[0] != '\0') {
+      xfree(this->path);
+    }
     xfree(this->file);
     xfree(this->query);
     xfree(this->frag);
@@ -974,17 +976,24 @@ __url_set_path(URL this, char *str)
   for (j = 0; str[j] && (str[j] != '#' && !isspace(str[j])); j++);
 
   if (str[i] != '/') {
-    this->path    = xmalloc(2);
-    this->request = xmalloc(2);
-    strncpy(this->path,    "/", 2);
-    strncpy(this->request, "/", 2);
-    this->path[1]    = '\0';
-    this->request[1] = '\0';
+    if (this->scheme == FTP) {
+      this->path    = "";
+    } else {
+      this->path    = xmalloc(2);
+      this->request = xmalloc(2);
+      strncpy(this->path,    "/", 2);
+      strncpy(this->request, "/", 2);
+      this->path[1]    = '\0';
+      this->request[1] = '\0';
+    }
   } else {
     this->path    = xmalloc(i+2);
     memcpy(this->path, str, i+1);
     this->path[i] = '/';
     this->path[i + 1]    = '\0';
+    if (this->scheme == FTP && this->path[0] == '/') {
+      memmove(this->path, this->path+1, strlen(this->path));
+    }
   }
   trim(this->request);
   str += i + 1;
