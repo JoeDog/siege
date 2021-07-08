@@ -1,6 +1,13 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2021/07/07 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/url.c              Removed leading / from ftp paths
+
+2021/07/07 midchildan https://github.com/midchildan
+ * src/browser.c          fixed: "--reps=once" 
+ * src/main.c             fixed: "--reps=once" 
+
 2021/07/04 Jeffrey Fulmer http://www.joedog.org/support/
  * src/init.c             Fixed password parsing # can be in pwd
  * src/auth.c             Prettified credentials output for siege -C
