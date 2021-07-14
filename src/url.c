@@ -127,7 +127,7 @@ url_destroy(URL this)
     xfree(this->username);
     xfree(this->password);
     xfree(this->hostname);
-    if (this->path[0] != '\0') {
+    if (this->path != NULL && this->path[0] != '\0') {
       xfree(this->path);
     }
     xfree(this->file);
@@ -1040,7 +1040,9 @@ __url_set_parameters(URL this, char *str)
   int i;
 
   if (str==NULL) return NULL;
-  if (this->params != NULL && strlen(this->params) > 1) return str;
+  if (this->params != NULL && strlen(this->params) > 1) {
+    return str;
+  }
 
   if (this->hasparams == FALSE) {
     this->params = "";
