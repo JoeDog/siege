@@ -27,6 +27,7 @@
 #include <perl.h>
 #include <memory.h>
 #include <notify.h>
+#include <util.h>
 #include <joedog/defs.h>
 #include <joedog/boolean.h>
 
@@ -64,6 +65,12 @@ parse(char *str)
   if (ch) {*ch = '\0';}
 
   trim(str);
+}
+
+int 
+count(char* s, char c)
+{
+  return *s == '\0' ? 0 : count(s + 1, c) + (*s == c);
 }
 
 /** 
@@ -124,8 +131,9 @@ read_cfg_file(LINES *l, char *filename)
     }
     parse(line);
     chomp(line);
-    if (strlen(line) == 0);
-    else if (is_variable_line(line)) {
+    if (strlen(line) == 0) {
+      ;
+    } else if (is_variable_line(line)) {
       char *tmp = line;
       option = tmp;
       while (*tmp && !ISSPACE((int)*tmp) && !ISSEPARATOR(*tmp))
@@ -139,9 +147,18 @@ read_cfg_file(LINES *l, char *filename)
       *tmp++=0;
       hash_add(H, option, value); 
     } else {
-    char *tmp = xstrdup(line);
+      char *tmp = xstrdup(line);
+      int   r   = 0;
+      int   cnt = 0;
+      cnt += count(tmp, '$');
       while (strstr(tmp, "$")) {
-        tmp = evaluate(H, tmp);
+        if (strstr(tmp, "\\$")) {
+          tmp = escape(tmp);
+        } else {
+          tmp = evaluate(H, tmp);
+        }
+        r++;
+        if (r == cnt) break;
       }
       l->line = (char**)realloc(l->line, sizeof(char *) * (l->index + 1));
       l->line[l->index] = (char *)strdup(tmp);
@@ -192,7 +209,6 @@ is_variable_line(char *line)
 {
   char *pos, *x;
   char c;
-
   /**
    * check for variable assignment; make sure that on the left side 
    * of the = is nothing but letters, numbers, and/or underscores.
