@@ -222,14 +222,13 @@ SSL_thread_cleanup(void)
     lock_count=(long *)NULL; 
   }
   CRYPTO_cleanup_all_ex_data();
-  ERR_remove_state(0);
   ERR_free_strings();
   EVP_cleanup();
   CRYPTO_cleanup_all_ex_data();
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(OPENSSL_USE_DEPRECATED)
-   ERR_remove_state(0);
+  ERR_remove_state(0);
 #else
-   ERR_remove_thread_state(NULL);
+  ERR_remove_thread_state(NULL);
 #endif
 }
 
