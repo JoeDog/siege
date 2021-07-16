@@ -605,6 +605,18 @@ __http(BROWSER this, URL U)
         redirect_url = url_destroy(redirect_url);
       }
       break;
+    case 201:
+      if (my.follow && response_get_location(resp) != NULL) {
+        redirect_url = url_normalize(U, response_get_location(resp));
+        if (empty(url_get_hostname(redirect_url))) {
+          url_set_hostname(redirect_url, url_get_hostname(U));
+        }
+        if ((__request(this, redirect_url)) == FALSE) {
+          redirect_url = url_destroy(redirect_url);
+          return FALSE;
+        }
+      }
+      break;
     case 301:
     case 302:
     case 303:
