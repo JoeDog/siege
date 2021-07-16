@@ -2,10 +2,15 @@ To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
 2021/07/14 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/browser.c          Added HTTP response 201 handler
+ * src/response.c         Added Content-Location handler
+ * src/response.h         Added CONTENT_LOCATION value
+ * src/http.c             Added Content-Location parser
  * src/cfg.c              Added an escape handler for $ in URLs
  * src/eval.c             Added function escape(str) to remove '\'
  * src/ssl.c              Put ERR_remove_state inside ssl version
  * src/url.c              Added fix for null path checking
+ * src/util.c             Fixed np_phtread_usleep for Solaris
  * src/version.c          Version increment: 4.1.1
 
 2021/07/07 Jeffrey Fulmer http://www.joedog.org/support/
