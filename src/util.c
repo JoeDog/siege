@@ -229,6 +229,7 @@ pthread_usleep_np(unsigned long usec)
 
   pthread_mutex_lock(&timer_mutex);
   err = pthread_cond_timedwait(&timer_cond, &timer_mutex, &timeout);
+  pthread_mutex_unlock(&timer_mutex);
   
   pthread_setcanceltype(type,NULL);
   pthread_testcancel();  
