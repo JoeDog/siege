@@ -491,6 +491,9 @@ http_read_headers(CONN *C, URL U)
     if (strncasecmp(line, LOCATION, strlen(LOCATION)) == 0) {
       response_set_location(resp, line);
     }
+    if (strncasecmp(line, CONTENT_LOCATION, strlen(CONTENT_LOCATION)) == 0) {
+      response_set_location(resp, line);
+    }
     if (strncasecmp(line, LAST_MODIFIED, strlen(LAST_MODIFIED)) == 0) {
       response_set_last_modified(resp, line);
       char *date;
