@@ -302,6 +302,16 @@ response_set_location(RESPONSE this, char *line)
     hash_add(this->headers, REDIRECT, "true");
     xfree(tmp);
   }
+  if (strncasecmp(line, CONTENT_LOCATION, strlen(CONTENT_LOCATION)) == 0) {
+    len = strlen(line);
+    tmp = xmalloc(len);
+    memset(tmp, '\0', len);
+    memmove(tmp, line+18, len-17);
+    tmp[len-18] = '\0'; 
+    hash_add(this->headers, LOCATION, (void*)tmp);
+    hash_add(this->headers, REDIRECT, "true");
+    xfree(tmp);
+  }
   return __boolean_value(this, REDIRECT, FALSE);
 }
 
