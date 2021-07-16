@@ -213,7 +213,11 @@ This option tells siege to work with a list of urls inside a text
 file. The URLs are listed one per line. Unlike URLs that are passed as
 a command-line argument, the URLs in this file should not be quoted.
 
-$_PROGRAM's urls.txt parser supports comments and variables.
+$_PROGRAM's urls.txt parser supports comments and variables. Since 
+$_PROGRAM uses the dollar sign ($) as a prefix for scalar variables,
+you should escape any variable you want to send to the server:
+
+  https://$(HOST)/siege/jsoner.php POST {"price": "\$10 per mile"}
 
 =item B<-R FILE>, B<--rc=FILE>
 
