@@ -30,6 +30,7 @@
 #include <ssl.h>
 #include <ftp.h>
 #include <http.h>
+#include <socks5.h>
 #include <hash.h>
 #include <array.h>
 #include <util.h>
@@ -925,8 +926,14 @@ __init_connection(BROWSER this, URL U)
     (auth_get_proxy_required(my.auth))?auth_get_proxy_port(my.auth):url_get_port(U)
   );
 
+  if (auth_get_proxy_required(my.auth) && auth_get_proxy_socks5(my.auth)) {
+    if ( !socks5_tunnel_mount(this->conn, url_get_hostname(U), url_get_port(U)) ) {
+      return FALSE;
+    }
+  }
   if (url_get_scheme(U) == HTTPS) {
-    if (auth_get_proxy_required(my.auth)) {
+    // if (auth_get_proxy_required(my.auth)) {
+    if (auth_get_proxy_required(my.auth) && !auth_get_proxy_socks5(my.auth) ) {
       https_tunnel_request(this->conn, url_get_hostname(U), url_get_port(U));
       https_tunnel_response(this->conn);
     }

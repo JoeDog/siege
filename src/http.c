@@ -58,7 +58,7 @@ https_tunnel_request(CONN *C, char *host, int port)
   size_t  rlen, n;
   char    request[256];
 
-  if (C->encrypt == TRUE && auth_get_proxy_required(my.auth)) {
+  if (C->encrypt == TRUE && auth_get_proxy_required(my.auth) && !auth_get_proxy_socks5(my.auth)) {
     snprintf(
       request, sizeof(request),
       "CONNECT %s:%d HTTP/1.0\015\012"
@@ -133,7 +133,7 @@ http_get(CONN *C, URL U)
   ifmod = cache_get_header(C->cache, C_LAST, U);
 
   /* Request path based on proxy settings */
-  if(auth_get_proxy_required(my.auth)){
+  if(auth_get_proxy_required(my.auth) && !auth_get_proxy_socks5(my.auth) ){
     sprintf(
       fullpath, "%s://%s:%d%s", C->encrypt == FALSE?"http":"https", 
       url_get_hostname(U), url_get_port(U), url_get_request(U)
@@ -291,7 +291,7 @@ http_post(CONN *C, URL U)
   memset(protocol, '\0', sizeof(protocol));
   memset(keepalive,'\0', sizeof(keepalive));
 
-  if (auth_get_proxy_required(my.auth)) {
+  if (auth_get_proxy_required(my.auth) && !auth_get_proxy_socks5(my.auth)) {
    sprintf(
       fullpath, 
       "%s://%s:%d%s", 

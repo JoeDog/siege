@@ -78,10 +78,11 @@ struct AUTH_T {
     unsigned char nonce[8];
   } ntlm;
   struct {
-    BOOLEAN required;   /* boolean, TRUE == use a proxy server.    */
-    char *hostname;     /* hostname for the proxy server.          */
-    int  port;          /* port number for proxysrv                */
-    char *encode;       /* base64 encoded username and password    */
+    BOOLEAN required;   /* boolean, TRUE == use a proxy server.         */
+    BOOLEAN socks5;     /* boolean, TRUE == socks5, FALSE == http proxy */
+    char *hostname;     /* hostname for the proxy server.               */
+    int  port;          /* port number for proxysrv                     */
+    char *encode;       /* base64 encoded username and password         */
   } proxy;
   pthread_mutex_t lock;
 }; 
@@ -397,6 +398,14 @@ auth_get_proxy_required(AUTH this)
   return this->proxy.required;
 }
 
+BOOLEAN
+auth_get_proxy_socks5(AUTH this)
+{
+  if (this == NULL) 
+    return FALSE;
+  return this->proxy.socks5;
+}
+
 char *
 auth_get_proxy_host(AUTH this) 
 {
@@ -413,6 +422,12 @@ void
 auth_set_proxy_required(AUTH this, BOOLEAN required)
 {
   this->proxy.required = required;
+}
+
+void
+auth_set_proxy_socks5(AUTH this, BOOLEAN socks5)
+{
+  this->proxy.socks5 = socks5;
 }
 
 void
