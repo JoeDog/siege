@@ -749,7 +749,7 @@ __ftp(BROWSER this, URL U)
 {
   int     pass;
   int     fail;
-  int     code = 0;      // capture the relevent return code
+  int     code = 0;      // capture the relevant return code
   float   etime;         // elapsed time
   CONN    *D    = NULL;  // FTP data connection
   size_t  bytes = 0;     // bytes from server

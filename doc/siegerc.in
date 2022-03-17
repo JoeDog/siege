@@ -27,7 +27,7 @@
 verbose = true
 
 #
-# Color mode: This option works in conjuction with verbose mode. 
+# Color mode: This option works in conjunction with verbose mode.
 # It tells siege whether or not it should display its output in
 # color-coded output. (Enabled by default)
 #
@@ -551,7 +551,7 @@ unique = true
 
 #
 # SSL-cert: This optional feature allows you to specify a path to a client
-# certificate. It is not neccessary to specify a certificate in order to use
+# certificate. It is not necessary to specify a certificate in order to use
 # https. If you don't know why you would want one, then you probably don't need
 # it.  Use openssl to generate a certificate and key with the following command:
 #
