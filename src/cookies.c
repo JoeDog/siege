@@ -29,6 +29,7 @@ struct COOKIES_T {
 private NODE *  __delete_node(NODE *node);
 private BOOLEAN __exists(char *file);
 private BOOLEAN __save_cookies(COOKIES this);
+private BOOLEAN __endswith(const char *str, const char *suffix);
 
 COOKIES
 new_cookies() {
@@ -65,31 +66,26 @@ BOOLEAN
 cookies_add(COOKIES this, char *str, char *host)
 {
   size_t  id    = pthread_self();
-  int     hlen  = 0;
-  int     dlen  = 0;
+  //int     hlen  = 0;
+  //int     dlen  = 0;
   NODE   *cur   = NULL; 
   NODE   *pre   = NULL; 
   NODE   *new   = NULL;
   BOOLEAN found = FALSE;
   BOOLEAN valid = FALSE;
   COOKIE  oreo  = new_cookie(str, host);
-
   if (oreo == NULL) return FALSE;
   if (cookie_get_name(oreo) == NULL || cookie_get_value(oreo) == NULL) return FALSE;
-
-  //pthread_mutex_lock(&(my.lock));
   for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
     const char *domainptr = cookie_get_domain(cur->cookie);
     if (*domainptr == '.') ++domainptr;
-    hlen = host      ? strlen(host)      : 0;
-    dlen = domainptr ? strlen(domainptr) : 0;
-    if (! strcasecmp(host, domainptr)) {
-      valid = TRUE; // host level cookie found
+    //hlen = host      ? strlen(host)      : 0;
+    //dlen = domainptr ? strlen(domainptr) : 0;
+    if (__endswith(host, domainptr)){
+      valid = TRUE;
     }
-    if (! valid && (dlen < hlen) && (! strcasecmp(host + (hlen - dlen), domainptr))) {
-      valid = TRUE; // domain level cookie found
-    }
-    if (valid && cur->threadID == id && !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
+    if (valid && cur->threadID == id && 
+        !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
       cookie_reset_value(cur->cookie, cookie_get_value(oreo));
       oreo  = cookie_destroy(oreo);
       found = TRUE;
@@ -107,8 +103,6 @@ cookies_add(COOKIES this, char *str, char *host)
     else
       pre->next  = new;
   }
-  //pthread_cond_wait(&my.cond, &my.lock);
-  //pthread_mutex_unlock(&(my.lock));
 
   return TRUE;
 }
@@ -168,8 +162,6 @@ cookies_delete_all(COOKIES this)
 char *
 cookies_header(COOKIES this, char *host, char *newton)
 {
-  int   dlen; 
-  int   hlen;
   NODE  *pre;
   NODE  *cur;
   time_t tmp;
@@ -179,7 +171,6 @@ cookies_header(COOKIES this, char *host, char *newton)
   size_t id = pthread_self();
 
   memset(oreo, '\0', sizeof oreo);
-  hlen = strlen(host);
 
   tmp = time(NULL);
   gmtime_r(&tmp, &tm);
@@ -192,20 +183,8 @@ cookies_header(COOKIES this, char *host, char *newton)
      */
     const char *domainptr = cookie_get_domain(cur->cookie);
     if (*domainptr == '.') ++domainptr;
-    dlen = domainptr ? strlen(domainptr) : 0;
-    if (cur->threadID == id) {
-      if (!strcasecmp(domainptr, host)) {
-        if (cookie_get_expires(cur->cookie) <= now && cookie_get_session(cur->cookie) != TRUE) {
-          cookies_delete(this, cookie_get_name(cur->cookie));
-          continue;
-        }
-        if (strlen(oreo) > 0)
-          strncat(oreo, ";",      sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_name(cur->cookie),  sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, "=",        sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_value(cur->cookie), sizeof(oreo) - 10 - strlen(oreo));
-      }
-      if ((dlen < hlen) && (!strcasecmp(host + (hlen - dlen), domainptr))) {
+    if (my.get || cur->threadID == id) {
+      if (__endswith(host, domainptr)) {
         if (cookie_get_expires(cur->cookie) <= now && cookie_get_session(cur->cookie) != TRUE) {
           cookies_delete(this, cookie_get_name(cur->cookie));
           continue;
@@ -404,6 +383,22 @@ __exists(char *file)
      * Party on Garth... 
      */
     close(fd);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
+private BOOLEAN 
+__endswith(const char *str, const char *suffix)
+{
+  if (!str || !suffix)
+    return FALSE;
+  size_t lenstr = strlen(str);
+  size_t lensuffix = strlen(suffix);
+  if (lensuffix >  lenstr)
+    return FALSE;
+  if (! strncmp(str + lenstr - lensuffix, suffix, lensuffix)) {
     return TRUE;
   }
   return FALSE;
