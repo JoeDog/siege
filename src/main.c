@@ -432,7 +432,6 @@ main(int argc, char *argv[])
   } 
 
   cookies = load_cookies(my.cookies);
-
   for (i = 0; i < my.cusers; i++) {
     char    tmp[4096];
     BROWSER B = new_browser(i);
@@ -526,7 +525,7 @@ main(int argc, char *argv[])
 
   pthread_usleep_np(10000);
 
-  if (!my.quiet) {
+  if (! my.quiet && ! my.get) {
     if (my.failures > 0 && my.failed >= my.failures) {
       fprintf(stderr, "%s aborted due to excessive socket failure; you\n", program_name);
       fprintf(stderr, "can change the failure threshold in $HOME/.%src\n", program_name);
