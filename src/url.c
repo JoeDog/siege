@@ -496,7 +496,7 @@ url_normalize(URL req, char *location)
 
   if ((location[0] != '/') && location[0] != '.' && (strchr(location, '.') != NULL && strchr(location, '/') != NULL)) {
     /**
-     * This is probably host/path; it doesn't start with relevent path 
+     * This is probably host/path; it doesn't start with relevant path
      * indicators and it contains the hallmarks of host/path namely at
      * least one dot and slash
      */
@@ -951,7 +951,7 @@ __url_set_port(URL this, char *str)
 private char *
 __url_set_path(URL this, char *str)
 {
-  int   i;    // capture the lenght of the path
+  int   i;    // capture the length of the path
   int   j;    // capture the length of the request (sans frag)
   char *c;
 

@@ -234,7 +234,7 @@ allows you to specify an alternative file for logging.
 
 This option allows you to log a message to the log file before your 
 stats are written there. It is generally used to identify the 
-proceding run. You could, for example, mark the file with your 
+proceeding run. You could, for example, mark the file with your
 command-line parameters so it's understood what configuration 
 generated the following data.
 
