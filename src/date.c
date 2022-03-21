@@ -456,7 +456,7 @@ __strtotime(const char *string)
            (val < 1300) &&
            (indate< date) &&
            ((date[-1] == '+' || date[-1] == '-'))) {
-          /* four digits and a value less than 1300 and it is preceeded with
+          /* four digits and a value less than 1300 and it is preceded with
              a plus or minus. This is a time zone indication. */
           found = TRUE;
           tzoff = (val/100 * 60 + val%100)*60;

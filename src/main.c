@@ -170,7 +170,7 @@ display_help()
 }
 
 /* Check the command line for the presence of the -R or --RC switch.  We
- * need to do this seperately from the other command line switches because
+ * need to do this separately from the other command line switches because
  * the options are initialized from the .siegerc file before the command line
  * switches are parsed. The argument index is reset before leaving the
  * function. */
