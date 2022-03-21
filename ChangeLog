@@ -1,7 +1,19 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
-2021/07/14 Jeffrey Fulmer http://www.joedog.org/support/
+2022/03/21 cui fliter https://github.com/cuishuang
+ * src/browser.c          Fixed typos
+ * src/date.c             Fixed typos
+ * src/url.c              Fixed typos
+ * utils/siege2csv.in     Fixed typos
+
+2022/03/17 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/main.c             Silenced statistics output on -g/--get
+ * src/cookies.c          Improved domain matching, added my.get 
+ * src/ssl.c              Silenced a compiler warning
+ * src/version.c          Version increment: 4.1.2
+
+2021/07/14 Jeffrey Fulmer https://www.joedog.org/support/
  * src/browser.c          Added HTTP response 201 handler
  * src/response.c         Added Content-Location handler
  * src/response.h         Added CONTENT_LOCATION value
@@ -13,7 +25,7 @@ To email a contributor remove "DELETE" from the email address.
  * src/util.c             Fixed np_phtread_usleep for Solaris
  * src/version.c          Version increment: 4.1.1
 
-2021/07/07 Jeffrey Fulmer http://www.joedog.org/support/
+2021/07/07 Jeffrey Fulmer https://www.joedog.org/support/
  * src/url.c              Removed leading / from ftp paths
 
 2021/07/07 midchildan https://github.com/midchildan
