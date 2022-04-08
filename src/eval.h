@@ -28,6 +28,7 @@
 
 #define BUFSIZE 40000
 
+char *escape(char *buf);
 char *evaluate(HASH hash, char *buf);
 
 #endif/*EVAL_H*/ 

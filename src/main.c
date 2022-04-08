@@ -83,7 +83,8 @@ static struct option long_options[] =
   { "header",       required_argument, NULL, 'H' },
   { "user-agent",   required_argument, NULL, 'A' },
   { "content-type", required_argument, NULL, 'T' },
-  {0, 0, 0, 0} 
+  { "json-output",  no_argument,       NULL, 'j' },
+  {0, 0, 0, 0}
 };
 
 /**
@@ -157,6 +158,7 @@ display_help()
   puts("  -H, --header=\"text\"       Add a header to request (can be many)" ); 
   puts("  -A, --user-agent=\"text\"   Sets User-Agent in request" ); 
   puts("  -T, --content-type=\"text\" Sets Content-Type in request" ); 
+  puts("  -j, --json-output         JSON OUTPUT, print final stats to stdout as JSON");
   puts("      --no-parser           NO PARSER, turn off the HTML page parser");
   puts("      --no-follow           NO FOLLOW, do not follow HTTP redirects");
   puts("");
@@ -168,7 +170,7 @@ display_help()
 }
 
 /* Check the command line for the presence of the -R or --RC switch.  We
- * need to do this seperately from the other command line switches because
+ * need to do this separately from the other command line switches because
  * the options are initialized from the .siegerc file before the command line
  * switches are parsed. The argument index is reset before leaving the
  * function. */
@@ -179,7 +181,7 @@ parse_rc_cmdline(int argc, char *argv[])
   strcpy(my.rc, "");
   
   while( a > -1 ){
-    a = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:", long_options, (int*)0);
+    a = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:j", long_options, (int*)0);
     if(a == 'R'){
       strcpy(my.rc, optarg);
       a = -1;
@@ -198,7 +200,7 @@ parse_cmdline(int argc, char *argv[])
 {
   int c = 0;
   int nargs;
-  while ((c = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:", long_options, (int *)0)) != EOF) {
+  while ((c = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:j", long_options, (int *)0)) != EOF) {
   switch (c) {
       case 'V':
         display_version(TRUE);
@@ -295,7 +297,10 @@ parse_cmdline(int argc, char *argv[])
           strcat(my.extra,optarg);
           strcat(my.extra,"\015\012");
         }
-        break; 
+        break;
+      case 'j':
+        my.json_output = TRUE;
+        break;
 
     } /* end of switch( c )           */
   }   /* end of while c = getopt_long */
@@ -427,7 +432,6 @@ main(int argc, char *argv[])
   } 
 
   cookies = load_cookies(my.cookies);
-
   for (i = 0; i < my.cusers; i++) {
     char    tmp[4096];
     BROWSER B = new_browser(i);
@@ -444,15 +448,19 @@ main(int argc, char *argv[])
       /**
        * Scenario: -r once/--reps=once 
        */
-      int   len = (array_length(urls)/my.cusers); 
-      ARRAY tmp = new_array();
-      for (j = 0; j < ((i+1) * len) && j < (int)array_length(urls); j++) {
+      int n_urls = array_length(urls);
+      int per_user = n_urls / my.cusers;
+      int remainder = n_urls % my.cusers;
+      int begin_url = i * per_user + ((i < remainder) ? i : remainder);
+      int end_url = (i + 1) * per_user + ((i < remainder) ? (i + 1) : remainder);
+      ARRAY url_slice = new_array();
+      for (j = begin_url; j < end_url && j < n_urls; j++) {
         URL u = array_get(urls, j);
         if (u != NULL && url_get_hostname(u) != NULL && strlen(url_get_hostname(u)) > 1) {
-          array_npush(tmp, array_get(urls, j), URLSIZE);    
+          array_npush(url_slice, u, URLSIZE);
         }
-      } 
-      browser_set_urls(B, urls);
+      }
+      browser_set_urls(B, url_slice);
     }
     array_npush(browsers, B, BROWSERSIZE);
   }
@@ -517,7 +525,7 @@ main(int argc, char *argv[])
 
   pthread_usleep_np(10000);
 
-  if (!my.quiet) {
+  if (! my.quiet && ! my.get) {
     if (my.failures > 0 && my.failed >= my.failures) {
       fprintf(stderr, "%s aborted due to excessive socket failure; you\n", program_name);
       fprintf(stderr, "can change the failure threshold in $HOME/.%src\n", program_name);
@@ -542,6 +550,38 @@ main(int argc, char *argv[])
     fprintf(stderr, "Shortest transaction:\t%12.2f\n",       data_get_lowest(data));
     fprintf(stderr, " \n");
   }
+
+  if (my.json_output) {
+    fprintf(stderr, "\n");
+    printf("{\n");
+    printf("\t\"transactions\":\t\t\t%12u,\n", data_get_count(data));
+
+    double availability;
+    if (data_get_count(data) == 0) {
+      availability = 0;
+    } else {
+      availability = (double)data_get_count(data) / (data_get_count(data) + my.failed) * 100;
+    }
+
+    printf("\t\"availability\":\t\t\t%12.2f,\n", availability);
+    printf("\t\"elapsed_time\":\t\t\t%12.2f,\n", data_get_elapsed(data));
+    printf("\t\"data_transferred\":\t\t%12.2f,\n", data_get_megabytes(data)); /*%12llu*/
+    printf("\t\"response_time\":\t\t%12.2f,\n", data_get_response_time(data));
+    printf("\t\"transaction_rate\":\t\t%12.2f,\n", data_get_transaction_rate(data));
+    printf("\t\"throughput\":\t\t\t%12.2f,\n", data_get_throughput(data));
+    printf("\t\"concurrency\":\t\t\t%12.2f,\n", data_get_concurrency(data));
+    printf("\t\"successful_transactions\":\t%12u,\n", data_get_code(data));
+
+    if (my.debug) {
+      printf("\t\"http_ok_received\":\t\t%12u,\n", data_get_okay(data));
+    }
+
+    printf("\t\"failed_transactions\":\t\t%12u,\n", my.failed);
+    printf("\t\"longest_transaction\":\t\t%12.2f,\n", data_get_highest(data));
+    printf("\t\"shortest_transaction\":\t\t%12.2f\n", data_get_lowest(data));
+    puts("}");
+  }
+
   if (my.mark)    mark_log_file(my.markstr);
   if (my.logging) {
     log_transaction(data);

@@ -166,6 +166,7 @@ cache_get_header(CACHE this, CTYPE type, URL U)
   DATE  e   = NULL;
   char *key = NULL;
   char *exp = NULL;
+  char *ptr = NULL;
   char  tmp[256];
 
   /**
@@ -208,7 +209,6 @@ cache_get_header(CACHE this, CTYPE type, URL U)
 
   memset(tmp, '\0', 256);
   switch (type) {
-    char *ptr = NULL;
     case C_ETAG:
       ptr = strdup(date_get_etag(d)); // need a local copy 
       if (empty(ptr)) return "";      // should never happen

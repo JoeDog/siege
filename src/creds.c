@@ -45,7 +45,10 @@ new_creds(SCHEME scheme, char *str)
   CREDS this;
 
   this = calloc(sizeof(struct CREDS_T), 1);
-  this->scheme = scheme;
+  this->scheme   = scheme;
+  this->username = NULL;
+  this->password = NULL;
+  this->realm    = NULL;
   __parse_input(this, str);
   return this;
 }
@@ -53,10 +56,10 @@ new_creds(SCHEME scheme, char *str)
 CREDS
 creds_destroy(CREDS this)
 {
-  free(this->username);
-  free(this->password);
-  free(this->realm);
-  free(this);
+  xfree(this->username);
+  xfree(this->password);
+  xfree(this->realm);
+  xfree(this);
   return NULL;
 }
 

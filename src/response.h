@@ -55,6 +55,7 @@ typedef enum { // content-encoding
 #define CONTENT_ENCODING    "content-encoding"
 #define CONTENT_LENGTH      "content-length"
 #define CONTENT_TYPE        "content-type"
+#define CONTENT_LOCATION    "content-location"
 #define ETAG                "etag"
 #define EXPIRES             "expires"
 #define KEEPALIVE_MAX       "keepalive-max"

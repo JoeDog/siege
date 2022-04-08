@@ -1,20 +1,97 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
-2018/02/18 Benjamin Pearson <bpearson@squiz.com.au>
+2022/04/08 barryhunter via https://github.com/barryhunter
+ * src/parser.c           Refined match for META redirect 
+
+2022/03/21 cui fliter https://github.com/cuishuang
+ * src/browser.c          Fixed typos
+ * src/date.c             Fixed typos
+ * src/url.c              Fixed typos
+ * utils/siege2csv.in     Fixed typos
+
+2022/03/17 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/main.c             Silenced statistics output on -g/--get
+ * src/cookies.c          Improved domain matching, added my.get 
+ * src/ssl.c              Silenced a compiler warning
+ * src/version.c          Version increment: 4.1.2
+
+2021/07/14 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/browser.c          Added HTTP response 201 handler
+ * src/response.c         Added Content-Location handler
+ * src/response.h         Added CONTENT_LOCATION value
+ * src/http.c             Added Content-Location parser
+ * src/cfg.c              Added an escape handler for $ in URLs
+ * src/eval.c             Added function escape(str) to remove '\'
+ * src/ssl.c              Put ERR_remove_state inside ssl version
+ * src/url.c              Added fix for null path checking
+ * src/util.c             Fixed np_phtread_usleep for Solaris
+ * src/version.c          Version increment: 4.1.1
+
+2021/07/07 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/url.c              Removed leading / from ftp paths
+
+2021/07/07 midchildan https://github.com/midchildan
+ * src/browser.c          fixed: "--reps=once" 
+ * src/main.c             fixed: "--reps=once" 
+
+2021/07/04 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/init.c             Fixed password parsing # can be in pwd
+ * src/auth.c             Prettified credentials output for siege -C
+ * src/version.c          Version increment: 4.1.0
+
+2021/04/17 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/cookie.c           Added NULL checks for getters
+ * version.c              Version increment: 4.0.9
+
+2021/04/17 Vedran Miletic https://github.com/vedranmiletic
+ * src/main.c             Prettified json
+
+2021/03/17 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/hash.c             Added explicit include of sys/types.h
+ * src/version.c          Version increment: 4.0.8; Copyright 2021
+
+2021/03/16 Zosecer https://github.com/zosecer
+ * src/parser.c           Added handling for null pointer detection
+
+2020/07/11 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/cookie.c           Fixed an issue with expires
+ * src/cookies.c          Fixed an issue with persistence
+ * src/version.c          Version increment: 4.0.7
+
+2020/07/11 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/init.c             Minor bug fix
+ * src/auth.c             Fixed initialization error
+ * src/version.c          Version increment: 4.0.6
+
+2020/07/10 Jeffrey Fulmer http://www.joedog.org/support/
+ * src/creds.c            Fixed an initialization problem
+ * src/cookies.c          Fixed locking issue
+ * src/url.c              Fixed an initialization problem
+ * src/init.c             Fixed an initialization problem
+ * src/memory.c           Formatting change
+ * src/version.c          Version increment: 4.0.5
+
+2020/02/10 Ben Baker-Smith <ben@DELETEbaker-smith.net>
+ * src/main.c             Added -j/--json-output 
+ * src/init.c             Added -j/--json-output - force quiet mode
+ * src/setup.h            Added variable for json output
+ * doc/siegerc.in         Added documentation to the config file
+
+2018/02/18 Benjamin Pearson <bpearson@DELETEsquiz.com.au>
  * src/url.c              Adding DELETE and OPTIONS support.
  * src/browser.c          Adding DELETE and OPTIONS support.
 
-2018/02/18 "Mr. Baileys" <ivo@vangeertruyen.be>
+2018/02/18 "Mr. Baileys" <ivo@DELETEvangeertruyen.be>
  * src/http.c            Correct capitalization for Content-Type & Content-Length
 
-2018/02/18 root <root@tester.gc-system.cz>
+2018/02/18 root <root@DELETEtester.gc-system.cz>
  * src/response.c        Handle case of incorrect server response header
 
-2018/02/18 Viktor Szepe <viktor@szepe.net>
+2018/02/18 Viktor Szepe <viktor@DELETEszepe.net>
  * README.md              Make readme's title nice
 
-2018/02/18 Michael McConville <mmcco@mykolab.com>
+2018/02/18 Michael McConville <mmcco@DELETEmykolab.com>
  * src/page.c             Remove needless memset(2)
 
 2018/02/18 James Wang <https://github.com/wjn740>

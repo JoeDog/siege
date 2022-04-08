@@ -220,6 +220,7 @@ start(BROWSER this)
 {
   int x;
   int y;
+  int max_y;
   int ret;
   int len; 
   this->conn  = NULL;
@@ -260,6 +261,7 @@ start(BROWSER this)
 
   len = (my.reps == -1) ? (int)array_length(this->urls) : my.reps;
   y   = (my.reps == -1) ? 0 : this->id * (my.length / my.cusers);
+  max_y = (int)array_length(this->urls);
   for (x = 0; x < len; x++, y++) {
     x = ((my.secs > 0) && ((my.reps <= 0)||(my.reps == MAXREPS))) ? 0 : x;
     if (my.internet == TRUE) {
@@ -273,14 +275,14 @@ start(BROWSER this)
        * with clean slate, ie. reset (delete) cookies (eg. to let a new
        * session start)
        */
-      if (y >= my.length) {
+      if (y >= max_y) {
         y = 0;
         if (my.expire) {
           cookies_delete_all(my.cookies);
         }
       }
     }
-    if (y >= my.length || y < 0) {
+    if (y >= max_y || y < 0) {
       y = 0;
     }
 
@@ -603,6 +605,18 @@ __http(BROWSER this, URL U)
         redirect_url = url_destroy(redirect_url);
       }
       break;
+    case 201:
+      if (my.follow && response_get_location(resp) != NULL) {
+        redirect_url = url_normalize(U, response_get_location(resp));
+        if (empty(url_get_hostname(redirect_url))) {
+          url_set_hostname(redirect_url, url_get_hostname(U));
+        }
+        if ((__request(this, redirect_url)) == FALSE) {
+          redirect_url = url_destroy(redirect_url);
+          return FALSE;
+        }
+      }
+      break;
     case 301:
     case 302:
     case 303:
@@ -667,7 +681,6 @@ __http(BROWSER this, URL U)
           this->auth.type.www =  BASIC;
           auth_set_basic_header(my.auth, HTTP, response_get_www_auth_realm(resp));
         }
-        printf("%s %d\n", url_get_absolute(U), url_get_method(U));
         if ((__request(this, U)) == FALSE) {
           fprintf(stderr, "ERROR from http_request\n");
           return FALSE;
@@ -736,7 +749,7 @@ __ftp(BROWSER this, URL U)
 {
   int     pass;
   int     fail;
-  int     code = 0;      // capture the relevent return code
+  int     code = 0;      // capture the relevant return code
   float   etime;         // elapsed time
   CONN    *D    = NULL;  // FTP data connection
   size_t  bytes = 0;     // bytes from server

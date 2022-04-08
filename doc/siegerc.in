@@ -27,14 +27,13 @@
 verbose = true
 
 #
-# Color mode: This option works in conjuction with verbose mode. 
+# Color mode: This option works in conjunction with verbose mode.
 # It tells siege whether or not it should display its output in
 # color-coded output. (Enabled by default)
 #
 # ex: color = on | off
 # 
 color = on
-
 
 #
 # Quiet mode: With this featured enabled, siege goes mostly silent.
@@ -59,6 +58,17 @@ color = on
 # Ex: quiet = true
 #
 quiet = false
+
+#
+# JSON output - With this feature enabled, siege will print the final stats as
+# JSON to stdout. It monopolizes stdout, superceding verbose and debug modes.
+#
+# The default value is false.
+#
+# ex: json_output = true | false
+#
+json_output = false
+
 
 #
 # Show logfile location. By default, siege displays the logfile 
@@ -541,7 +551,7 @@ unique = true
 
 #
 # SSL-cert: This optional feature allows you to specify a path to a client
-# certificate. It is not neccessary to specify a certificate in order to use
+# certificate. It is not necessary to specify a certificate in order to use
 # https. If you don't know why you would want one, then you probably don't need
 # it.  Use openssl to generate a certificate and key with the following command:
 #

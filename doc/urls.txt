@@ -10,7 +10,18 @@
 #      or POST content from a file:
 # http://www.whoohoo.com/melvin.jsp POST </home/jeff/haha
 # http://www.whoohoo.com/melvin.jsp POST <./haha
-# You may also set and reference variables inside this file,
-# for more information, man urls_txt
+# 
+# You may also assign and reference variables inside this file:
+# HOST=www.joedog.org
+# PROT=https  # Secure protocol
+# PORT=443    # Default https port
+# 
+# $(PROT)://$(HOST):$(PORT)/siege/jsoner.php?haha=papa
+# $(PROT)://$(HOST)/siege/jsoner.php?day=%2332
+# $(PROT)://$(HOST)/siege/jsoner.php POST {haha:papa}
+# 
+# Since $ is used to prefix scalar variables, you have to escape 
+# them if you want to pass them to the server: 
+# $(PROT)://$(HOST)/siege/jsoner.php?amount=\$10.00&cost=\$12.99
 # -------------------------------------------------------
 

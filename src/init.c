@@ -119,6 +119,7 @@ init_config( void )
   my.timestamp      = FALSE;
   my.chunked        = FALSE;
   my.unique         = TRUE;
+  my.json_output    = FALSE;
   my.extra[0]       = 0;
   my.follow         = TRUE;
   my.zero_ok        = TRUE; 
@@ -237,6 +238,7 @@ show_config(int EXIT)
   printf("allow zero byte data:           %s\n", my.zero_ok?"true":"false"); 
   printf("allow chunked encoding:         %s\n", my.chunked?"true":"false"); 
   printf("upload unique files:            %s\n", my.unique?"true":"false"); 
+  printf("json output:                    %s\n", my.json_output?"true":"false");
   if (my.parser == TRUE && my.nomap->index > 0) {
     int i;
     printf("no-follow:\n"); 
@@ -260,12 +262,14 @@ show_config(int EXIT)
 int
 readline(char **s, FILE *fp)
 {
-  int  c;
-  int  i;
-  int  len  = 0;
-  int  size = 0;
-  char *tmp = NULL;
-  char *ptr = NULL;
+  int     c;
+  int     i;
+  int     len  = 0;
+  int     size = 0;
+  char    *tmp = NULL;
+  char    *ptr = NULL;
+  char    *txt = NULL;
+  BOOLEAN lop  = TRUE;
 
   ptr  = xmalloc(LINESZ);
   size = LINESZ;
@@ -303,9 +307,22 @@ readline(char **s, FILE *fp)
     ptr = tmp;
   }
   ptr[len] = '\0';
-
+ 
+  /**
+   * This condition is a band-aid. Some passwords 
+   * contain '#' which are treated like comments in
+   * the siege.conf file. So if a line begins with 
+   * login, we won't treat '#' as a comment. If lop
+   * is FALSE, we won't null out the line. 
+   */
+  txt = strdup(ptr);
+  trim(txt);
+  if (strncmp(txt, "login", 5) == 0) {
+    lop = FALSE;
+  } 
+  xfree(txt);
   for (i = 0; ptr[i] != '\0'; i++) {
-    if (ptr[i] == '#') {
+    if (ptr[i] == '#' && lop == TRUE) {
       ptr[i] = '\0';
     }
   }
@@ -586,6 +603,12 @@ load_conf(char *filename)
       else
         my.unique = FALSE;  
     }
+    else if (strmatch(option, "json_output")) {
+      if (!strncasecmp(value, "true", 4))
+        my.json_output = TRUE;
+      else
+        my.json_output = FALSE;
+    }
     else if (strmatch(option, "header")) {
       if (!strchr(value,':')) NOTIFY(FATAL, "no ':' in http-header");
       if ((strlen(value) + strlen(my.extra) + 3) > 512) NOTIFY(FATAL, "too many headers");
@@ -679,8 +702,12 @@ ds_module_check(void)
     my.logging = FALSE;
     my.bench   = TRUE;
   }
-  
-  if (my.quiet) { 
+
+  if (my.json_output) {
+    my.quiet = TRUE;
+  }
+
+  if (my.quiet) {
     my.verbose = FALSE; // Why would you set quiet and verbose???
     my.debug   = FALSE; // why would you set quiet and debug?????
   }

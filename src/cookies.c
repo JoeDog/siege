@@ -9,6 +9,7 @@
 #include <array.h>
 #include <hash.h>
 #include <perl.h>
+#include <setup.h>
 #include <memory.h>
 #include <notify.h>
 #include <cookies.h>
@@ -23,28 +24,27 @@ struct COOKIES_T {
   NODE *          head;
   size_t          size;
   char *          file;
-  pthread_mutex_t mutex;
 };
 
 private NODE *  __delete_node(NODE *node);
 private BOOLEAN __exists(char *file);
 private BOOLEAN __save_cookies(COOKIES this);
+private BOOLEAN __endswith(const char *str, const char *suffix);
 
 COOKIES
 new_cookies() {
+  int len;
   COOKIES this;
+  char    name[] = "/.siege/cookies.txt";
 
   this = calloc(sizeof(struct COOKIES_T), 1);
   this->size = 0;
-  if (pthread_mutex_init( &(this->mutex), NULL) != 0) {
-    NOTIFY(FATAL, "cookies: pthread_mutex_init");
-  } 
-  int len;
   char *p = getenv("HOME");
-  len = p ? strlen(p) : 20;
-  this->file = malloc(sizeof (char*) * len);
+  len = p ? strlen(p) : 60;
+  len += strlen(name)+1;
+  this->file = xmalloc(sizeof (char*) * len);
   memset(this->file, '\0', len);
-  snprintf(this->file, len, "%s/.siege/cookies.txt", getenv("HOME"));
+  snprintf(this->file, len, "%s%s", getenv("HOME"), name);
   return this;
 }
 
@@ -52,15 +52,12 @@ COOKIES
 cookies_destroy(COOKIES this) 
 {
   NODE *cur     = NULL; 
-  pthread_mutex_lock(&(this->mutex));
   __save_cookies(this);
   cur = this->head;
   while (cur) {
     cur = __delete_node(cur);
   }
   xfree(this->file);
-  pthread_mutex_unlock(&(this->mutex));
-  pthread_mutex_destroy(&(this->mutex));
   free(this);
   return NULL;
 }
@@ -69,31 +66,26 @@ BOOLEAN
 cookies_add(COOKIES this, char *str, char *host)
 {
   size_t  id    = pthread_self();
-  int     hlen  = 0;
-  int     dlen  = 0;
+  //int     hlen  = 0;
+  //int     dlen  = 0;
   NODE   *cur   = NULL; 
   NODE   *pre   = NULL; 
   NODE   *new   = NULL;
   BOOLEAN found = FALSE;
   BOOLEAN valid = FALSE;
   COOKIE  oreo  = new_cookie(str, host);
-
   if (oreo == NULL) return FALSE;
   if (cookie_get_name(oreo) == NULL || cookie_get_value(oreo) == NULL) return FALSE;
-
-  pthread_mutex_lock(&(this->mutex));
   for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
     const char *domainptr = cookie_get_domain(cur->cookie);
     if (*domainptr == '.') ++domainptr;
-    hlen = host      ? strlen(host)      : 0;
-    dlen = domainptr ? strlen(domainptr) : 0;
-    if (! strcasecmp(host, domainptr)) {
-      valid = TRUE; // host level cookie found
+    //hlen = host      ? strlen(host)      : 0;
+    //dlen = domainptr ? strlen(domainptr) : 0;
+    if (__endswith(host, domainptr)){
+      valid = TRUE;
     }
-    if (! valid && (dlen < hlen) && (! strcasecmp(host + (hlen - dlen), domainptr))) {
-      valid = TRUE; // domain level cookie found
-    }
-    if (valid && cur->threadID == id && !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
+    if (valid && cur->threadID == id && 
+        !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
       cookie_reset_value(cur->cookie, cookie_get_value(oreo));
       oreo  = cookie_destroy(oreo);
       found = TRUE;
@@ -111,7 +103,6 @@ cookies_add(COOKIES this, char *str, char *host)
     else
       pre->next  = new;
   }
-  pthread_mutex_unlock(&(this->mutex));
 
   return TRUE;
 }
@@ -128,7 +119,6 @@ cookies_delete(COOKIES this, char *str)
     if (cur->threadID == id) {
       char *name    = cookie_get_name(cur->cookie);
       if (!strcasecmp(name, str)) {
-        //NOTIFY(DEBUG, "%s:%d cookie deleted: %ld => %s\n",__FILE__, __LINE__, (long)id, str);
         cur->cookie = cookie_destroy(cur->cookie);
         pre->next   = cur->next;
         if (cur == this->head) {
@@ -172,8 +162,6 @@ cookies_delete_all(COOKIES this)
 char *
 cookies_header(COOKIES this, char *host, char *newton)
 {
-  int   dlen; 
-  int   hlen;
   NODE  *pre;
   NODE  *cur;
   time_t tmp;
@@ -183,9 +171,7 @@ cookies_header(COOKIES this, char *host, char *newton)
   size_t id = pthread_self();
 
   memset(oreo, '\0', sizeof oreo);
-  hlen = strlen(host);
 
-  pthread_mutex_lock(&(this->mutex));
   tmp = time(NULL);
   gmtime_r(&tmp, &tm);
   tm.tm_isdst = -1; // force mktime to figure it out!
@@ -197,20 +183,8 @@ cookies_header(COOKIES this, char *host, char *newton)
      */
     const char *domainptr = cookie_get_domain(cur->cookie);
     if (*domainptr == '.') ++domainptr;
-    dlen = domainptr ? strlen(domainptr) : 0;
-    if (cur->threadID == id) {
-      if (!strcasecmp(domainptr, host)) {
-        if (cookie_get_expires(cur->cookie) <= now && cookie_get_session(cur->cookie) != TRUE) {
-          cookies_delete(this, cookie_get_name(cur->cookie));
-          continue;
-        }
-        if (strlen(oreo) > 0)
-          strncat(oreo, ";",      sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_name(cur->cookie),  sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, "=",        sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_value(cur->cookie), sizeof(oreo) - 10 - strlen(oreo));
-      }
-      if ((dlen < hlen) && (!strcasecmp(host + (hlen - dlen), domainptr))) {
+    if (my.get || cur->threadID == id) {
+      if (__endswith(host, domainptr)) {
         if (cookie_get_expires(cur->cookie) <= now && cookie_get_session(cur->cookie) != TRUE) {
           cookies_delete(this, cookie_get_name(cur->cookie));
           continue;
@@ -228,7 +202,6 @@ cookies_header(COOKIES this, char *host, char *newton)
     strncat(newton, oreo,       MAX_COOKIE_SIZE);
     strncat(newton, "\015\012", 2);
   }
-  pthread_mutex_unlock(&(this->mutex));
 
   return newton;
 }
@@ -358,6 +331,7 @@ __save_cookies(COOKIES this)
   now = time(NULL);
   fp  = fopen(this->file, "w");
   if (fp == NULL) {
+    fprintf(stderr, "ERROR: Unable to open cookies file: %s\n", this->file);
     return FALSE;
   }
   fputs("#\n", fp);
@@ -398,16 +372,35 @@ __exists(char *file)
 {
   int  fd;
 
-  /* open the file read only  */
   if ((fd = open(file, O_RDONLY)) < 0) {
-  /* the file does NOT exist  */
-    close(fd);
+    /**
+     * The file does NOT exist so the descriptor is -1
+     * No need to close it.
+     */
     return FALSE;
   } else {
-  /* party on Garth... */
+    /** 
+     * Party on Garth... 
+     */
     close(fd);
     return TRUE;
   }
-
   return FALSE;
 }
+
+
+private BOOLEAN 
+__endswith(const char *str, const char *suffix)
+{
+  if (!str || !suffix)
+    return FALSE;
+  size_t lenstr = strlen(str);
+  size_t lensuffix = strlen(suffix);
+  if (lensuffix >  lenstr)
+    return FALSE;
+  if (! strncmp(str + lenstr - lensuffix, suffix, lensuffix)) {
+    return TRUE;
+  }
+  return FALSE;
+}
+

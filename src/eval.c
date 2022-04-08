@@ -34,6 +34,35 @@
 #include <util.h>
 
 char *
+escape(char *buf)
+{
+  size_t i = 0;
+  size_t len;
+  char   *res;
+  char   fin[BUFSIZE];
+
+  res = xrealloc(buf, BUFSIZE * sizeof(char));
+  if (res != NULL) {
+    buf = res;
+  }
+
+  len = strlen(buf);
+  while (i < len && buf[i] != '\\') {
+    i++;
+  }  
+
+  while (i < len) {
+    buf[i] = buf[i + 1];
+    i++;  
+  }
+  buf[len] = '\0';
+  strncpy(fin, buf, len);
+  memset(res, '\0', BUFSIZE * sizeof(char));
+  strncpy(res, fin, strlen(fin));
+  return res; 
+}
+
+char *
 evaluate(HASH hash, char *buf)
 {
   int  x   = 0;
@@ -75,7 +104,7 @@ evaluate(HASH hash, char *buf)
   }
  
   memset(final, '\0', sizeof final);
-  strncpy( final, buf, len);
+  strncpy(final, buf, len);
   if (string != NULL) {
     strcat(final, ENV==0?(char*)hash_get(hash, string):getenv(string));
   }

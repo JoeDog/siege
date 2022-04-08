@@ -45,6 +45,9 @@ new_cookie(char *str, char *host)
   COOKIE this;
 
   this = calloc(sizeof(struct COOKIE_T), 1);
+  this->name    = NULL;
+  this->value   = NULL;
+  this->domain  = NULL;
   this->expires = 0;
   this->expstr  = NULL;
   this->string  = NULL;
@@ -125,7 +128,7 @@ cookie_set_expires(COOKIE this, time_t expires)
 char *
 cookie_get_name(COOKIE this) 
 {
-  if (this->name == NULL) 
+  if (this == NULL && this->name == NULL) 
     return this->none;
   return this->name;
 }
@@ -138,7 +141,7 @@ cookie_get_name(COOKIE this)
 char * 
 cookie_get_value(COOKIE this) 
 {
-  if (this->value == NULL) 
+  if (this == NULL && this->value == NULL) 
     return this->none;
   return this->value;
 }
@@ -149,7 +152,7 @@ cookie_get_value(COOKIE this)
 char *
 cookie_get_domain(COOKIE this)
 {
-  if (this->domain == NULL) 
+  if (this == NULL && this->domain == NULL) 
     return this->none;
   return this->domain;
 }
@@ -160,7 +163,7 @@ cookie_get_domain(COOKIE this)
 char * 
 cookie_get_path(COOKIE this)
 {
-  if (this->path == NULL)
+  if (this == NULL && this->path == NULL)
     return this->none;
   return this->path;
 }
@@ -168,12 +171,16 @@ cookie_get_path(COOKIE this)
 time_t 
 cookie_get_expires(COOKIE this)
 {
+  if (this == NULL) 
+    return -1;
   return this->expires;
 }
 
 BOOLEAN
 cookie_get_session(COOKIE this)
 {
+  if (this == NULL) 
+    return TRUE;
   return this->session;
 }
 
@@ -286,6 +293,29 @@ __parse_input(COOKIE this, char *str, char *host)
         this->session = FALSE;
         this->expires = expires;
       } // else this->expires was initialized 0 in the constructor
+    } else if (!strncasecmp(key, "max-age", 7)) {
+      struct tm *gmt;
+      long   max = -1;
+      time_t now = time(NULL);
+      gmt = gmtime(&now);
+      now = mktime(gmt);
+      max = atof(val);
+      if (max != -1) {
+        /**
+         * XXX: This "works" but I can't implement it until I understand the hour diff
+         *
+        time_t tmp = now+max-3600;
+        char buf1[20];
+        char buf2[20];
+        strftime(buf1, 20, "%Y-%m-%d %H:%M:%S", localtime(&this->expires));
+        strftime(buf2, 20, "%Y-%m-%d %H:%M:%S", localtime(&tmp));
+        printf("!!!!!!!!!!!!!!! %ld  %ld !!!!!!!!!!!!!!!\n", this->expires, tmp);
+        printf("expires: %s\n", buf1);
+        printf("max-age: %s\n", buf2);
+        this->expires = tmp; // I can't use this until I understand the hour diff
+         */
+        this->session = FALSE;
+      }
     } else if (!strncasecmp(key, "path", 4))   {
       this->path = strdup(val);
     } else if (!strncasecmp(key, "domain", 6)) {

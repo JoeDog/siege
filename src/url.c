@@ -91,10 +91,29 @@ URL
 new_url(char *str)
 {
   URL this;
-  this = xcalloc(sizeof(struct URL_T), 1);
-  this->ID = 0;
+  this = xmalloc(URLSIZE);
+  this->ID        = 0;
+  this->scheme    = HTTP;
   this->hasparams = FALSE;
   this->params    = NULL;
+  this->redir     = FALSE;
+  this->method    = GET;
+  this->username  = NULL;
+  this->password  = NULL;
+  this->hostname  = NULL;
+  this->port      = 80;
+  this->path      = NULL;
+  this->file      = NULL;
+  this->params    = NULL;
+  this->hasparams = FALSE;
+  this->query     = NULL;
+  this->frag      = NULL;
+  this->request   = NULL;
+  this->postlen   = 0;
+  this->postdata  = NULL;
+  this->posttemp  = NULL;
+  this->conttype  = NULL;
+  this->cached    = FALSE;
   this->redir     = FALSE;
   __url_parse(this, str); 
   return this;
@@ -108,7 +127,9 @@ url_destroy(URL this)
     xfree(this->username);
     xfree(this->password);
     xfree(this->hostname);
-    xfree(this->path);
+    if (this->path != NULL && this->path[0] != '\0') {
+      xfree(this->path);
+    }
     xfree(this->file);
     xfree(this->query);
     xfree(this->frag);
@@ -475,7 +496,7 @@ url_normalize(URL req, char *location)
 
   if ((location[0] != '/') && location[0] != '.' && (strchr(location, '.') != NULL && strchr(location, '/') != NULL)) {
     /**
-     * This is probably host/path; it doesn't start with relevent path 
+     * This is probably host/path; it doesn't start with relevant path
      * indicators and it contains the hallmarks of host/path namely at
      * least one dot and slash
      */
@@ -930,7 +951,7 @@ __url_set_port(URL this, char *str)
 private char *
 __url_set_path(URL this, char *str)
 {
-  int   i;    // capture the lenght of the path
+  int   i;    // capture the length of the path
   int   j;    // capture the length of the request (sans frag)
   char *c;
 
@@ -955,17 +976,24 @@ __url_set_path(URL this, char *str)
   for (j = 0; str[j] && (str[j] != '#' && !isspace(str[j])); j++);
 
   if (str[i] != '/') {
-    this->path    = xmalloc(2);
-    this->request = xmalloc(2);
-    strncpy(this->path,    "/", 2);
-    strncpy(this->request, "/", 2);
-    this->path[1]    = '\0';
-    this->request[1] = '\0';
+    if (this->scheme == FTP) {
+      this->path    = "";
+    } else {
+      this->path    = xmalloc(2);
+      this->request = xmalloc(2);
+      strncpy(this->path,    "/", 2);
+      strncpy(this->request, "/", 2);
+      this->path[1]    = '\0';
+      this->request[1] = '\0';
+    }
   } else {
     this->path    = xmalloc(i+2);
     memcpy(this->path, str, i+1);
     this->path[i] = '/';
     this->path[i + 1]    = '\0';
+    if (this->scheme == FTP && this->path[0] == '/') {
+      memmove(this->path, this->path+1, strlen(this->path));
+    }
   }
   trim(this->request);
   str += i + 1;
@@ -1012,7 +1040,9 @@ __url_set_parameters(URL this, char *str)
   int i;
 
   if (str==NULL) return NULL;
-  if (this->params != NULL && strlen(this->params) > 1) return str;
+  if (this->params != NULL && strlen(this->params) > 1) {
+    return str;
+  }
 
   if (this->hasparams == FALSE) {
     this->params = "";

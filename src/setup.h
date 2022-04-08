@@ -217,6 +217,7 @@ struct CONFIG
   char    *ssl_key;     /* PEM private key file for client auth    */
   char    *ssl_ciphers; /* SSL chiphers to use : delimited         */ 
   METHOD  method;       /* HTTP method for --get requests          */
+  BOOLEAN json_output;  /* boolean, TRUE == print stats in json    */
   pthread_cond_t  cond;
   pthread_mutex_t lock;
 };
