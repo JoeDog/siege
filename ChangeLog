@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2022/04/08 barryhunter via https://github.com/barryhunter
+ * src/parser.c           Refined match for META redirect 
+
 2022/03/21 cui fliter https://github.com/cuishuang
  * src/browser.c          Fixed typos
  * src/date.c             Fixed typos
