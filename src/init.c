@@ -440,7 +440,7 @@ load_conf(char *filename)
         my.shlog = FALSE;
     }
     else if (strmatch(option, "logfile")) {
-      strncpy(my.logfile, value, sizeof(my.logfile)); 
+      xstrncpy(my.logfile, value, sizeof(my.logfile)); 
     } 
     else if (strmatch(option, "concurrent")) {
       if (value != NULL) {
@@ -518,14 +518,13 @@ load_conf(char *filename)
       } 
     }
     else if (strmatch(option, "file")) {
-      memset(my.file, 0, sizeof(my.file));
-      strncpy(my.file, value, sizeof(my.file));
+      xstrncpy(my.file, value, sizeof(my.file));
     }
     else if (strmatch(option, "url")) {
       my.url = stralloc(value);
     }
     else if (strmatch(option, "user-agent")) {
-      strncpy(my.uagent, value, sizeof(my.uagent));
+      xstrncpy(my.uagent, value, sizeof(my.uagent));
     }
     else if (strmatch(option, "accept-encoding")) {
       BOOLEAN compress = FALSE;
@@ -535,7 +534,7 @@ load_conf(char *filename)
       if (compress == TRUE && zlib == FALSE) {
         NOTIFY(WARNING, "Zip encoding disabled; siege requires zlib support to enable it");
       } else {
-        strncpy(my.encoding, value, sizeof(my.encoding));
+        xstrncpy(my.encoding, value, sizeof(my.encoding));
       }
     }
     #if 1
