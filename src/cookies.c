@@ -26,6 +26,7 @@ struct COOKIES_T {
   char *          file;
 };
 
+
 private NODE *  __delete_node(NODE *node);
 private BOOLEAN __exists(char *file);
 private BOOLEAN __save_cookies(COOKIES this);
@@ -198,7 +199,7 @@ cookies_header(COOKIES this, char *host, char *newton)
     }
   }
   if (strlen(oreo) > 0) {
-    strncpy(newton, "Cookie: ", 8);
+    strncpy(newton, "Cookie: ", 9);
     strncat(newton, oreo,       MAX_COOKIE_SIZE);
     strncat(newton, "\015\012", 2);
   }
