@@ -105,7 +105,7 @@ display_version(BOOLEAN b)
   char name[128]; 
 
   memset(name, 0, sizeof name);
-  strncpy(name, program_name, strlen(program_name));
+  strncpy(name, program_name, sizeof(name));
 
   if(my.debug){
     fprintf(stderr,"%s %s: debugging enabled\n\n%s\n", uppercase(name, strlen(name)), version_string, copyright);
@@ -242,8 +242,11 @@ parse_cmdline(int argc, char *argv[])
       case 'l':
         my.logging = TRUE;
         if (optarg) {
-          my.logfile[strlen(optarg)] = '\0';
-          strncpy(my.logfile, optarg, strlen(optarg));
+          if (strlen(optarg) > sizeof(my.logfile)) {
+            fprintf(stderr, "ERROR: -l/--logfile is limited to %ld in length", sizeof(my.logfile));
+            exit(1);
+          }
+          xstrncpy(my.logfile, optarg, strlen(optarg)+1);
         } 
         break;
       case 'm':
@@ -268,9 +271,8 @@ parse_cmdline(int argc, char *argv[])
         parse_time(optarg);
         break;
       case 'f':
-        memset(my.file, 0, sizeof(my.file));
         if(optarg == NULL) break; /*paranoia*/
-        strncpy(my.file, optarg, strlen(optarg));
+        xstrncpy(my.file, optarg, strlen(optarg)+1);
         break;
       case 'A':
         strncpy(my.uagent, optarg, 255);
