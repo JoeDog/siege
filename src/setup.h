@@ -150,74 +150,74 @@ void display_version(BOOLEAN b);
  */
 struct CONFIG
 {
-  BOOLEAN logging;      /* boolean, log transactions to log file   */
-  BOOLEAN shlog;        /* show log file configuration directive.  */
-  int     limit;        /* Limits the thread count to int          */
-  char    *url;         /* URL for the single hit invocation.      */
-  char    logfile[128]; /* alternative user defined simbot.log     */ 
-  BOOLEAN verbose;      /* boolean, verbose output to screen       */
-  BOOLEAN quiet;        /* boolean, turn off all output to screen  */
-  BOOLEAN parser;       /* boolean, turn on/off the HTML parser    */
-  BOOLEAN csv;          /* boolean, display verbose output in CSV  */
-  BOOLEAN fullurl;      /* boolean, display full url in verbose    */
-  BOOLEAN display;      /* boolean, display the thread id verbose  */
-  BOOLEAN config;       /* boolean, prints the configuration       */
-  BOOLEAN color;        /* boolean, true for color, false for not  */
-  int     cusers;       /* default concurrent users value.         */
-  float   delay;        /* range for random time delay, see -d     */
-  int     timeout;      /* socket connection timeout value, def:10 */
-  BOOLEAN bench;        /* signifies a benchmarking run, no delay  */
-  BOOLEAN internet;     /* use random URL selection if TRUE        */
-  BOOLEAN timestamp;    /* timestamp the output                    */
-  int     time;         /* length of the siege in hrs, mins, secs  */
-  int     secs;         /* time value for the lenght of the siege  */
-  int     reps;         /* reps to run the test, default infinite  */ 
-  char    file[128];    /* urls.txt file, default in joepath.h     */
-  int     length;       /* length of the urls array, made global   */
-  LINES * nomap;        /* list of hosts to not follow             */
-  BOOLEAN debug;        /* boolean, undocumented debug command     */
-  BOOLEAN chunked;      /* boolean, accept chunked encoding        */
-  BOOLEAN unique;       /* create unique files for upload          */
-  BOOLEAN get;          /* get header information for debugging    */ 
-  BOOLEAN print;        /* get header and page for debugging       */ 
-  BOOLEAN mark;         /* signifies a log file mark req.          */ 
-  char    *markstr;     /* user defined string value to mark file  */
-  int     protocol;     /* 0=HTTP/1.0; 1=HTTP/1.1                  */
-  COOKIES cookies;      /* cookies    */
-  char uagent[256];     /* user defined User-Agent string.         */
-  char encoding[256];   /* user defined Accept-Encoding string.    */
-  char conttype[256];   /* user defined default content type.      */
-  int  bids;            /* W & P authorization bids before failure */
+  BOOLEAN logging;       /* boolean, log transactions to log file   */
+  BOOLEAN shlog;         /* show log file configuration directive.  */
+  int     limit;         /* Limits the thread count to int          */
+  char    *url;          /* URL for the single hit invocation.      */
+  char    logfile[4096]; /* alternative logfile defined in siegerc  */ 
+  BOOLEAN verbose;       /* boolean, verbose output to screen       */
+  BOOLEAN quiet;         /* boolean, turn off all output to screen  */
+  BOOLEAN parser;        /* boolean, turn on/off the HTML parser    */
+  BOOLEAN csv;           /* boolean, display verbose output in CSV  */
+  BOOLEAN fullurl;       /* boolean, display full url in verbose    */
+  BOOLEAN display;       /* boolean, display the thread id verbose  */
+  BOOLEAN config;        /* boolean, prints the configuration       */
+  BOOLEAN color;         /* boolean, true for color, false for not  */
+  int     cusers;        /* default concurrent users value.         */
+  float   delay;         /* range for random time delay, see -d     */
+  int     timeout;       /* socket connection timeout value, def:10 */
+  BOOLEAN bench;         /* signifies a benchmarking run, no delay  */
+  BOOLEAN internet;      /* use random URL selection if TRUE        */
+  BOOLEAN timestamp;     /* timestamp the output                    */
+  int     time;          /* length of the siege in hrs, mins, secs  */
+  int     secs;          /* time value for the lenght of the siege  */
+  int     reps;          /* reps to run the test, default infinite  */ 
+  char    file[255];     /* urls.txt file, default in joepath.h     */
+  int     length;        /* length of the urls array, made global   */
+  LINES * nomap;         /* list of hosts to not follow             */
+  BOOLEAN debug;         /* boolean, undocumented debug command     */
+  BOOLEAN chunked;       /* boolean, accept chunked encoding        */
+  BOOLEAN unique;        /* create unique files for upload          */
+  BOOLEAN get;           /* get header information for debugging    */ 
+  BOOLEAN print;         /* get header and page for debugging       */ 
+  BOOLEAN mark;          /* signifies a log file mark req.          */ 
+  char    *markstr;      /* user defined string value to mark file  */
+  int     protocol;      /* 0=HTTP/1.0; 1=HTTP/1.1                  */
+  COOKIES cookies;       /* cookies    */
+  char uagent[256];      /* user defined User-Agent string.         */
+  char encoding[256];    /* user defined Accept-Encoding string.    */
+  char conttype[256];    /* user defined default content type.      */
+  int  bids;             /* W & P authorization bids before failure */
   AUTH auth;
-  BOOLEAN keepalive;    /* boolean, connection keep-alive value    */
-  int     signaled;     /* timed based testing notification bool.  */
-  char    extra[2048];  /* extra http request headers              */ 
+  BOOLEAN keepalive;     /* boolean, connection keep-alive value    */
+  int     signaled;      /* timed based testing notification bool.  */
+  char    extra[2048];   /* extra http request headers              */ 
   #if 0
   struct {
-    BOOLEAN required;   /* boolean, TRUE == use a proxy server.    */
-    char *hostname;     /* hostname for the proxy server.          */
-    int  port;          /* port number for proxysrv                */ 
-    char *encode;       /* base64 encoded username and password    */
+    BOOLEAN required;    /* boolean, TRUE == use a proxy server.    */
+    char *hostname;      /* hostname for the proxy server.          */
+    int  port;           /* port number for proxysrv                */ 
+    char *encode;        /* base64 encoded username and password    */
   } proxy;
   #endif
-  BOOLEAN login;        /* boolean, client must login first.       */
-  char    *loginurl;    /* XXX: deprecated the initial login URL   */
+  BOOLEAN login;         /* boolean, client must login first.       */
+  char    *loginurl;     /* XXX: deprecated the initial login URL   */
   ARRAY   lurl;
-  int     failures;     /* number of failed attempts before abort. */
-  int     failed;       /* total number of socket failures.        */
-  BOOLEAN escape;       /* boolean, TRUE == url-escaping           */
-  BOOLEAN expire;       /* boolean, TRUE == expire cookies ea. run */
-  BOOLEAN follow;       /* boolean, TRUE == follow 302             */
-  BOOLEAN zero_ok;      /* boolean, TRUE == zero bytes data is OK. */ 
-  BOOLEAN spinner;      /* boolean, TRUE == spin, FALSE not so much*/
-  BOOLEAN cache;        /* boolean, TRUE == cache revalidate       */
-  char    rc[256];      /* filename of SIEGERC file                */  
-  int     ssl_timeout;  /* SSL session timeout                     */
-  char    *ssl_cert;    /* PEM certificate file for client auth    */
-  char    *ssl_key;     /* PEM private key file for client auth    */
-  char    *ssl_ciphers; /* SSL chiphers to use : delimited         */ 
-  METHOD  method;       /* HTTP method for --get requests          */
-  BOOLEAN json_output;  /* boolean, TRUE == print stats in json    */
+  int     failures;      /* number of failed attempts before abort. */
+  int     failed;        /* total number of socket failures.        */
+  BOOLEAN escape;        /* boolean, TRUE == url-escaping           */
+  BOOLEAN expire;        /* boolean, TRUE == expire cookies ea. run */
+  BOOLEAN follow;        /* boolean, TRUE == follow 302             */
+  BOOLEAN zero_ok;       /* boolean, TRUE == zero bytes data is OK. */ 
+  BOOLEAN spinner;       /* boolean, TRUE == spin, FALSE not so much*/
+  BOOLEAN cache;         /* boolean, TRUE == cache revalidate       */
+  char    rc[256];       /* filename of SIEGERC file                */  
+  int     ssl_timeout;   /* SSL session timeout                     */
+  char    *ssl_cert;     /* PEM certificate file for client auth    */
+  char    *ssl_key;      /* PEM private key file for client auth    */
+  char    *ssl_ciphers;  /* SSL chiphers to use : delimited         */ 
+  METHOD  method;        /* HTTP method for --get requests          */
+  BOOLEAN json_output;   /* boolean, TRUE == print stats in json    */
   pthread_cond_t  cond;
   pthread_mutex_t lock;
 };
