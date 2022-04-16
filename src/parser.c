@@ -227,8 +227,7 @@ __parse_control(ARRAY array, URL base, char *html)
         if (strncasecmp(ptr, "href", 4) == 0) {
           ptr = strtok_r(NULL, CONTROL_TOKENS_QUOTES, &aid);
           if (ptr != NULL) {
-            memset(buf, '\0', sizeof(buf));
-            strncpy(buf, ptr, strlen(ptr));
+            xstrncpy(buf, ptr, strlen(ptr)+1);
           }
         }
       }
