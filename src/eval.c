@@ -56,9 +56,8 @@ escape(char *buf)
     i++;  
   }
   buf[len] = '\0';
-  strncpy(fin, buf, len);
-  memset(res, '\0', BUFSIZE * sizeof(char));
-  strncpy(res, fin, strlen(fin));
+  xstrncpy(fin, buf, len+1);
+  xstrncpy(res, fin, strlen(fin)+1);
   return res; 
 }
 
@@ -103,14 +102,12 @@ evaluate(HASH hash, char *buf)
     }
   }
  
-  memset(final, '\0', sizeof final);
-  strncpy(final, buf, len);
+  xstrncpy(final, buf, len+1);
   if (string != NULL) {
     strcat(final, ENV==0?(char*)hash_get(hash, string):getenv(string));
   }
   strcat(final, scan);
-  memset(result, '\0', BUFSIZE * sizeof(char));
-  strncpy(result, final, strlen(final));
+  xstrncpy(result, final, strlen(final)+1);
   
   xfree(string);
   return result;
