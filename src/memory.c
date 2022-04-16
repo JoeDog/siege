@@ -27,6 +27,14 @@
 #include <string.h>
 #include <stdarg.h>
 
+char * 
+xstrncpy(char* dest, const char*src, size_t n) 
+{
+  memset(dest, '\0', n);
+  memcpy(dest, src, strnlen(src, n-1));
+  return dest;
+}
+
 char *
 xstrdup(const char *str)
 {
