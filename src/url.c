@@ -1,7 +1,7 @@
 /**
  * URL Support
  *
- * Copyright (C) 2013-2015 
+ * Copyright (C) 2013-2022 
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * Copyright (C) 1999 by
  * Jeffrey Fulmer - <jeff@joedog.org>.
@@ -701,20 +701,20 @@ __url_set_absolute(URL this, char *url)
 
   if (!strncasecmp(url, "http:", 5)){
     n = 7;
-    strncpy(scheme, "http", 4);
+    strncpy(scheme, "http", 5);
   }
   if (!strncasecmp(url, "https:", 6)){
     n = 8;
-    strncpy(scheme, "https", 5);
+    strncpy(scheme, "https", 6);
   }
   if (!strncasecmp(url, "ftp:", 4)){
     n = 6;
-    strncpy(scheme, "ftp", 3);
+    strncpy(scheme, "ftp", 4);
   }
   if (strlen(scheme) < 3) {
     // A scheme wasn't supplied; we'll use http by default.
     n = 7;
-    strncpy(scheme, "http", 4);
+    strncpy(scheme, "http", 5);
   }
 
   len = strlen(url)+5;
@@ -1331,15 +1331,13 @@ __url_replace(char *url, const char *needle, const char *replacement)
     ins += rlen;
     tmp = p + nlen;
   }
+
   if (strlen(buf) > strlen(url)){
     str = (char *)realloc(url, strlen(buf)+1);
     if (str == NULL) {
       return;
     }
     url = str;
-    memset(url, '\0', strlen(buf)+1);
-  } else {
-    memset(url, '\0', strlen(url));
   }
-  strncpy(url, buf, strlen(buf));
+  xstrncpy(url, buf, strlen(buf)+1);
 }
