@@ -62,7 +62,7 @@ static long            *lock_count;
 unsigned long SSL_pthreads_thread_id(void);
 #ifdef  HAVE_SSL
 private  void SSL_error_stack(void); 
-private  void SSL_pthreads_locking_callback(int m, int t, char *f, int l);
+public   void SSL_pthreads_locking_callback(int mode, int type, char *file, int line);
 #endif/*HAVE_SSL*/
 
 BOOLEAN
@@ -232,7 +232,7 @@ SSL_thread_cleanup(void)
 #endif
 }
 
-private void 
+void 
 SSL_pthreads_locking_callback(int mode, int type, char *file, int line) 
 {
   if( my.debug == 4 ){
