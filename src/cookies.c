@@ -190,18 +190,19 @@ cookies_header(COOKIES this, char *host, char *newton)
           cookies_delete(this, cookie_get_name(cur->cookie));
           continue;
         }
-        if (strlen(oreo) > 0)
-          strncat(oreo, ";",      sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_name(cur->cookie),  sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, "=",        sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_value(cur->cookie), sizeof(oreo) - 10 - strlen(oreo));
+        if (strlen(oreo) > 0) {
+          xstrncat(oreo, ";",      sizeof(oreo) - 10 - strlen(oreo));
+        }
+        xstrncat(oreo, cookie_get_name(cur->cookie),  sizeof(oreo) - 10 - strlen(oreo));
+        xstrncat(oreo, "=",        sizeof(oreo) - 10 - strlen(oreo));
+        xstrncat(oreo, cookie_get_value(cur->cookie), sizeof(oreo) - 10 - strlen(oreo));
       }
     }
   }
   if (strlen(oreo) > 0) {
     strncpy(newton, "Cookie: ", 9);
-    strncat(newton, oreo,       MAX_COOKIE_SIZE);
-    strncat(newton, "\015\012", 2);
+    xstrncat(newton, oreo,       MAX_COOKIE_SIZE);
+    xstrncat(newton, "\015\012", 2);
   }
 
   return newton;
