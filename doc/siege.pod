@@ -380,7 +380,7 @@ Stein's torture.pl script:
   Elapsed time
       The duration of the entire siege test. This is measured from the 
       time the user invokes $_PROGRAM until the last simulated user 
-      completes its transactions. Shown above, the test took 14.67 
+      completes its transactions. Shown above, the test took 58.57 
       seconds to complete.
 
   Data transferred
