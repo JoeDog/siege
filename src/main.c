@@ -104,13 +104,12 @@ display_version(BOOLEAN b)
    */
   char name[128]; 
 
-  memset(name, 0, sizeof name);
-  strncpy(name, program_name, sizeof(name));
+  xstrncpy(name, program_name, sizeof(name));
 
-  if(my.debug){
+  if (my.debug) {
     fprintf(stderr,"%s %s: debugging enabled\n\n%s\n", uppercase(name, strlen(name)), version_string, copyright);
   } else {
-    if(b == TRUE){
+    if (b == TRUE) {
       fprintf(stderr,"%s %s\n\n%s\n", uppercase(name, strlen(name)), version_string, copyright);
       exit(EXIT_SUCCESS);
     } else {
@@ -166,7 +165,7 @@ display_help()
   /**
    * our work is done, exit nicely
    */
-  exit( EXIT_SUCCESS );
+  exit(EXIT_SUCCESS);
 }
 
 /* Check the command line for the presence of the -R or --RC switch.  We
