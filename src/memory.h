@@ -26,7 +26,8 @@
 
 char * xstrdup(const char *str); 
 char * xstrcat(const char *arg1, ...);
-char * xstrncpy(char* dest, const char*src, size_t n);
+char * xstrncat(char *dest, const char *src, size_t len);
+char * xstrncpy(char* dest, const char *src, size_t len);
 void * xrealloc(void *, size_t);
 void * xmalloc (size_t);
 void * xcalloc (size_t, size_t);  
