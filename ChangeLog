@@ -1,6 +1,17 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2022/04/18 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/memory.c           Added xstrncpy, xstrncat
+ * src/memory.h           Added xstrncpy, xstrncat
+ * src/cookies.c          Implemented new x* functions
+ * src/ssl.c              Silenced compiler warning
+ * src/main.c             Added xstrncpy to silence warnings
+ * src/version.c          Version increment: 4.1.3
+
+2022/04/18 Frank Ledo  via https://github.com/FrankLedo
+ * doc/siege.pod          Fixed a typo in the man page
+
 2022/04/08 barryhunter via https://github.com/barryhunter
  * src/parser.c           Refined match for META redirect 
 
