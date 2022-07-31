@@ -39,7 +39,7 @@ siege_timer(pthread_t handler)
   if (time(&now) < 0) { 
     NOTIFY(FATAL, "unable to set the siege timer!"); 
   }
-  timeout.tv_sec=now + my.secs;
+  timeout.tv_sec=now + my.secs + 1;
   timeout.tv_nsec=0;
 
   pthread_mutex_lock(&timer_mutex); 
