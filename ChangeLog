@@ -1,6 +1,12 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2022/07/32 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/browser.c          Made all threads cancel deferred 
+ * src/ftp.c              Catch 421: server accepts but doesn't handle
+ * src/timer.c            Added a second to account for spool up
+ * src/version.c          Version increment: 4.1.4
+
 2022/04/18 Jeffrey Fulmer https://www.joedog.org/support/
  * src/memory.c           Added xstrncpy, xstrncat
  * src/memory.h           Added xstrncpy, xstrncat
