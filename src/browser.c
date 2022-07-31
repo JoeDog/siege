@@ -234,22 +234,20 @@ start(BROWSER this)
   sigemptyset(&this->sigs);
   sigaddset(&this->sigs, SIGUSR1);
   pthread_sigmask(SIG_UNBLOCK, &this->sigs, NULL);
-#else/*CANCEL_CLIENT_PLATFORM*/
+#else /*CANCEL_CLIENT_PLATFORM*/
   #if defined(_AIX)
     pthread_cleanup_push((void(*)(void*))__signal_cleanup, NULL);
   #else
     pthread_cleanup_push((void*)__signal_cleanup, this->conn);
   #endif
 
-  #if defined(sun)
-    pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
-  #elif defined(_AIX)
-    pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
-  #elif defined(hpux) || defined(__hpux)
-    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &this->type);
-  #else
-    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &this->type);
-  #endif
+  /**
+   * NOTE: Beginning with siege 4.1.4, all platforms are cancel
+   *       deferred. Execution continues until control reaches
+   *       a cancel point specified by pthread_testcancel();
+   */
+  pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &this->type);
+  //pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &this->state);
 #endif/*SIGNAL_CLIENT_PLATFORM*/
 
@@ -326,6 +324,11 @@ start(BROWSER this)
         u = url_destroy(u);
       }
     }
+
+    /**
+     * This feels like a safe cancel point
+     */ 
+    pthread_testcancel(); 
 
     /**
      * Delay between interactions -D num /--delay=num
@@ -786,7 +789,6 @@ __ftp(BROWSER this, URL U)
   if (url_get_password(U) == NULL || strlen(url_get_password(U)) < 1) {
     url_set_password(U, auth_get_ftp_password(my.auth, url_get_hostname(U)));
   }
-
   if (ftp_login(this->conn, U) == FALSE) {
     if (my.verbose) {
       int  color = __select_color(this->conn->ftp.code);
