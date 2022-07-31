@@ -44,7 +44,12 @@ ftp_login(CONN *C, URL U)
 
   code = __response(C);
   if (! okay(code)) {
-    NOTIFY(ERROR, "FTP: Server responded: %d", code);
+    C->ftp.code = code;
+    if (code == 421) {
+      DISPLAY(RED, "[ERROR] FTP: Server responded: 421 - Service unavailable");
+    } else {
+      NOTIFY(ERROR, "FTP: Server responded: %d", code);
+    }
     return FALSE;
   }
 
@@ -296,9 +301,15 @@ __response(CONN *C)
         x++;
       }
       if (isdigit(C->chkbuf[0]) && (C->chkbuf[3] != '-')) break;
+      if (x == 0 && n == 0) break;
     }
     code = __response_code(C->chkbuf);
     if (C->chkbuf[3] == ' ') {
+      cont = FALSE;
+    }
+    if (strlen(C->chkbuf) == 0 && n == 0 && x == 0) {
+      // we connected but didn't get a response 
+      code = 421;
       cont = FALSE;
     }
   }
