@@ -246,8 +246,7 @@ start(BROWSER this)
    *       deferred. Execution continues until control reaches
    *       a cancel point specified by pthread_testcancel();
    */
-  pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &this->type);
-  //pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
+  pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &this->state);
 #endif/*SIGNAL_CLIENT_PLATFORM*/
 
