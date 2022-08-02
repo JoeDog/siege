@@ -35,6 +35,7 @@ config.guess           \
 config.sub             \
 install-sh             \
 ltmain.sh              \
+manifier               \
 mdate-sh               \
 missing                \
 mkinstalldirs          \
