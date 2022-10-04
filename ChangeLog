@@ -3,6 +3,7 @@ To email a contributor remove "DELETE" from the email address.
 
 2022/10/03 Jeffrey Fulmer https://www.joedog.org/support/
  * src/log.c              Print warning to stderr to elude > capture
+ * src/version.c          Version increment: 4.1.6-b1
 
 2022/08/02 Jeffrey Fulmer https://www.joedog.org/support/
  * src/browser.c          Corrected deferred
