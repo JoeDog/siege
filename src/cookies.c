@@ -184,7 +184,7 @@ cookies_header(COOKIES this, char *host, char *newton)
      */
     const char *domainptr = cookie_get_domain(cur->cookie);
     if (*domainptr == '.') ++domainptr;
-    if (my.get || cur->threadID == id) {
+    if (my.get || my.print || cur->threadID == id) {
       if (__endswith(host, domainptr)) {
         if (cookie_get_expires(cur->cookie) <= now && cookie_get_session(cur->cookie) != TRUE) {
           cookies_delete(this, cookie_get_name(cur->cookie));
@@ -203,7 +203,7 @@ cookies_header(COOKIES this, char *host, char *newton)
     strncpy(newton, "Cookie: ", 9);
     xstrncat(newton, oreo,       MAX_COOKIE_SIZE);
     xstrncat(newton, "\015\012", 2);
-  }
+  } 
 
   return newton;
 }
