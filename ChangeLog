@@ -1,6 +1,11 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2022/12/27 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/cookies.c          Retrieve cookies in -p/--print mode (bug fix)
+ * src/sock.c             More verbose message on resolution failures
+ * src/version.c          Version increment: 4.1.6-b2
+
 2022/10/03 Jeffrey Fulmer https://www.joedog.org/support/
  * src/log.c              Print warning to stderr to elude > capture
  * src/version.c          Version increment: 4.1.6-b1
