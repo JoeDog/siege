@@ -156,7 +156,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
     res = getaddrinfo(hn, port_str, &hints, &addr_res);
     if (res != 0) {
       NOTIFY(ERROR, "Address resolution failed at %s:%d with the following error:", __FILE__, __LINE__);
-      NOTIFY(ERROR, "%s", gai_strerror(res));
+      NOTIFY(ERROR, "%s: %s", gai_strerror(res), hn);
       return -1;
     }
     s_addr = addr_res->ai_addr;
