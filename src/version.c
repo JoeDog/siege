@@ -8,8 +8,8 @@ const char *version_string = "4.1.6";
 const char *program_name   = "siege";
 const char *author_name    = "Jeffrey Fulmer, et al.";
 const char *email_address  = "jeff@joedog.org";
-const char *years          = "1999-2022";
-const char *copyright      = "Copyright (C) 2022 by Jeffrey Fulmer, et al.\n\
+const char *years          = "1999-2023";
+const char *copyright      = "Copyright (C) 2023 by Jeffrey Fulmer, et al.\n\
 This is free software; see the source for copying conditions.\n\
 There is NO warranty; not even for MERCHANTABILITY or FITNESS\n\
 FOR A PARTICULAR PURPOSE.\n";
