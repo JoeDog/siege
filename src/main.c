@@ -531,24 +531,24 @@ main(int argc, char *argv[])
       fprintf(stderr, "%s aborted due to excessive socket failure; you\n", program_name);
       fprintf(stderr, "can change the failure threshold in $HOME/.%src\n", program_name);
     }
-    fprintf(stderr, "\nTransactions:\t\t%12u hits\n",        data_get_count(data));
+    fprintf(stderr, "\nTransactions:\t\t%9u    hits\n",        data_get_count(data));
     fprintf(stderr, "Availability:\t\t%12.2f %%\n",          data_get_count(data)==0 ? 0 :
                                                              (double)data_get_count(data) /
                                                              (data_get_count(data)+my.failed)*100
     );
     fprintf(stderr, "Elapsed time:\t\t%12.2f secs\n",        data_get_elapsed(data));
     fprintf(stderr, "Data transferred:\t%12.2f MB\n",        data_get_megabytes(data)); /*%12llu*/
-    fprintf(stderr, "Response time:\t\t%12.2f secs\n",       data_get_response_time(data));
+    fprintf(stderr, "Response time:\t\t%12.2f ms\n",       1000.0f * data_get_response_time(data));
     fprintf(stderr, "Transaction rate:\t%12.2f trans/sec\n", data_get_transaction_rate(data));
     fprintf(stderr, "Throughput:\t\t%12.2f MB/sec\n",        data_get_throughput(data));
     fprintf(stderr, "Concurrency:\t\t%12.2f\n",              data_get_concurrency(data));
-    fprintf(stderr, "Successful transactions:%12u\n",        data_get_code(data)); 
+    fprintf(stderr, "Successful transactions:%9u\n",        data_get_code(data));
     if (my.debug) {
-      fprintf(stderr, "HTTP OK received:\t%12u\n",             data_get_okay(data));
+      fprintf(stderr, "HTTP OK received:\t%9u\n",             data_get_okay(data));
     }
-    fprintf(stderr, "Failed transactions:\t%12u\n",          my.failed);
-    fprintf(stderr, "Longest transaction:\t%12.2f\n",        data_get_highest(data));
-    fprintf(stderr, "Shortest transaction:\t%12.2f\n",       data_get_lowest(data));
+    fprintf(stderr, "Failed transactions:\t%9u\n",          my.failed);
+    fprintf(stderr, "Longest transaction:\t%12.2f ms\n",        1000.0f * data_get_highest(data));
+    fprintf(stderr, "Shortest transaction:\t%12.2f ms\n",       1000.0f * data_get_lowest(data));
     fprintf(stderr, " \n");
   }
 
