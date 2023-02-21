@@ -1,6 +1,11 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2023/02/21 Kirit Sælensminde https://github.com/KayEss
+ * .gitignore             Added generated files
+ * src/main.c             Added precision to output metrics
+ * src/version.c          Version increment: 4.1.7-b1
+
 2023/01/05 Jeffrey Fulmer https://www.joedog.org/support/
  * src/version.c          Version increment: 4.1.6
 
