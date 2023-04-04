@@ -38,6 +38,7 @@ AUTH    new_auth();
 AUTH    auth_destroy(AUTH this);
 void    auth_add(AUTH this, CREDS creds);
 void    auth_display(AUTH this, SCHEME scheme);
+BOOLEAN auth_has_credentials(AUTH this);
 char *  auth_get_basic_header(AUTH this, SCHEME scheme);
 BOOLEAN auth_set_basic_header(AUTH this, SCHEME scheme, char *realm);
 char *  auth_get_ntlm_header(AUTH this, SCHEME scheme);
