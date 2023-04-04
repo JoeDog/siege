@@ -1,6 +1,12 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2023/04/04 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/browser.c          Don't accept auth challenge if we have no creds
+ * src/auth.c             Return "" if we can't build a header
+ * src/auth.h             Added BOOLEAN auth_has_credentials
+ * src/version.c          Version increment: 4.1.7-b2
+
 2023/02/21 Kirit Sælensminde https://github.com/KayEss
  * .gitignore             Added generated files
  * src/main.c             Added precision to output metrics
