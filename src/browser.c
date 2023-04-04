@@ -678,10 +678,12 @@ __http(BROWSER this, URL U)
           b = auth_set_ntlm_header (
             my.auth, HTTP, response_get_www_auth_challenge(resp), response_get_www_auth_realm(resp)
           );
+          if (b == FALSE) return b;
         }
         if (response_get_www_auth_type(resp) == BASIC) {
           this->auth.type.www =  BASIC;
-          auth_set_basic_header(my.auth, HTTP, response_get_www_auth_realm(resp));
+          b = auth_set_basic_header(my.auth, HTTP, response_get_www_auth_realm(resp));
+          if (b == FALSE) return b;
         }
         if ((__request(this, U)) == FALSE) {
           fprintf(stderr, "ERROR from http_request\n");
@@ -695,8 +697,8 @@ __http(BROWSER this, URL U)
        */
       this->auth.proxy = (this->auth.proxy==0) ? 1 : this->auth.proxy;
       if ((this->auth.bids.proxy++) < my.bids - 1) {
+        BOOLEAN b;
         if (response_get_proxy_auth_type(resp) == DIGEST) {
-          BOOLEAN b;
           this->auth.type.proxy =  DIGEST;
           b = auth_set_digest_header (
             my.auth, &(this->auth.pchlg), &(this->auth.pcred), &(this->rseed),
@@ -712,7 +714,8 @@ __http(BROWSER this, URL U)
         }
         if (response_get_proxy_auth_type(resp) == BASIC) {
           this->auth.type.proxy = BASIC;
-          auth_set_basic_header(my.auth, PROXY, response_get_proxy_auth_realm(resp));
+          b = auth_set_basic_header(my.auth, PROXY, response_get_proxy_auth_realm(resp));
+          if (b == FALSE) return b;
         }
         if ((__request(this, U)) == FALSE)
           return FALSE;
