@@ -67,8 +67,6 @@ BOOLEAN
 cookies_add(COOKIES this, char *str, char *host)
 {
   size_t  id    = pthread_self();
-  //int     hlen  = 0;
-  //int     dlen  = 0;
   NODE   *cur   = NULL; 
   NODE   *pre   = NULL; 
   NODE   *new   = NULL;
@@ -80,13 +78,17 @@ cookies_add(COOKIES this, char *str, char *host)
   for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
     const char *domainptr = cookie_get_domain(cur->cookie);
     if (*domainptr == '.') ++domainptr;
-    //hlen = host      ? strlen(host)      : 0;
-    //dlen = domainptr ? strlen(domainptr) : 0;
     if (__endswith(host, domainptr)){
       valid = TRUE;
     }
     if (valid && cur->threadID == id && 
         !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
+      cookie_reset_value(cur->cookie, cookie_get_value(oreo));
+      oreo  = cookie_destroy(oreo);
+      found = TRUE;
+      break;
+    }
+    if (my.get && valid && !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
       cookie_reset_value(cur->cookie, cookie_get_value(oreo));
       oreo  = cookie_destroy(oreo);
       found = TRUE;
