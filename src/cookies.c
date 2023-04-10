@@ -97,14 +97,17 @@ cookies_add(COOKIES this, char *str, char *host)
   }   
 
   if (!found) {
+    if (my.get && strlen(host) > 1) {
+      cookie_set_persistent(oreo, TRUE);
+    }
     new = (NODE*)malloc(sizeof(NODE));
-    new->threadID = id;
+    new->threadID = (cookie_get_persistent(oreo) == TRUE) ? 999999999999999 : id;
     new->cookie   = oreo;
     new->next     = cur;
     if (cur == this->head)
       this->head = new;
     else
-      pre->next  = new;
+      if (pre != NULL) pre->next  = new;
   }
 
   return TRUE;
@@ -144,7 +147,7 @@ cookies_delete_all(COOKIES this)
   NODE     *cur;
   NODE     *pre;
   pthread_t id  = pthread_self();
-
+  puts("DELETE ALL");
   // XXX: delete cookies by thread; not every cookie in the list
   for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
     if (cur->threadID == id) {
@@ -174,7 +177,6 @@ cookies_header(COOKIES this, char *host, char *newton)
   size_t id = pthread_self();
 
   memset(oreo, '\0', sizeof oreo);
-
   tmp = time(NULL);
   gmtime_r(&tmp, &tm);
   tm.tm_isdst = -1; // force mktime to figure it out!
@@ -221,8 +223,9 @@ cookies_list(COOKIES this)
     if (tmp == NULL) 
       ; 
     else printf(
-      "%lld: NAME: %s\n   VALUE: %s\n   Expires: %s\n",
-      (long long)cur->threadID, cookie_get_name(tmp), cookie_get_value(tmp), cookie_expires_string(tmp)
+      "%lld: NAME: %s\n   VALUE: %s\n   Expires: %s  Persistent: %s\n",
+      (long long)cur->threadID, cookie_get_name(tmp), cookie_get_value(tmp), cookie_expires_string(tmp),
+      (cookie_get_persistent(tmp)==TRUE) ? "true" : "false"
     );
   }
 }
@@ -293,28 +296,38 @@ load_cookies(COOKIES this)
     chomp(line);
     if (strlen(line) > 1) {
       int   num = 2;
+      char  *key;
+      char  *val;
       char  **pair; 
       pair = split('|', line, &num);
       trim(pair[0]);
       trim(pair[1]);
-      if (pair[0] != NULL && pair[1] != NULL) {
-        if (hash_get(IDX, pair[0]) == NULL) {
+      if (strstr(pair[1], "persistent=true") != NULL) {
+        key = xstrdup("999999999999999");
+      } else {
+        key = xstrdup(pair[0]);
+      }
+      val = xstrdup(pair[1]);
+      if (key != NULL && val != NULL) {
+        if (hash_get(IDX, key) == NULL) {
           char tmp[1024];
           n += 1;
           memset(tmp, '\0', 1024);
           snprintf(tmp, 1024, "%d", n);
-          hash_add(IDX, pair[0], tmp);
+          hash_add(IDX, key, tmp);
         }
-        HASH tmp = (HASH)hash_get(HOH, hash_get(IDX, pair[0]));
+        HASH tmp = (HASH)hash_get(HOH, hash_get(IDX, key));
         if (tmp == NULL) {
           tmp = new_hash();
-          hash_add(tmp, pair[1], pair[1]);
-          hash_nadd(HOH, hash_get(IDX, pair[0]), tmp, HASHSIZE);
+          hash_add(tmp, val, val);
+          hash_nadd(HOH, hash_get(IDX, key), tmp, HASHSIZE);
         } else {
-          hash_add(tmp, pair[1], pair[1]);
+          hash_add(tmp, val, val);
         }
       } 
       split_free(pair, num); 
+      xfree(key);
+      xfree(val);
     }
     memset(line, '\0', len);
   } 
@@ -358,7 +371,12 @@ __save_cookies(COOKIES this)
     if (tmp != NULL && cookie_get_session(tmp) != TRUE && cookie_get_expires(cur->cookie) >= now) {
       memset(line, '\0', len);
       if (cookie_to_string(tmp) != NULL) {
-        snprintf(line, len, "%ld | %s\n", cur->threadID, cookie_to_string(tmp));
+        snprintf(
+          line, len, 
+          "%ld | %s\n", 
+          (my.get || cookie_get_persistent(tmp)) ? 999999999999999 : cur->threadID, 
+          cookie_to_string(tmp)
+        );
       }
       fputs(line, fp); 
     }
