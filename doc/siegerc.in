@@ -521,6 +521,17 @@ url-escaping = true
 #
 # login-url = 
 
+# 
+# Auth URL. This feature is similar to the Login URL except it's invoked 
+# for form-based authentication after a 403 challenge. If the server responds
+# with 403 Forbidden, siege will attempt form based authentication with a
+# auth-url whose hostname matches the current hostname. You can set more than
+# one auth-url. Siege will attempt to select the appropriate one.
+#
+# ex: auth-url = https://www.joedog.org/lemme-in POST user=ted&pass=excellent
+#
+# auth-url = 
+
 #
 # FTP login - There are two ways to login to an ftp server with siege. You
 # can use this directive to set login credentials or you can set them in a
