@@ -1,6 +1,14 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2023/04/10 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/cookie.c           Added siege attribute persistent
+ * src/cookie.h           Added public prototypes
+ * src/cookies.c          Added persistence for -g/--get cookies
+ * src/init.c             Added auth-urls for 403 challenges
+ * src/setup.h            Added auth-url array
+ * src/version.c          Version increment: 4.1.7-b3
+
 2023/04/04 Jeffrey Fulmer https://www.joedog.org/support/
  * src/browser.c          Don't accept auth challenge if we have no creds
  * src/auth.c             Return "" if we can't build a header
