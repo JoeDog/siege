@@ -129,6 +129,7 @@ init_config( void )
   my.ssl_key        = NULL;
   my.ssl_ciphers    = NULL; 
   my.lurl           = new_array();
+  my.aurl           = new_array();
   my.cookies        = new_cookies();
   my.nomap          = xcalloc(1, sizeof(LINES));
   my.nomap->index   = 0;
@@ -253,6 +254,7 @@ show_config(int EXIT)
   xfree(method);
   my.auth    = auth_destroy(my.auth);
   my.lurl    = array_destroy(my.lurl);
+  my.aurl    = array_destroy(my.aurl);
   my.cookies = cookies_destroy(my.cookies); 
 
   if (EXIT) exit(0);
@@ -537,7 +539,6 @@ load_conf(char *filename)
         xstrncpy(my.encoding, value, sizeof(my.encoding));
       }
     }
-    #if 1
     else if (!strncasecmp(option, "login", 5)) {
       if(strmatch(option, "login-url")){  
         my.login = TRUE;
@@ -547,7 +548,9 @@ load_conf(char *filename)
         auth_add(my.auth, new_creds(HTTP, value));
       }
     }
-    #endif 
+    else if(strmatch(option, "auth-url")){  
+      array_push(my.aurl, value);
+    }
     else if (strmatch(option, "attempts")) {
       if (value != NULL) {
         my.bids = atoi(value);
