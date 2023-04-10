@@ -203,6 +203,7 @@ struct CONFIG
   BOOLEAN login;         /* boolean, client must login first.       */
   char    *loginurl;     /* XXX: deprecated the initial login URL   */
   ARRAY   lurl;
+  ARRAY   aurl; 
   int     failures;      /* number of failed attempts before abort. */
   int     failed;        /* total number of socket failures.        */
   BOOLEAN escape;        /* boolean, TRUE == url-escaping           */
