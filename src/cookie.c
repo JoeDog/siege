@@ -20,6 +20,7 @@ struct COOKIE_T {
   char *    string;
   BOOLEAN   session;
   BOOLEAN   secure;
+  BOOLEAN   persistent;
 };
 
 size_t COOKIESIZE = sizeof(struct COOKIE_T);
@@ -45,14 +46,15 @@ new_cookie(char *str, char *host)
   COOKIE this;
 
   this = calloc(sizeof(struct COOKIE_T), 1);
-  this->name    = NULL;
-  this->value   = NULL;
-  this->domain  = NULL;
-  this->expires = 0;
-  this->expstr  = NULL;
-  this->string  = NULL;
-  this->session = TRUE;  
-  this->none    = strdup("none");
+  this->name       = NULL;
+  this->value      = NULL;
+  this->domain     = NULL;
+  this->expires    = 0;
+  this->expstr     = NULL;
+  this->string     = NULL;
+  this->session    = TRUE;  
+  this->persistent = FALSE;
+  this->none       = strdup("none");
   if (__parse_input(this, str, host) == FALSE) {
     return cookie_destroy(this);
   }
@@ -120,6 +122,12 @@ cookie_set_expires(COOKIE this, time_t expires)
   this->expires = expires;
 }
 
+void 
+cookie_set_persistent(COOKIE this, BOOLEAN persistent)
+{
+  this->persistent = persistent;
+}
+
 /**
  * Returns the name of the cookie
  * Example: Set-Cookie: exes=X; expires=Fri, 01-May-2015 12:51:25 GMT
@@ -184,6 +192,14 @@ cookie_get_session(COOKIE this)
   return this->session;
 }
 
+BOOLEAN
+cookie_get_persistent(COOKIE this)
+{
+  if (this == NULL) 
+    return TRUE;
+  return this->persistent;
+}
+
 /**
  * Returns the string value of the cookie
  * (Mainly a debugging tool; we want cookie_expires for anything useful)
@@ -217,9 +233,10 @@ cookie_to_string(COOKIE this)
   memset(this->string, '\0', len);
  
   snprintf(
-    this->string, len, "%s=%s; domain=%s; path=%s; expires=%lld",
+    this->string, len, "%s=%s; domain=%s; path=%s; expires=%lld%s",
     this->name, this->value, (this->domain != NULL) ? this->domain : "none", 
-    (this->path != NULL) ? this->path : "/", (long long)this->expires
+    (this->path != NULL) ? this->path : "/", (long long)this->expires,
+    (this->persistent == TRUE) ? "; persistent=true" : ""
   ); 
   return this->string;
 }
@@ -248,10 +265,10 @@ cookie_reset_value(COOKIE this, char *value)
 COOKIE 
 cookie_clone(COOKIE this, COOKIE that) 
 {
-  this->value   = strealloc(this->value,  cookie_get_value(that)); 
-  this->domain  = strealloc(this->domain, cookie_get_domain(that));
-  this->path    = strealloc(this->path,   cookie_get_path(that));
-  //if ((time_t*)cookie_get_expires(that) != 0) {
+  this->value     = strealloc(this->value,  cookie_get_value(that)); 
+  this->domain    = strealloc(this->domain, cookie_get_domain(that));
+  this->path      = strealloc(this->path,   cookie_get_path(that));
+  this->persistent = cookie_get_persistent(that);
   if (this->expires > 0) {
     this->expires = time((time_t*)cookie_get_expires(that));
   }
@@ -322,6 +339,10 @@ __parse_input(COOKIE this, char *str, char *host)
       cookie_set_domain(this, val);
     } else if (!strncasecmp(key, "secure", 6)) {
       this->secure = TRUE;
+    } else if (!strncasecmp(key, "persistent", 10)) {
+      if (!strncasecmp(val, "true", 4)) {
+        this->persistent = TRUE;
+      }
     } else {
       this->name  = strdup(key);
       this->value = strdup(val);
