@@ -136,7 +136,7 @@ cookie_set_persistent(COOKIE this, BOOLEAN persistent)
 char *
 cookie_get_name(COOKIE this) 
 {
-  if (this == NULL && this->name == NULL) 
+  if (this == NULL || this->name == NULL) 
     return this->none;
   return this->name;
 }
@@ -149,7 +149,7 @@ cookie_get_name(COOKIE this)
 char * 
 cookie_get_value(COOKIE this) 
 {
-  if (this == NULL && this->value == NULL) 
+  if (this == NULL || this->value == NULL) 
     return this->none;
   return this->value;
 }
@@ -160,7 +160,7 @@ cookie_get_value(COOKIE this)
 char *
 cookie_get_domain(COOKIE this)
 {
-  if (this == NULL && this->domain == NULL) 
+  if (this == NULL || this->domain == NULL) 
     return this->none;
   return this->domain;
 }
@@ -171,7 +171,7 @@ cookie_get_domain(COOKIE this)
 char * 
 cookie_get_path(COOKIE this)
 {
-  if (this == NULL && this->path == NULL)
+  if (this == NULL || this->path == NULL)
     return this->none;
   return this->path;
 }
@@ -211,9 +211,6 @@ cookie_get_persistent(COOKIE this)
 char *
 cookie_expires_string(COOKIE this)
 {
-  /*if (this->expstr == NULL) 
-    this->expstr = malloc(sizeof (char*) * 128);
-  else */
   this->expstr = realloc(this->expstr, sizeof(this->expstr)*128);
   memset(this->expstr, '\0', 128);
   struct tm * timeinfo;
