@@ -1,6 +1,10 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2023/06/20 Jeroen Derks   https://github.com/Magentron
+ * src/cookie.c           Fixed integrity checks 
+ * src/version.c          Version increment: 4.1.7-b4
+
 2023/04/10 Jeffrey Fulmer https://www.joedog.org/support/
  * src/cookie.c           Added siege attribute persistent
  * src/cookie.h           Added public prototypes
