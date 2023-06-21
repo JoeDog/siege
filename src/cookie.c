@@ -33,6 +33,8 @@ private char *   months[12] = {
   "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
 };
 
+char *__cookie_none = "none";
+
 /**
  * Creates a cookie with the value of the
  * Set-cookie header. 
@@ -54,7 +56,7 @@ new_cookie(char *str, char *host)
   this->string     = NULL;
   this->session    = TRUE;  
   this->persistent = FALSE;
-  this->none       = strdup("none");
+  this->none       = strdup(__cookie_none);
   if (__parse_input(this, str, host) == FALSE) {
     return cookie_destroy(this);
   }
@@ -137,7 +139,7 @@ char *
 cookie_get_name(COOKIE this) 
 {
   if (this == NULL || this->name == NULL) 
-    return this->none;
+    return __cookie_none;
   return this->name;
 }
 
@@ -150,7 +152,7 @@ char *
 cookie_get_value(COOKIE this) 
 {
   if (this == NULL || this->value == NULL) 
-    return this->none;
+    return __cookie_none;
   return this->value;
 }
 
@@ -161,7 +163,7 @@ char *
 cookie_get_domain(COOKIE this)
 {
   if (this == NULL || this->domain == NULL) 
-    return this->none;
+    return __cookie_none;
   return this->domain;
 }
 
@@ -172,7 +174,7 @@ char *
 cookie_get_path(COOKIE this)
 {
   if (this == NULL || this->path == NULL)
-    return this->none;
+    return __cookie_none;
   return this->path;
 }
 

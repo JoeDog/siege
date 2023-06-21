@@ -36,6 +36,7 @@ page_destroy(PAGE this)
     this->size = 0;
     free(this->buf);
     free(this);
+    this = NULL;
   }
   return this;
 }  
