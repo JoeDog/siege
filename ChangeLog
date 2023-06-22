@@ -2,6 +2,11 @@ To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
 2023/06/20 Jeroen Derks   https://github.com/Magentron
+ * src/cookie.c           Solves #223
+ * src/page.c             Solves #223
+ * src/version.c          Version increment: 4.1.7-b5
+
+2023/06/20 Jeroen Derks   https://github.com/Magentron
  * src/cookie.c           Fixed integrity checks 
  * src/version.c          Version increment: 4.1.7-b4
 
