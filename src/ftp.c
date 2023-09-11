@@ -228,7 +228,7 @@ ftp_list(CONN *C, CONN *D, URL U)
 {
   int  n;
   char c;
-  int  bytes;
+  int  bytes = 0;
 
   C->ftp.code = __request(C, "LIST %s", (url_get_file(U)==NULL)?url_get_path(U):url_get_file(U));
 
