@@ -104,13 +104,12 @@ display_version(BOOLEAN b)
    */
   char name[128]; 
 
-  memset(name, 0, sizeof name);
-  strncpy(name, program_name, strlen(program_name));
+  xstrncpy(name, program_name, sizeof(name));
 
-  if(my.debug){
+  if (my.debug) {
     fprintf(stderr,"%s %s: debugging enabled\n\n%s\n", uppercase(name, strlen(name)), version_string, copyright);
   } else {
-    if(b == TRUE){
+    if (b == TRUE) {
       fprintf(stderr,"%s %s\n\n%s\n", uppercase(name, strlen(name)), version_string, copyright);
       exit(EXIT_SUCCESS);
     } else {
@@ -166,11 +165,11 @@ display_help()
   /**
    * our work is done, exit nicely
    */
-  exit( EXIT_SUCCESS );
+  exit(EXIT_SUCCESS);
 }
 
 /* Check the command line for the presence of the -R or --RC switch.  We
- * need to do this seperately from the other command line switches because
+ * need to do this separately from the other command line switches because
  * the options are initialized from the .siegerc file before the command line
  * switches are parsed. The argument index is reset before leaving the
  * function. */
@@ -242,8 +241,11 @@ parse_cmdline(int argc, char *argv[])
       case 'l':
         my.logging = TRUE;
         if (optarg) {
-          my.logfile[strlen(optarg)] = '\0';
-          strncpy(my.logfile, optarg, strlen(optarg));
+          if (strlen(optarg) > sizeof(my.logfile)) {
+            fprintf(stderr, "ERROR: -l/--logfile is limited to %ld in length", sizeof(my.logfile));
+            exit(1);
+          }
+          xstrncpy(my.logfile, optarg, strlen(optarg)+1);
         } 
         break;
       case 'm':
@@ -268,9 +270,8 @@ parse_cmdline(int argc, char *argv[])
         parse_time(optarg);
         break;
       case 'f':
-        memset(my.file, 0, sizeof(my.file));
         if(optarg == NULL) break; /*paranoia*/
-        strncpy(my.file, optarg, strlen(optarg));
+        xstrncpy(my.file, optarg, strlen(optarg)+1);
         break;
       case 'A':
         strncpy(my.uagent, optarg, 255);
@@ -292,7 +293,7 @@ parse_cmdline(int argc, char *argv[])
       case 'H':
         {
           if(!strchr(optarg,':')) NOTIFY(FATAL, "no ':' in http-header");
-          if((strlen(optarg) + strlen(my.extra) + 3) > 2048)
+          if((strlen(optarg) + strlen(my.extra) + 3) > sizeof(my.extra))  // sizeof(*my.extra) == 1, so this is accurate
               NOTIFY(FATAL, "header is too large");
           strcat(my.extra,optarg);
           strcat(my.extra,"\015\012");
@@ -432,7 +433,6 @@ main(int argc, char *argv[])
   } 
 
   cookies = load_cookies(my.cookies);
-
   for (i = 0; i < my.cusers; i++) {
     char    tmp[4096];
     BROWSER B = new_browser(i);
@@ -526,29 +526,29 @@ main(int argc, char *argv[])
 
   pthread_usleep_np(10000);
 
-  if (!my.quiet) {
+  if (! my.quiet && ! my.get) {
     if (my.failures > 0 && my.failed >= my.failures) {
       fprintf(stderr, "%s aborted due to excessive socket failure; you\n", program_name);
       fprintf(stderr, "can change the failure threshold in $HOME/.%src\n", program_name);
     }
-    fprintf(stderr, "\nTransactions:\t\t%12u hits\n",        data_get_count(data));
+    fprintf(stderr, "\nTransactions:\t\t%9u    hits\n",        data_get_count(data));
     fprintf(stderr, "Availability:\t\t%12.2f %%\n",          data_get_count(data)==0 ? 0 :
                                                              (double)data_get_count(data) /
                                                              (data_get_count(data)+my.failed)*100
     );
     fprintf(stderr, "Elapsed time:\t\t%12.2f secs\n",        data_get_elapsed(data));
     fprintf(stderr, "Data transferred:\t%12.2f MB\n",        data_get_megabytes(data)); /*%12llu*/
-    fprintf(stderr, "Response time:\t\t%12.2f secs\n",       data_get_response_time(data));
+    fprintf(stderr, "Response time:\t\t%12.2f ms\n",       1000.0f * data_get_response_time(data));
     fprintf(stderr, "Transaction rate:\t%12.2f trans/sec\n", data_get_transaction_rate(data));
     fprintf(stderr, "Throughput:\t\t%12.2f MB/sec\n",        data_get_throughput(data));
     fprintf(stderr, "Concurrency:\t\t%12.2f\n",              data_get_concurrency(data));
-    fprintf(stderr, "Successful transactions:%12u\n",        data_get_code(data)); 
+    fprintf(stderr, "Successful transactions:%9u\n",        data_get_code(data));
     if (my.debug) {
-      fprintf(stderr, "HTTP OK received:\t%12u\n",             data_get_okay(data));
+      fprintf(stderr, "HTTP OK received:\t%9u\n",             data_get_okay(data));
     }
-    fprintf(stderr, "Failed transactions:\t%12u\n",          my.failed);
-    fprintf(stderr, "Longest transaction:\t%12.2f\n",        data_get_highest(data));
-    fprintf(stderr, "Shortest transaction:\t%12.2f\n",       data_get_lowest(data));
+    fprintf(stderr, "Failed transactions:\t%9u\n",          my.failed);
+    fprintf(stderr, "Longest transaction:\t%12.2f ms\n",        1000.0f * data_get_highest(data));
+    fprintf(stderr, "Shortest transaction:\t%12.2f ms\n",       1000.0f * data_get_lowest(data));
     fprintf(stderr, " \n");
   }
 

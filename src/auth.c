@@ -174,6 +174,14 @@ auth_add(AUTH this, CREDS creds)
   return;
 }
 
+BOOLEAN 
+auth_has_credentials(AUTH this)
+{
+  size_t len = array_length(this->creds);
+  printf("LENGTH: %ld\n", len);
+  return TRUE;
+}
+
 void
 auth_display(AUTH this, SCHEME scheme)
 {
@@ -194,9 +202,9 @@ char *
 auth_get_basic_header(AUTH this, SCHEME scheme)
 {
   if (scheme == PROXY) {
-    return this->proxy.encode;
+    return this->proxy.encode != NULL ? this->proxy.encode : "";
   } else {
-    return this->basic.encode;
+    return this->basic.encode != NULL ? this->basic.encode : "";
   }  
 }
 

@@ -130,6 +130,7 @@ init_config( void )
   my.ssl_key        = NULL;
   my.ssl_ciphers    = NULL; 
   my.lurl           = new_array();
+  my.aurl           = new_array();
   my.cookies        = new_cookies();
   my.nomap          = xcalloc(1, sizeof(LINES));
   my.nomap->index   = 0;
@@ -255,6 +256,7 @@ show_config(int EXIT)
   xfree(method);
   my.auth    = auth_destroy(my.auth);
   my.lurl    = array_destroy(my.lurl);
+  my.aurl    = array_destroy(my.aurl);
   my.cookies = cookies_destroy(my.cookies); 
 
   if (EXIT) exit(0);
@@ -442,7 +444,7 @@ load_conf(char *filename)
         my.shlog = FALSE;
     }
     else if (strmatch(option, "logfile")) {
-      strncpy(my.logfile, value, sizeof(my.logfile)); 
+      xstrncpy(my.logfile, value, sizeof(my.logfile)); 
     } 
     else if (strmatch(option, "concurrent")) {
       if (value != NULL) {
@@ -520,14 +522,13 @@ load_conf(char *filename)
       } 
     }
     else if (strmatch(option, "file")) {
-      memset(my.file, 0, sizeof(my.file));
-      strncpy(my.file, value, sizeof(my.file));
+      xstrncpy(my.file, value, sizeof(my.file));
     }
     else if (strmatch(option, "url")) {
       my.url = stralloc(value);
     }
     else if (strmatch(option, "user-agent")) {
-      strncpy(my.uagent, value, sizeof(my.uagent));
+      xstrncpy(my.uagent, value, sizeof(my.uagent));
     }
     else if (strmatch(option, "accept-encoding")) {
       BOOLEAN compress = FALSE;
@@ -537,10 +538,9 @@ load_conf(char *filename)
       if (compress == TRUE && zlib == FALSE) {
         NOTIFY(WARNING, "Zip encoding disabled; siege requires zlib support to enable it");
       } else {
-        strncpy(my.encoding, value, sizeof(my.encoding));
+        xstrncpy(my.encoding, value, sizeof(my.encoding));
       }
     }
-    #if 1
     else if (!strncasecmp(option, "login", 5)) {
       if(strmatch(option, "login-url")){  
         my.login = TRUE;
@@ -550,7 +550,9 @@ load_conf(char *filename)
         auth_add(my.auth, new_creds(HTTP, value));
       }
     }
-    #endif 
+    else if(strmatch(option, "auth-url")){  
+      array_push(my.aurl, value);
+    }
     else if (strmatch(option, "attempts")) {
       if (value != NULL) {
         my.bids = atoi(value);
@@ -619,7 +621,8 @@ load_conf(char *filename)
     }
     else if (strmatch(option, "header")) {
       if (!strchr(value,':')) NOTIFY(FATAL, "no ':' in http-header");
-      if ((strlen(value) + strlen(my.extra) + 3) > 512) NOTIFY(FATAL, "too many headers");
+      if ((strlen(value) + strlen(my.extra) + 3) > sizeof(my.extra) / 2) // leave half of the header space to be used internally
+          NOTIFY(FATAL, "too many headers");
       strcat(my.extra,value);
       strcat(my.extra,"\015\012");
     }

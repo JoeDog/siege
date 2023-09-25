@@ -71,14 +71,14 @@ write_to_log(int count, float elapsed, int bytes, float ttime, int code, int fai
   setlocale(LC_TIME, "C");
   len = strftime(date, sizeof date, "%Y-%m-%d %H:%M:%S", tmp);
 
-  /* if the file does NOT exist then we'll create it. */
   if (my.shlog) { 
-    printf("LOG FILE: %s\n", my.logfile ); 
-    printf("You can disable this log file notification by editing\n");
-    printf("%s/.siege/siege.conf ", getenv("HOME"));
-    puts("and changing \'show-logfile\' to false." );
+    fprintf(stderr, "LOG FILE: %s\n", my.logfile ); 
+    fprintf(stderr, "You can disable this log file notification by editing\n");
+    fprintf(stderr, "%s/.siege/siege.conf ", getenv("HOME"));
+    fprintf(stderr, "and changing \'show-logfile\' to false.\n");
   }
 
+  /* if the file does NOT exist then we'll create it. */
   if (!file_exists(my.logfile)) {
     if (!create_logfile(my.logfile)) {
       NOTIFY(ERROR, "unable to create log file: %s", my.logfile);

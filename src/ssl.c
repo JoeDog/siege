@@ -62,7 +62,7 @@ static long            *lock_count;
 unsigned long SSL_pthreads_thread_id(void);
 #ifdef  HAVE_SSL
 private  void SSL_error_stack(void); 
-private  void SSL_pthreads_locking_callback(int m, int t, char *f, int l);
+public   void SSL_pthreads_locking_callback(int mode, int type, char *file, int line);
 #endif/*HAVE_SSL*/
 
 BOOLEAN
@@ -222,14 +222,13 @@ SSL_thread_cleanup(void)
     lock_count=(long *)NULL; 
   }
   CRYPTO_cleanup_all_ex_data();
-  ERR_remove_state(0);
   ERR_free_strings();
   EVP_cleanup();
   CRYPTO_cleanup_all_ex_data();
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(OPENSSL_USE_DEPRECATED)
-   ERR_remove_state(0);
-#else
-   ERR_remove_thread_state(NULL);
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L && OPENSSL_VERSION_NUMBER < 0x10100000L
+  ERR_remove_thread_state(NULL);
+#elif OPENSSL_VERSION_NUMBER < 0x10000000L
+  ERR_remove_state(0);
 #endif
 }
 

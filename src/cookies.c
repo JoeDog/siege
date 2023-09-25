@@ -26,9 +26,11 @@ struct COOKIES_T {
   char *          file;
 };
 
+
 private NODE *  __delete_node(NODE *node);
 private BOOLEAN __exists(char *file);
 private BOOLEAN __save_cookies(COOKIES this);
+private BOOLEAN __endswith(const char *str, const char *suffix);
 
 COOKIES
 new_cookies() {
@@ -65,31 +67,28 @@ BOOLEAN
 cookies_add(COOKIES this, char *str, char *host)
 {
   size_t  id    = pthread_self();
-  int     hlen  = 0;
-  int     dlen  = 0;
   NODE   *cur   = NULL; 
   NODE   *pre   = NULL; 
   NODE   *new   = NULL;
   BOOLEAN found = FALSE;
   BOOLEAN valid = FALSE;
   COOKIE  oreo  = new_cookie(str, host);
-
   if (oreo == NULL) return FALSE;
   if (cookie_get_name(oreo) == NULL || cookie_get_value(oreo) == NULL) return FALSE;
-
-  //pthread_mutex_lock(&(my.lock));
   for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
     const char *domainptr = cookie_get_domain(cur->cookie);
     if (*domainptr == '.') ++domainptr;
-    hlen = host      ? strlen(host)      : 0;
-    dlen = domainptr ? strlen(domainptr) : 0;
-    if (! strcasecmp(host, domainptr)) {
-      valid = TRUE; // host level cookie found
+    if (__endswith(host, domainptr)){
+      valid = TRUE;
     }
-    if (! valid && (dlen < hlen) && (! strcasecmp(host + (hlen - dlen), domainptr))) {
-      valid = TRUE; // domain level cookie found
+    if (valid && cur->threadID == id && 
+        !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
+      cookie_reset_value(cur->cookie, cookie_get_value(oreo));
+      oreo  = cookie_destroy(oreo);
+      found = TRUE;
+      break;
     }
-    if (valid && cur->threadID == id && !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
+    if (my.get && valid && !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
       cookie_reset_value(cur->cookie, cookie_get_value(oreo));
       oreo  = cookie_destroy(oreo);
       found = TRUE;
@@ -98,17 +97,18 @@ cookies_add(COOKIES this, char *str, char *host)
   }   
 
   if (!found) {
+    if (my.get && strlen(host) > 1) {
+      cookie_set_persistent(oreo, TRUE);
+    }
     new = (NODE*)malloc(sizeof(NODE));
-    new->threadID = id;
+    new->threadID = (cookie_get_persistent(oreo) == TRUE) ? 999999999999999 : id;
     new->cookie   = oreo;
     new->next     = cur;
     if (cur == this->head)
       this->head = new;
     else
-      pre->next  = new;
+      if (pre != NULL) pre->next  = new;
   }
-  //pthread_cond_wait(&my.cond, &my.lock);
-  //pthread_mutex_unlock(&(my.lock));
 
   return TRUE;
 }
@@ -147,7 +147,7 @@ cookies_delete_all(COOKIES this)
   NODE     *cur;
   NODE     *pre;
   pthread_t id  = pthread_self();
-
+  puts("DELETE ALL");
   // XXX: delete cookies by thread; not every cookie in the list
   for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
     if (cur->threadID == id) {
@@ -168,8 +168,6 @@ cookies_delete_all(COOKIES this)
 char *
 cookies_header(COOKIES this, char *host, char *newton)
 {
-  int   dlen; 
-  int   hlen;
   NODE  *pre;
   NODE  *cur;
   time_t tmp;
@@ -179,8 +177,6 @@ cookies_header(COOKIES this, char *host, char *newton)
   size_t id = pthread_self();
 
   memset(oreo, '\0', sizeof oreo);
-  hlen = strlen(host);
-
   tmp = time(NULL);
   gmtime_r(&tmp, &tm);
   tm.tm_isdst = -1; // force mktime to figure it out!
@@ -192,37 +188,26 @@ cookies_header(COOKIES this, char *host, char *newton)
      */
     const char *domainptr = cookie_get_domain(cur->cookie);
     if (*domainptr == '.') ++domainptr;
-    dlen = domainptr ? strlen(domainptr) : 0;
-    if (cur->threadID == id) {
-      if (!strcasecmp(domainptr, host)) {
+    if (my.get || my.print || cur->threadID == id) {
+      if (__endswith(host, domainptr)) {
         if (cookie_get_expires(cur->cookie) <= now && cookie_get_session(cur->cookie) != TRUE) {
           cookies_delete(this, cookie_get_name(cur->cookie));
           continue;
         }
-        if (strlen(oreo) > 0)
-          strncat(oreo, ";",      sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_name(cur->cookie),  sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, "=",        sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_value(cur->cookie), sizeof(oreo) - 10 - strlen(oreo));
-      }
-      if ((dlen < hlen) && (!strcasecmp(host + (hlen - dlen), domainptr))) {
-        if (cookie_get_expires(cur->cookie) <= now && cookie_get_session(cur->cookie) != TRUE) {
-          cookies_delete(this, cookie_get_name(cur->cookie));
-          continue;
+        if (strlen(oreo) > 0) {
+          xstrncat(oreo, ";",      sizeof(oreo) - 10 - strlen(oreo));
         }
-        if (strlen(oreo) > 0)
-          strncat(oreo, ";",      sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_name(cur->cookie),  sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, "=",        sizeof(oreo) - 10 - strlen(oreo));
-        strncat(oreo, cookie_get_value(cur->cookie), sizeof(oreo) - 10 - strlen(oreo));
+        xstrncat(oreo, cookie_get_name(cur->cookie),  sizeof(oreo) - 10 - strlen(oreo));
+        xstrncat(oreo, "=",        sizeof(oreo) - 10 - strlen(oreo));
+        xstrncat(oreo, cookie_get_value(cur->cookie), sizeof(oreo) - 10 - strlen(oreo));
       }
     }
   }
   if (strlen(oreo) > 0) {
-    strncpy(newton, "Cookie: ", 8);
-    strncat(newton, oreo,       MAX_COOKIE_SIZE);
-    strncat(newton, "\015\012", 2);
-  }
+    strncpy(newton, "Cookie: ", 9);
+    xstrncat(newton, oreo,       MAX_COOKIE_SIZE);
+    xstrncat(newton, "\015\012", 2);
+  } 
 
   return newton;
 }
@@ -238,8 +223,9 @@ cookies_list(COOKIES this)
     if (tmp == NULL) 
       ; 
     else printf(
-      "%lld: NAME: %s\n   VALUE: %s\n   Expires: %s\n",
-      (long long)cur->threadID, cookie_get_name(tmp), cookie_get_value(tmp), cookie_expires_string(tmp)
+      "%lld: NAME: %s\n   VALUE: %s\n   Expires: %s  Persistent: %s\n",
+      (long long)cur->threadID, cookie_get_name(tmp), cookie_get_value(tmp), cookie_expires_string(tmp),
+      (cookie_get_persistent(tmp)==TRUE) ? "true" : "false"
     );
   }
 }
@@ -310,28 +296,38 @@ load_cookies(COOKIES this)
     chomp(line);
     if (strlen(line) > 1) {
       int   num = 2;
+      char  *key;
+      char  *val;
       char  **pair; 
       pair = split('|', line, &num);
       trim(pair[0]);
       trim(pair[1]);
-      if (pair[0] != NULL && pair[1] != NULL) {
-        if (hash_get(IDX, pair[0]) == NULL) {
+      if (strstr(pair[1], "persistent=true") != NULL) {
+        key = xstrdup("999999999999999");
+      } else {
+        key = xstrdup(pair[0]);
+      }
+      val = xstrdup(pair[1]);
+      if (key != NULL && val != NULL) {
+        if (hash_get(IDX, key) == NULL) {
           char tmp[1024];
           n += 1;
           memset(tmp, '\0', 1024);
           snprintf(tmp, 1024, "%d", n);
-          hash_add(IDX, pair[0], tmp);
+          hash_add(IDX, key, tmp);
         }
-        HASH tmp = (HASH)hash_get(HOH, hash_get(IDX, pair[0]));
+        HASH tmp = (HASH)hash_get(HOH, hash_get(IDX, key));
         if (tmp == NULL) {
           tmp = new_hash();
-          hash_add(tmp, pair[1], pair[1]);
-          hash_nadd(HOH, hash_get(IDX, pair[0]), tmp, HASHSIZE);
+          hash_add(tmp, val, val);
+          hash_nadd(HOH, hash_get(IDX, key), tmp, HASHSIZE);
         } else {
-          hash_add(tmp, pair[1], pair[1]);
+          hash_add(tmp, val, val);
         }
       } 
       split_free(pair, num); 
+      xfree(key);
+      xfree(val);
     }
     memset(line, '\0', len);
   } 
@@ -375,7 +371,12 @@ __save_cookies(COOKIES this)
     if (tmp != NULL && cookie_get_session(tmp) != TRUE && cookie_get_expires(cur->cookie) >= now) {
       memset(line, '\0', len);
       if (cookie_to_string(tmp) != NULL) {
-        snprintf(line, len, "%ld | %s\n", cur->threadID, cookie_to_string(tmp));
+        snprintf(
+          line, len, 
+          "%ld | %s\n", 
+          (my.get || cookie_get_persistent(tmp)) ? 999999999999999 : cur->threadID, 
+          cookie_to_string(tmp)
+        );
       }
       fputs(line, fp); 
     }
@@ -404,6 +405,22 @@ __exists(char *file)
      * Party on Garth... 
      */
     close(fd);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
+private BOOLEAN 
+__endswith(const char *str, const char *suffix)
+{
+  if (!str || !suffix)
+    return FALSE;
+  size_t lenstr = strlen(str);
+  size_t lensuffix = strlen(suffix);
+  if (lensuffix >  lenstr)
+    return FALSE;
+  if (! strncmp(str + lenstr - lensuffix, suffix, lensuffix)) {
     return TRUE;
   }
   return FALSE;

@@ -1,6 +1,6 @@
 #!%_PERL%
 #siege2csv.pl is a perl script that parses the output from bombardmnet.sh
-#into comma seperated values for easy use with spreadsheets.
+#into comma separated values for easy use with spreadsheets.
 #Copyright (C) 2001 Peter J. Hutnick
 
 #This program is distributed in the hope that it will be useful,

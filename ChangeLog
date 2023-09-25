@@ -1,16 +1,7 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
-2022/03/11 Julien Simbola https://github.com/akiuni
- * src/auth.c			  Added Socks5 proxy support
- * src/auth.h			  Added Socks5 proxy support
- * src/browser.c		  Added Socks5 proxy support
- * src/http.c			  Added Socks5 proxy support
- * src/init.c			  Added Socks5 proxy support
- * src/Makefile.am	      Added Socks5 proxy support
- * doc/siegerc.in	      Added Socks5 proxy support
 
-2021/07/14 Jeffrey Fulmer http://www.joedog.org/support/
  * src/browser.c          Added HTTP response 201 handler
  * src/response.c         Added Content-Location handler
  * src/response.h         Added CONTENT_LOCATION value
@@ -22,7 +13,7 @@ To email a contributor remove "DELETE" from the email address.
  * src/util.c             Fixed np_phtread_usleep for Solaris
  * src/version.c          Version increment: 4.1.1
 
-2021/07/07 Jeffrey Fulmer http://www.joedog.org/support/
+2021/07/07 Jeffrey Fulmer https://www.joedog.org/support/
  * src/url.c              Removed leading / from ftp paths
 
 2021/07/07 midchildan https://github.com/midchildan

@@ -27,6 +27,29 @@
 #include <string.h>
 #include <stdarg.h>
 
+char * 
+xstrncpy(char* dest, const char*src, size_t len) 
+{
+  memset(dest, '\0', len);
+  memcpy(dest, src, strnlen(src, len-1));
+  return dest;
+}
+
+char *
+xstrncat(char *dest, const char *src, size_t len)
+{
+  if (src == NULL) {
+    NOTIFY(ERROR, "source string has no value!");
+    return NULL;
+  }
+  if (dest == NULL) {
+    NOTIFY(ERROR, "source string has no value!");
+    return NULL;
+  }
+  strncat(dest, src, len);
+  return dest;
+}
+
 char *
 xstrdup(const char *str)
 {

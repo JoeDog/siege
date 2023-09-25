@@ -113,7 +113,7 @@ LICENSE
 -------
 Consult the file COPYING for complete license information.
  
-Copyright (C) 2000-2009 by Jeffrey Fulmer <jeff@joedog.org>
+Copyright (C) 2000-2023 by Jeffrey Fulmer <jeff@joedog.org>
  
 Permission is  granted  to anyone to make or distribute verbatim
 copies  of  this  document as received,  in any medium, provided 

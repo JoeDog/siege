@@ -113,7 +113,7 @@ private BOOLEAN __no_follow(const char *hostname);
 private void    __increment_failures();
 private int     __select_color(int code);
 private void    __display_result(BROWSER this, RESPONSE resp, URL U, unsigned long bytes, float etime);
-
+private void    __init_cookies(BROWSER this);
 
 #ifdef  SIGNAL_CLIENT_PLATFORM
 private void    __signal_handler(int sig);
@@ -235,24 +235,23 @@ start(BROWSER this)
   sigemptyset(&this->sigs);
   sigaddset(&this->sigs, SIGUSR1);
   pthread_sigmask(SIG_UNBLOCK, &this->sigs, NULL);
-#else/*CANCEL_CLIENT_PLATFORM*/
+#else /*CANCEL_CLIENT_PLATFORM*/
   #if defined(_AIX)
     pthread_cleanup_push((void(*)(void*))__signal_cleanup, NULL);
   #else
     pthread_cleanup_push((void*)__signal_cleanup, this->conn);
   #endif
 
-  #if defined(sun)
-    pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
-  #elif defined(_AIX)
-    pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
-  #elif defined(hpux) || defined(__hpux)
-    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &this->type);
-  #else
-    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, &this->type);
-  #endif
+  /**
+   * NOTE: Beginning with siege 4.1.4, all platforms are cancel
+   *       deferred. Execution continues until control reaches
+   *       a cancel point specified by pthread_testcancel();
+   */
+  pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &this->type);
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &this->state);
 #endif/*SIGNAL_CLIENT_PLATFORM*/
+
+  __init_cookies(this);
 
   if (my.login == TRUE) {
     URL tmp = new_url(array_next(my.lurl));
@@ -329,6 +328,11 @@ start(BROWSER this)
     }
 
     /**
+     * This feels like a safe cancel point
+     */ 
+    pthread_testcancel(); 
+
+    /**
      * Delay between interactions -D num /--delay=num
      */
     if (my.delay >= 1) {
@@ -375,10 +379,12 @@ browser_set_urls(BROWSER this, ARRAY urls)
 void
 browser_set_cookies(BROWSER this, HASH cookies)
 {
-  int i = 0;
-
   this->cookies = cookies;
+}
 
+private void
+__init_cookies(BROWSER this) {
+  int i;
   if (this->cookies != NULL) {
     char **keys = hash_get_keys(this->cookies);
     for (i = 0; i < hash_get_entries(this->cookies); i ++){
@@ -419,6 +425,8 @@ __request(BROWSER this, URL U) {
 private BOOLEAN
 __http(BROWSER this, URL U)
 {
+  char     *url;
+  BOOLEAN  res;
   unsigned long bytes  = 0;
   int      code, okay, fail;
   float    etime;
@@ -677,10 +685,12 @@ __http(BROWSER this, URL U)
           b = auth_set_ntlm_header (
             my.auth, HTTP, response_get_www_auth_challenge(resp), response_get_www_auth_realm(resp)
           );
+          if (b == FALSE) return b;
         }
         if (response_get_www_auth_type(resp) == BASIC) {
           this->auth.type.www =  BASIC;
-          auth_set_basic_header(my.auth, HTTP, response_get_www_auth_realm(resp));
+          b = auth_set_basic_header(my.auth, HTTP, response_get_www_auth_realm(resp));
+          if (b == FALSE) return b;
         }
         if ((__request(this, U)) == FALSE) {
           fprintf(stderr, "ERROR from http_request\n");
@@ -688,14 +698,30 @@ __http(BROWSER this, URL U)
         }
       }
       break;
+    case 403:
+      res = FALSE;
+      while ((url = array_pop(my.aurl)) != NULL) {
+        URL tmp = new_url(url);
+        if (strmatch(url_get_hostname(U), url_get_hostname(tmp))) {
+          url_set_ID(tmp, 0);
+          res = __request(this, tmp);
+          if (res == TRUE) {
+            xfree(url);
+            res = __request(this, U);
+            return res;
+          }
+        }
+        xfree(url);
+      }
+      return res;
     case 407:
       /**
        * Proxy-Authenticate challenge from the proxy server.
        */
       this->auth.proxy = (this->auth.proxy==0) ? 1 : this->auth.proxy;
       if ((this->auth.bids.proxy++) < my.bids - 1) {
+        BOOLEAN b;
         if (response_get_proxy_auth_type(resp) == DIGEST) {
-          BOOLEAN b;
           this->auth.type.proxy =  DIGEST;
           b = auth_set_digest_header (
             my.auth, &(this->auth.pchlg), &(this->auth.pcred), &(this->rseed),
@@ -711,7 +737,8 @@ __http(BROWSER this, URL U)
         }
         if (response_get_proxy_auth_type(resp) == BASIC) {
           this->auth.type.proxy = BASIC;
-          auth_set_basic_header(my.auth, PROXY, response_get_proxy_auth_realm(resp));
+          b = auth_set_basic_header(my.auth, PROXY, response_get_proxy_auth_realm(resp));
+          if (b == FALSE) return b;
         }
         if ((__request(this, U)) == FALSE)
           return FALSE;
@@ -750,7 +777,7 @@ __ftp(BROWSER this, URL U)
 {
   int     pass;
   int     fail;
-  int     code = 0;      // capture the relevent return code
+  int     code = 0;      // capture the relevant return code
   float   etime;         // elapsed time
   CONN    *D    = NULL;  // FTP data connection
   size_t  bytes = 0;     // bytes from server
@@ -787,7 +814,6 @@ __ftp(BROWSER this, URL U)
   if (url_get_password(U) == NULL || strlen(url_get_password(U)) < 1) {
     url_set_password(U, auth_get_ftp_password(my.auth, url_get_hostname(U)));
   }
-
   if (ftp_login(this->conn, U) == FALSE) {
     if (my.verbose) {
       int  color = __select_color(this->conn->ftp.code);
