@@ -191,7 +191,7 @@ struct CONFIG
   AUTH auth;
   BOOLEAN keepalive;     /* boolean, connection keep-alive value    */
   int     signaled;      /* timed based testing notification bool.  */
-  char    extra[2048];   /* extra http request headers              */ 
+  char    extra[8192];   /* extra http request headers              */ 
   #if 0
   struct {
     BOOLEAN required;    /* boolean, TRUE == use a proxy server.    */

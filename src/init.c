@@ -613,7 +613,8 @@ load_conf(char *filename)
     }
     else if (strmatch(option, "header")) {
       if (!strchr(value,':')) NOTIFY(FATAL, "no ':' in http-header");
-      if ((strlen(value) + strlen(my.extra) + 3) > 512) NOTIFY(FATAL, "too many headers");
+      if ((strlen(value) + strlen(my.extra) + 3) > sizeof(my.extra) / 2) // leave half of the header space to be used internally
+          NOTIFY(FATAL, "too many headers");
       strcat(my.extra,value);
       strcat(my.extra,"\015\012");
     }
