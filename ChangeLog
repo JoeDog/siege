@@ -1,6 +1,12 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2023/09/2023 Hennik Hunsaker https://github.com/danhunsaker
+ * src/setup.h             to change the size
+ * src/main.c              to check the size rather than use a hard coded value
+ * src/init.c              to check the size and offer half to the config; 
+ * src/version.c           Version increment: 4.1.7-b6
+
 2023/06/20 Jeroen Derks   https://github.com/Magentron
  * src/cookie.c           Solves #223
  * src/page.c             Solves #223
