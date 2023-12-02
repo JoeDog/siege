@@ -182,7 +182,7 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   herrno = h_errno;
 #else
   /**
-   * Let's just hope gethostbyname is tread-safe
+   * Let's just hope gethostbyname is thread-safe
    */
   hp = gethostbyname(hn);
   herrno = h_errno;
