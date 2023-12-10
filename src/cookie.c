@@ -343,8 +343,10 @@ __parse_input(COOKIE this, char *str, char *host)
         this->persistent = TRUE;
       }
     } else {
-      this->name  = strdup(key);
-      this->value = strdup(val);
+      if (!this->name)
+        this->name  = strdup(key);
+      if (!this->value)
+        this->value = strdup(val);
     }
   }
   if (this->expires < 1000) {
