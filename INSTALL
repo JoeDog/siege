@@ -167,7 +167,8 @@ If that is the case, then follow the steps in item #1 below...
     -q, --quiet               QUIET turns verbose off and suppresses output.
     -g, --get                 GET, pull down HTTP headers and display the
                               transaction. Great for application debugging.
-    -c, --concurrent=NUM      CONCURRENT users, default is 10
+    -c, --concurrent=NUM      CONCURRENT users, default is 25 or whatever is
+                              specified in ~/.siegerc.
     -r, --reps=NUM            REPS, number of times to run the test.
     -t, --time=NUMm           TIMED testing where "m" is modifier S, M, or H
                               ex: --time=1H, one hour test.
