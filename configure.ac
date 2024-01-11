@@ -481,7 +481,7 @@ AC_OUTPUT_COMMANDS([
   echo "exit"     >> $outfile
   echo ""         >> $outfile
  
-], [ bindir=$exec_prefix$bindir sh=$SHELL ]) 
+], [ bindir=$bindir sh=$SHELL ])
 
 dnl
 dnl create bombardment utility
@@ -494,7 +494,7 @@ AC_OUTPUT_COMMANDS([
       -e "s|%_SHELL%|$sh|" \
       < $infile > $outfile
  
-], [ bindir=$exec_prefix$bindir sh=$SHELL ]) 
+], [ bindir=$bindir sh=$SHELL ])
 
 dnl
 dnl create siege2csv utility
@@ -507,7 +507,7 @@ AC_OUTPUT_COMMANDS([
       -e "s|%_PERL%|$LREP|" \
       < $infile > $outfile
  
-], [ bindir=$exec_prefix$bindir LREP=$PERL ]) 
+], [ bindir=$bindir LREP=$PERL ])
 
 dnl
 dnl Write platform to file for support reporting
