@@ -158,7 +158,7 @@ else
          SSL_INCLUDE="-I$dir/include/openssl -I$dir/include"
          SSL_LIBS="-lssl -lcrypto"
          AC_MSG_CHECKING([for OpenSSL version])
-         CPPFLAGS="$SSL_INCLUDE"
+         CPPFLAGS="$SSL_INCLUDE $CPPFLAGS"
          AC_EGREP_CPP(yes,[
            #include <openssl/opensslv.h>
            #if OPENSSL_VERSION_NUMBER >= 0x0090800fL 
@@ -185,7 +185,7 @@ else
     SSL_INCLUDE="-I$MYSSL/include/openssl -I$MYSSL/include"
     SSL_LIBS="-lssl -lcrypto"
     AC_MSG_CHECKING([for OpenSSL version])
-    CPPFLAGS="$SSL_INCLUDE"
+    CPPFLAGS="$SSL_INCLUDE $CPPFLAGS"
     AC_EGREP_CPP(yes,[
       #include <openssl/opensslv.h>
       #if OPENSSL_VERSION_NUMBER >= 0x0090800fL 
@@ -247,7 +247,7 @@ else
          Z_INCLUDE="-I$MYZ/include/zlib -I$MYZ/include"
          Z_LIBS="-lz"
          AC_MSG_CHECKING([for ZLIB version])
-         CPPFLAGS="$Z_INCLUDE"
+         CPPFLAGS="$Z_INCLUDE $CPPFLAGS"
          AC_SUBST(Z_CFLAGS)
          AC_SUBST(Z_INCLUDE)
          AC_SUBST(Z_LDFLAGS)
@@ -263,7 +263,7 @@ else
     Z_INCLUDE="-I$MYZ/include/zlib -I$MYZ/include"
     Z_LIBS="-lz"
     AC_MSG_CHECKING([for OpenSSL version])
-    CPPFLAGS="$Z_INCLUDE"
+    CPPFLAGS="$Z_INCLUDE $CPPFLAGS"
     AC_SUBST(Z_CFLAGS)
     AC_SUBST(Z_INCLUDE)
     AC_SUBST(Z_LDFLAGS)
