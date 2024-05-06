@@ -62,6 +62,7 @@ parser.c   parser.h    \
 perl.c     perl.h      \
 response.c response.h  \
 sock.c     sock.h      \
+socks5.c    socks5.h     \
 ssl.c      ssl.h       \
 stralloc.c stralloc.h  \
 timer.c    timer.h     \

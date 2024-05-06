@@ -118,6 +118,7 @@ init_config( void )
   my.auth           = new_auth();
   auth_set_proxy_required(my.auth, FALSE);
   auth_set_proxy_port(my.auth, 3128);
+  auth_set_proxy_socks5(my.auth, FALSE);
   my.timeout        = 30;
   my.timestamp      = FALSE;
   my.chunked        = FALSE;
@@ -212,6 +213,7 @@ show_config(int EXIT)
   if (auth_get_proxy_required(my.auth)){
     printf("proxy-host:                     %s\n", auth_get_proxy_host(my.auth));
     printf("proxy-port:                     %d\n", auth_get_proxy_port(my.auth));
+    printf("proxy-socks5:                   %s\n", auth_get_proxy_socks5(my.auth) ? "true" : "false");
   }
   printf("connection:                     %s\n", my.keepalive?"keep-alive":"close");
   printf("concurrent users:               %d\n", my.cusers);
@@ -575,6 +577,12 @@ load_conf(char *filename)
     }
     else if (strmatch(option, "proxy-host")) {
       auth_set_proxy_host(my.auth, trim(value));
+    }
+    else if (strmatch(option, "proxy-socks5")) {
+      if (!strncasecmp(value, "true", 4))
+        auth_set_proxy_socks5(my.auth, TRUE);
+      else
+        auth_set_proxy_socks5(my.auth, FALSE);
     }
     else if (strmatch(option, "proxy-port")) {
       if (value != NULL) {
