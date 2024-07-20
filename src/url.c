@@ -661,9 +661,36 @@ __url_parse(URL this, char *url)
 private void
 __parse_post_data(URL this, char *datap)
 {
+  char *ctype;
+  char *end_ctype;
+
+    // check content type
+  ctype = strstr(datap,"-T");
+  if (!empty(my.conttype)) {
+    this->conttype = xstrdup(my.conttype);
+  }else{
+    this->conttype = xstrdup("application/x-www-form-urlencoded");
+  }
+  
+  //if -T arg passed in line retrieve content type
+  if (ctype != NULL) {
+    // get end of content type defined by ; delimeter and separate strings with null terminator
+    // url file line should be constructed like this: http://url -T application/json; {data}
+    end_ctype = strstr(datap, ";");
+    *end_ctype = '\0';
+    // ctype moves to beginning of content type definition
+    ctype += 3;
+    // set conttype
+    this->conttype = xstrdup(ctype);
+    // move datap to char after null terminator
+    datap = end_ctype + 1;
+  }
+
   for (; isspace((unsigned int)*datap); datap++) {
     /* Advance past white space */
   }
+
+
   if (*datap == '<') {
     datap++;
     load_file(this, datap);
@@ -673,11 +700,6 @@ __parse_post_data(URL this, char *datap)
   } else {
     this->postdata = xstrdup(datap);
     this->postlen  = strlen(this->postdata);
-    if (! empty(my.conttype)) {
-      this->conttype = xstrdup(my.conttype);
-    } else {
-      this->conttype = xstrdup("application/x-www-form-urlencoded");
-    }
     return;
   }
 
