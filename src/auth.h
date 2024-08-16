@@ -46,7 +46,9 @@ BOOLEAN auth_set_ntlm_header(AUTH this, SCHEME scheme, char *header, char *realm
 char *  auth_get_digest_header(AUTH this, SCHEME scheme, DCHLG *chlg, DCRED *cred, const char *meth, const char *uri);
 BOOLEAN auth_set_digest_header(AUTH this, DCHLG **ch, DCRED **cr, unsigned int *rand, char *realm, char *str);
 BOOLEAN auth_get_proxy_required(AUTH this);
+BOOLEAN auth_get_proxy_socks5(AUTH this);
 void    auth_set_proxy_required(AUTH this, BOOLEAN required);
+void    auth_set_proxy_socks5(AUTH this, BOOLEAN socks5);
 char *  auth_get_proxy_host(AUTH this);
 void    auth_set_proxy_host(AUTH this, char *host);
 int     auth_get_proxy_port(AUTH this);
