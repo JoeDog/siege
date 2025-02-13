@@ -1,14 +1,12 @@
 dnl REQUIRE AUTOCONF 2.50 OR HIGHER...
-AC_PREREQ(2.63) 
+AC_PREREQ([2.63])
 
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(
-  m4_esyscmd_s([sed -ne 's/.*program_name.*"\(.*\)"\;/\1/p' src/version.c]), 
-  m4_esyscmd_s([sed -ne 's/.*version_string.*"\(.*\)"\;/\1/p' src/version.c]),
-) 
-AC_CONFIG_AUX_DIR(utils)  
+AC_INIT(m4_esyscmd_s(sed -ne 's/.*program_name.*"\(.*\)"\;/\1/p' src/version.c),
+  m4_esyscmd_s(sed -ne 's/.*version_string.*"\(.*\)"\;/\1/p' src/version.c),[])
+AC_CONFIG_AUX_DIR(utils)
 AC_CONFIG_MACRO_DIR(m4)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/setup.h])
@@ -29,14 +27,14 @@ AC_SUBST(PROGRAM)
 AC_SUBST(AUTHOR)
 AC_SUBST(EMAIL)
 AC_SUBST(PLATFORM)
- 
-dnl Check for AIX weirdos
-AC_AIX
- 
-dnl Checks for programs.
-AC_PROG_CC 
 
-AM_PROG_LIBTOOL 
+dnl Check for AIX weirdos
+AC_USE_SYSTEM_EXTENSIONS
+
+dnl Checks for programs.
+AC_PROG_CC
+
+LT_INIT
 
 dnl
 dnl Program support
@@ -57,7 +55,7 @@ case "$host_os" in
       fi
     fi
   ;;
-esac 
+esac
 
 if test -n "$GCC"; then
   oldCFLAGS=$CFLAGS
@@ -83,27 +81,21 @@ AC_SUBST(WARN_CFLAGS)
 AC_MSG_CHECKING([for dlopen() in -ldld])
 olibs=$LIBS
 LIBS="$LIBS -ldld"
-AC_TRY_LINK(, 
-  [ extern void* dlopen(); dlopen(); ],
-  AC_MSG_RESULT(yes);
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[ extern void* dlopen(); dlopen(); ]])],[AC_MSG_RESULT(yes);
   LIBS=$olibs;
   LDL=-ldld
-  AC_DEFINE(HAVE_SHL_LOAD, 1, [ Define if we have shl_load() ]),
-  AC_MSG_RESULT(no);
+  AC_DEFINE(HAVE_SHL_LOAD, 1,  Define if we have shl_load() )],[AC_MSG_RESULT(no);
   LDL=
-  LIBS=$olibs)
+  LIBS=$olibs])
 
 AC_MSG_CHECKING([for dlopen() in -ldl])
 olibs=$LIBS
 LIBS="$LIBS -ldl"
-AC_TRY_LINK(,
-  [ extern void* dlopen(); dlopen(); ],
-  AC_MSG_RESULT(yes);
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[ extern void* dlopen(); dlopen(); ]])],[AC_MSG_RESULT(yes);
   LIBS=$olibs;
-  LDL=-ldl,
-  AC_MSG_RESULT(no);
+  LDL=-ldl],[AC_MSG_RESULT(no);
   LDL=
-  LIBS=$olibs)
+  LIBS=$olibs])
 
 AC_SUBST(LDL)
 
@@ -117,7 +109,7 @@ if test "$ac_cv_have_dev_random" = yes; then
   AC_DEFINE([HAVE_DEV_RANDOM], 1, [Discovered a random device])
 fi
 
-dnl 
+dnl
 dnl with SSL support
 dnl
 MYSSL=off
@@ -141,18 +133,18 @@ else
   fi
 fi
 
-dnl 
+dnl
 dnl Check for ssl libraries
 dnl
 if test "$MYSSL" = "no"
 then
   AC_MSG_RESULT(HTTPS/ssl support disabled)
 else
-  AC_CHECK_HEADERS($MYSSL/include/openssl/opensslv.h, sslfound=yes, sslfound=locate)
+  AC_CHECK_HEADERS([$MYSSL/include/openssl/opensslv.h], [sslfound=yes], [sslfound=locate])
   if test $sslfound = "locate"; then
      dnl the user probably misunderstood the option....
      for dir in /usr /usr/local /usr/local/ssl /usr/pkg /usr/lib/ssl /usr/include/ssl /usr/include; do
-       AC_CHECK_HEADERS($dir/include/openssl/opensslv.h, sslfound=yes, sslfound=no)
+       AC_CHECK_HEADERS([$dir/include/openssl/opensslv.h], [sslfound=yes], [sslfound=no])
        if test $sslfound = "yes" ; then
          SSL_CFLAGS="-DOPENSSL_NO_KRB5"
          SSL_LDFLAGS="-L$dir/lib"
@@ -162,7 +154,7 @@ else
          CPPFLAGS="$SSL_INCLUDE $CPPFLAGS"
          AC_EGREP_CPP(yes,[
            #include <openssl/opensslv.h>
-           #if OPENSSL_VERSION_NUMBER >= 0x0090800fL 
+           #if OPENSSL_VERSION_NUMBER >= 0x0090800fL
            yes
            #endif
          ],[
@@ -170,7 +162,7 @@ else
            AC_MSG_RESULT([>= 0.9.8 (appropriate flag set)])
          ],[
            AC_MSG_RESULT([< 0.9.8])
-         ]) 
+         ])
          AC_SUBST(SSL_CFLAGS)
          AC_SUBST(SSL_INCLUDE)
          AC_SUBST(SSL_LDFLAGS)
@@ -189,7 +181,7 @@ else
     CPPFLAGS="$SSL_INCLUDE $CPPFLAGS"
     AC_EGREP_CPP(yes,[
       #include <openssl/opensslv.h>
-      #if OPENSSL_VERSION_NUMBER >= 0x0090800fL 
+      #if OPENSSL_VERSION_NUMBER >= 0x0090800fL
       yes
       #endif
     ],[
@@ -197,7 +189,7 @@ else
       AC_MSG_RESULT([>= 0.9.8 (appropriate flag set)])
     ],[
       AC_MSG_RESULT([< 0.9.8])
-    ]) 
+    ])
     AC_SUBST(SSL_CFLAGS)
     AC_SUBST(SSL_INCLUDE)
     AC_SUBST(SSL_LDFLAGS)
@@ -206,7 +198,7 @@ else
   fi
 fi
 
-dnl 
+dnl
 dnl with zlib support
 dnl
 MYZ=off
@@ -225,12 +217,12 @@ then
   AC_MSG_RESULT(checking for zlib support... no)
 else
   AC_MSG_RESULT(checking for zlib support... yes)
-  if test "$MYZ" = "off" ; then 
+  if test "$MYZ" = "off" ; then
     MYZ=""
   fi
 fi
 
-dnl 
+dnl
 dnl Check for zlib
 dnl
 if test "$MYZ" = "no"
@@ -287,7 +279,6 @@ AC_CHECK_TYPE(u_int32_t,unsigned int)
 AC_CHECK_TYPE(ssize_t,  int)
 
 dnl Checks for header files.
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h)
 AC_CHECK_HEADERS(limits.h)
@@ -302,10 +293,10 @@ AC_CHECK_HEADERS(errno.h)
 AC_CHECK_HEADERS(arpa/inet.h)
 AC_CHECK_HEADERS(netinet/in.h)
 AC_CHECK_HEADERS(netdb.h)
-AC_CHECK_HEADERS(pthread.h) 
-AC_CHECK_HEADERS(string.h) 
-AC_CHECK_HEADERS(strings.h) 
-AC_CHECK_HEADERS(sched.h) 
+AC_CHECK_HEADERS(pthread.h)
+AC_CHECK_HEADERS(string.h)
+AC_CHECK_HEADERS(strings.h)
+AC_CHECK_HEADERS(sched.h)
 AC_CHECK_HEADERS(openssl/e_os.h)
 AC_CHECK_HEADERS(openssl/e_os2.h)
 
@@ -314,12 +305,8 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 dnl
 AC_C_CONST
 AC_TYPE_SIZE_T
-AC_HEADER_TIME
+AC_CHECK_HEADERS_ONCE([sys/time.h])
 
-dnl
-dnl Return type of signal-handlers
-dnl
-AC_TYPE_SIGNAL
 
 dnl
 dnl Checks for library functions.
@@ -352,7 +339,7 @@ dnl
 PTHREAD_CFLAGS=error
 PTHREAD_LDFLAGS=error
 
-dnl If it's error, then the user didn't 
+dnl If it's error, then the user didn't
 dnl define it.
 if test "x$PTHREAD_LDFLAGS" = xerror; then
   AC_CHECK_LIB(pthread, pthread_attr_init, [
@@ -363,7 +350,7 @@ fi
 if test "x$PTHREAD_LDFLAGS" = xerror; then
   AC_CHECK_LIB(pthreads, pthread_attr_init, [
              PTHREAD_CFLAGS="-D_THREAD_SAFE"
-             PTHREAD_LDFLAGS="-lpthreads" ]) 
+             PTHREAD_LDFLAGS="-lpthreads" ])
 fi
 
 if test "x$PTHREAD_LDFLAGS" = xerror; then
@@ -381,7 +368,7 @@ fi
 if test $PTHREAD_LDFLAGS = "error"; then
   AC_MSG_WARN(pthread library NOT found: guessing and hoping for the best....)
   PTHREAD_CFLAGS="-D_REENTRANT"
-  PTHREAD_LDFLAGS="-lpthread" 
+  PTHREAD_LDFLAGS="-lpthread"
 fi
 
 AC_SUBST(PTHREAD_CFLAGS)
@@ -392,13 +379,13 @@ dnl On some platforms, notably Solaris, these
 dnl variables are assigned literally by the user
 dnl and not implied. (don't know why...)
 case "$host_os" in
-  *solaris*) 
-    if test -z "$ac_given_sysconfdir" ; 
+  *solaris*)
+    if test -z "$ac_given_sysconfdir" ;
     then
       sysconfdir="$prefix/etc"
     fi
- 
-    if test -z "$ac_given_localstatedir" ; 
+
+    if test -z "$ac_given_localstatedir" ;
     then
       localstatedir="$prefix/var"
     fi
@@ -406,17 +393,17 @@ case "$host_os" in
   *) ;;
 esac
 
-dnl 
+dnl
 dnl Create <joedog/joepath.h> header file
 dnl
-AC_OUTPUT_COMMANDS([
+AC_CONFIG_COMMANDS([default-1],[[
 	outfile=include/joedog/path.h
 	tmpfile=${outfile}
 	cat > $tmpfile << _EOF_
 /**
  * Path Header
  *
- * Copyright (C) 2000-2013 by 
+ * Copyright (C) 2000-2013 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege
  *
@@ -446,12 +433,12 @@ AC_OUTPUT_COMMANDS([
 
 #endif/*JOEDOG_PATH_H*/
 _EOF_
-], [ prefix=$prefix sysconfdir=$sysconfdir localstatedir=$localstatedir platform=$PLATFORM ])
+]],[[ prefix=$prefix sysconfdir=$sysconfdir localstatedir=$localstatedir platform=$PLATFORM ]])
 
 dnl
 dnl update dates and versioning in doc
 dnl
-AC_OUTPUT_COMMANDS([
+AC_CONFIG_COMMANDS([default-2],[[
   for file in doc/bombardment.1 doc/siege.1 doc/siege.config.1 doc/siege2csv.1 doc/siegerc;
   do
     rm -f $file
@@ -463,12 +450,12 @@ AC_OUTPUT_COMMANDS([
         -e "s|\$_EMAIL|$EMAIL|g" \
         < $file.in > $file
   done
-], [ VERSION=$VERSION DATE="$DATE" PROGRAM="$PROGRAM" AUTHOR="$AUTHOR" EMAIL="$EMAIL" ])
+]],[[ VERSION=$VERSION DATE="$DATE" PROGRAM="$PROGRAM" AUTHOR="$AUTHOR" EMAIL="$EMAIL" ]])
 
 dnl
 dnl create siege.config utility
 dnl
-AC_OUTPUT_COMMANDS([
+AC_CONFIG_COMMANDS([default-3],[[
   infile=utils/siege.config.in
   outfile=utils/siege.config
   rm -f $outfile
@@ -481,47 +468,48 @@ AC_OUTPUT_COMMANDS([
   echo "echo \"Run siege -C to view the current settings in that file\"" >> $outfile
   echo "exit"     >> $outfile
   echo ""         >> $outfile
- 
-], [ bindir=$bindir sh=$SHELL ])
+
+]],[[ bindir=$bindir sh=$SHELL ]])
 
 dnl
 dnl create bombardment utility
 dnl
-AC_OUTPUT_COMMANDS([
+AC_CONFIG_COMMANDS([default-4],[[
   infile=utils/bombardment.in
   outfile=utils/bombardment
   rm -f $outfile
   sed -e "s|%_PREFIX%|$bindir|" \
       -e "s|%_SHELL%|$sh|" \
       < $infile > $outfile
- 
-], [ bindir=$bindir sh=$SHELL ])
+
+]],[[ bindir=$bindir sh=$SHELL ]])
 
 dnl
 dnl create siege2csv utility
 dnl
-AC_OUTPUT_COMMANDS([
-  infile=utils/siege2csv.in 
+AC_CONFIG_COMMANDS([default-5],[[
+  infile=utils/siege2csv.in
   outfile=utils/siege2csv.pl
   rm -f $outfile
   sed -e "s|%_PREFIX%|$bindir|" \
       -e "s|%_PERL%|$LREP|" \
       < $infile > $outfile
- 
-], [ bindir=$bindir LREP=$PERL ])
+
+]],[[ bindir=$bindir LREP=$PERL ]])
 
 dnl
 dnl Write platform to file for support reporting
 dnl
-AC_OUTPUT_COMMANDS([
+AC_CONFIG_COMMANDS([default-6],[[
 	outfile=PLATFORM
 	tmpfile=${outfile}
 	cat > $tmpfile << _EOF_
 $PLATFORM
 _EOF_
-], [PLATFORM=$PLATFORM])
+]],[[PLATFORM=$PLATFORM]])
 
-AC_OUTPUT(Makefile src/Makefile doc/Makefile html/Makefile include/Makefile include/joedog/Makefile utils/Makefile)
+AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile html/Makefile include/Makefile include/joedog/Makefile utils/Makefile])
+AC_OUTPUT
 
 echo
 echo "--------------------------------------------------------"
@@ -532,4 +520,4 @@ echo "  make "
 echo "  make install"
 echo
 echo "For complete documentation:        http://www.joedog.org"
-echo "--------------------------------------------------------" 
+echo "--------------------------------------------------------"
