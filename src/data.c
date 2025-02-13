@@ -33,16 +33,11 @@
 # include <sys/times.h>
 #endif/*HAVE_SYS_TIMES_H*/
 
-#if TIME_WITH_SYS_TIME
+#include <time.h>
+
+#ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif/*HAVE_SYS_TIME_H   */
-#endif /*TIME_WITH_SYS_TIME*/
+#endif/*HAVE_SYS_TIME_H*/
 
 
 struct DATA_T

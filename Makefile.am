@@ -1,7 +1,7 @@
 ##
 ## Makefile.am
 ##
-## Copyright (C) 2000-2015 by 
+## Copyright (C) 2000-2015 by
 ## Jeffrey Fulmer - <jeff@joedog.org>, et al.
 ## This file is distributed as part of Siege
 ##
@@ -15,12 +15,14 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 ##
-## You should have received a copy of the GNU General Public License along 
-## with this program; if not, write to the Free Software Foundation, Inc., 
+## You should have received a copy of the GNU General Public License along
+## with this program; if not, write to the Free Software Foundation, Inc.,
 ## 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ##
 
-AUTOMAKE_OPTIONS  =    foreign no-dependencies  
+ACLOCAL_AMFLAGS   =    -I m4
+
+AUTOMAKE_OPTIONS  =    foreign no-dependencies
 
 WARN_CFLAGS       =    @WARN_CFLAGS@
 
@@ -30,5 +32,4 @@ SUBDIRS           =    . include src utils doc html
 
 DIST_SUBDIRS      =    $(SUBDIRS)
 
-EXTRA_DIST        =    README.md acspecific.m4 aclocal.m4 acinclude.m4
-
+EXTRA_DIST        =    README.md
