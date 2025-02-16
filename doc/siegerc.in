@@ -615,6 +615,14 @@ unique = true
 # proxy-port =
 
 #
+# Proxy Socks5: By default siege will attempt to connect to HTTP proxy 
+# (which is the most common way), however, you can enable socks5 proxy
+# with the setting proxy-socks5
+#
+# ex: proxy-socks5 = true
+# proxy-socks5 =
+
+#
 # Proxy-Authenticate: When siege hits a proxy server which requires 
 # username and password authentication, it will this username and 
 # password to the server. The format is username, password and optional
