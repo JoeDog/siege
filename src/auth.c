@@ -1115,6 +1115,12 @@ __digest_challenge(const char *challenge)
     xfree(key);
   }
 
+  /* Use default MD5 algorithm if not present in the header */
+  if (NULL == result->algorithm)
+  {
+    result->algorithm = strdup("MD5");
+  }
+
   return result;
 }
 
