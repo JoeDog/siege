@@ -1149,13 +1149,13 @@ __get_h_a1(const DCHLG *chlg, DCRED *cred, const char *nonce_value)
 {
   char *h_usrepa, *result, *tmp;
 
-  if (0 == strcasecmp("MD5", chlg->algorithm)) {
+  if (NULL != chlg->algorithm && 0 == strcasecmp("MD5", chlg->algorithm)) {
     tmp = xstrcat(cred->username, ":", chlg->realm, ":", cred->password, NULL);
     h_usrepa = __get_md5_str(tmp);
     xfree(tmp);
     result = h_usrepa;
   }
-  else if (0 == strcasecmp("MD5-sess", chlg->algorithm)) {
+  else if (NULL != chlg->algorithm && 0 == strcasecmp("MD5-sess", chlg->algorithm)) {
     if ((NULL == cred->h_a1)) {
       tmp = xstrcat(cred->username, ":", chlg->realm, ":", cred->password, NULL);
       h_usrepa = __get_md5_str(tmp);
@@ -1170,7 +1170,7 @@ __get_h_a1(const DCHLG *chlg, DCRED *cred, const char *nonce_value)
     }
   }
   else {
-    fprintf(stderr, "invalid call to %s algorithm is [%s]\n", __FUNCTION__, chlg->algorithm);
+    fprintf(stderr, "invalid call to %s algorithm is [%s]\n", __FUNCTION__, NULL != chlg->algorithm ? chlg->algorithm : "NULL");
     return NULL;
   }
 
@@ -1195,4 +1195,3 @@ __str_list_contains(const char *str, const char *pattern, size_t pattern_len)
 
   return FALSE;
 }
-
