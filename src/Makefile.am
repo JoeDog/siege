@@ -24,11 +24,11 @@ bin_PROGRAMS       =   siege
 
 WARN_CFLAGS        =   @WARN_CFLAGS@
 
-AM_CFLAGS          =   $(SSL_INCLUDE) $(Z_INCLUDE) $(PTHREAD_CFLAGS) $(WARN_CFLAGS) $(SSL_CFLAGS) $(Z_CFLAGS)
+AM_CFLAGS          =   $(SSL_INCLUDE) $(Z_INCLUDE) $(UUID_INCLUDE) $(PTHREAD_CFLAGS) $(WARN_CFLAGS) $(SSL_CFLAGS) $(Z_CFLAGS) $(UUID_CFLAGS)
 
-AM_LDFLAGS         =   $(SSL_LDFLAGS) $(Z_LDFLAGS) $(PTHREAD_LDFLAGS)  
+AM_LDFLAGS         =   $(SSL_LDFLAGS) $(Z_LDFLAGS) $(PTHREAD_LDFLAGS) $(UUID_LDFLAGS)
 
-LIBS               =   $(SSL_LIBS) $(Z_LIBS)
+LIBS               =   $(SSL_LIBS) $(Z_LIBS) $(UUID_LIBS)
 
 siege_SOURCES      =   \
 ansidecl.h             \
@@ -37,6 +37,7 @@ auth.c     auth.h      \
 base64.c   base64.h    \
 browser.c  browser.h   \
 cache.c    cache.h     \
+cookie_def.h           \
 cookie.c   cookie.h    \
 cookies.c  cookies.h   \
 cfg.c      cfg.h       \
@@ -45,6 +46,7 @@ crew.c     crew.h      \
 data.c     data.h      \
 date.c     date.h      \
 eval.c     eval.h      \
+facts.c    facts.h     \
 ftp.c      ftp.h       \
 getopt.c   getopt1.c   \
 handler.c  handler.h   \
@@ -65,6 +67,7 @@ sock.c     sock.h      \
 ssl.c      ssl.h       \
 stralloc.c stralloc.h  \
 timer.c    timer.h     \
+uuid.c     uuid.h      \
 url.c      url.h       \
 util.c     util.h      \
 version.c  version.h
