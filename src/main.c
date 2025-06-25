@@ -383,21 +383,50 @@ __urls_setup()
   return lines;
 }
 
+private BOOLEAN
+__save_cookies(char *file, char *text)
+{
+  FILE * fp;
+
+  fp  = fopen(file, "w");
+  if (fp == NULL) {
+    fprintf(stderr, "ERROR: Unable to open cookies file: %s\n", file);
+    return FALSE;
+  }
+  fputs("#\n", fp);
+  fputs("# Siege cookies file. You may edit this file to add cookies\n",fp);
+  fputs("# manually but comments and formatting will be removed.    \n",fp);
+  fputs("# All cookies that expire in the future will be preserved. \n",fp);
+  fputs("# ---------------------------------------------------------\n",fp);
+  fputs(text, fp);
+  fclose(fp);
+  return TRUE; 
+}
+
+
 int 
 main(int argc, char *argv[])
 {
   int       i, j;
   int       result   = 0;
   void  *   status   = NULL;
+  char      name[]   = "cookies.txt";
+  char  *   home     = getenv("HOME");
+  int       length   = home ? strlen(home)+strlen(name)+9 : 256;
+  char  *   file     = xmalloc(length); 
   LINES *   lines    = NULL;
   CREW      crew     = NULL;
   DATA      data     = NULL;
-  HASH      cookies  = NULL;
   ARRAY     urls     = new_array();
   ARRAY     browsers = new_array();
   pthread_t cease; 
   pthread_t timer;  
   pthread_attr_t scope_attr;
+
+
+  file = xmalloc(sizeof (char*) * length);
+  memset(file, '\0', sizeof (char*) * length);
+  snprintf(file, length, "%s/.siege/%s", home, name);
  
   __signal_setup();
   __config_setup(argc, argv);
@@ -432,17 +461,9 @@ main(int argc, char *argv[])
     }
   } 
 
-  cookies = load_cookies(my.cookies);
   for (i = 0; i < my.cusers; i++) {
-    char    tmp[4096];
-    BROWSER B = new_browser(i);
-    memset(tmp, '\0', sizeof(tmp));
-    snprintf(tmp, 4096, "%d", i);
-    if (cookies != NULL) {
-      if (hash_get(cookies, tmp) != NULL) {
-        browser_set_cookies(B, (HASH)hash_get(cookies, tmp));
-      } 
-    }
+    BROWSER B = new_browser(i+1, file);
+
     if (my.reps > 0 ) {
       browser_set_urls(B, urls);
     } else {
@@ -514,15 +535,18 @@ main(int argc, char *argv[])
   for (i = 0; i < ((crew_get_total(crew) > my.cusers || 
                     crew_get_total(crew) == 0) ? my.cusers : crew_get_total(crew)); i++) {
     BROWSER B = (BROWSER)array_get(browsers, i);
-    data_increment_count(data, browser_get_hits(B));
-    data_increment_bytes(data, browser_get_bytes(B));
-    data_increment_total(data, browser_get_time(B));
-    data_increment_code (data, browser_get_code(B));
-    data_increment_okay (data, browser_get_okay(B));
-    data_increment_fail (data, browser_get_fail(B));
-    data_set_highest    (data, browser_get_himark(B));
-    data_set_lowest     (data, browser_get_lomark(B));
+    data_increment_count  (data, browser_get_hits(B));
+    data_increment_bytes  (data, browser_get_bytes(B));
+    data_increment_total  (data, browser_get_time(B));
+    data_increment_code   (data, browser_get_code(B));
+    data_increment_okay   (data, browser_get_okay(B));
+    data_increment_fail   (data, browser_get_fail(B));
+    data_set_highest      (data, browser_get_himark(B));
+    data_set_lowest       (data, browser_get_lomark(B));
+    data_increment_cookies(data, browser_get_cookies(B));
   } crew_destroy(crew);
+
+  __save_cookies(file, data_get_cookies(data));
 
   pthread_usleep_np(10000);
 
@@ -597,8 +621,6 @@ main(int argc, char *argv[])
   data       = data_destroy(data);
   urls       = array_destroyer(urls, (void*)url_destroy);
   browsers   = array_destroyer(browsers, (void*)browser_destroy);
-  cookies    = hash_destroy(cookies);
-  my.cookies = cookies_destroy(my.cookies);
 
   if (my.url == NULL) {
     for (i = 0; i < my.length; i++)
