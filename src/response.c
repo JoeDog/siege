@@ -1,7 +1,7 @@
 /**
  * HTTP Response Headers
  *
- * Copyright (C) 2016
+ * Copyright (C) 2016-2025
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * Copyright (C) 1999 by
  * Jeffrey Fulmer - <jeff@joedog.org>.
@@ -610,7 +610,6 @@ __boolean_value(RESPONSE this, char *key, BOOLEAN def)
   }
   return res; 
 }
-
 
 private char *
 __parse_pair(char **str)
