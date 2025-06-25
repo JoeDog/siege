@@ -1,7 +1,7 @@
 /**
  * Browser instance
  *
- * Copyright (C) 2016 by
+ * Copyright (C) 2025 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege
  *
@@ -28,11 +28,13 @@
 #include <signal.h>
 #include <sock.h>
 #include <ssl.h>
+#include <facts.h>
 #include <ftp.h>
 #include <http.h>
 #include <hash.h>
 #include <array.h>
 #include <util.h>
+#include <uuid.h>
 #include <parser.h>
 #include <perl.h>
 #include <response.h>
@@ -55,9 +57,11 @@ struct BROWSER_T
 {
   int      id;
   size_t   tid;
+  char     uuid[37];
   ARRAY    urls;
   ARRAY    parts;
   HASH     cookies;
+  FACTS    facts;
   CONN *   conn;
 #ifdef SIGNAL_CLIENT_PLATFORM
   sigset_t sigs;
@@ -112,7 +116,6 @@ private BOOLEAN __no_follow(const char *hostname);
 private void    __increment_failures();
 private int     __select_color(int code);
 private void    __display_result(BROWSER this, RESPONSE resp, URL U, unsigned long bytes, float etime);
-private void    __init_cookies(BROWSER this);
 
 #ifdef  SIGNAL_CLIENT_PLATFORM
 private void    __signal_handler(int sig);
@@ -123,12 +126,13 @@ private void    __signal_cleanup();
 
 
 BROWSER
-new_browser(int id)
+new_browser(int id, char *file)
 {
   BROWSER this;
 
   this = calloc(BROWSERSIZE,1);
   this->id        = id;
+  this->facts     = new_facts(this->id, file);
   this->total     = 0.0;
   this->available = 0.0;
   this->count     = 0.0;
@@ -141,6 +145,7 @@ new_browser(int id)
   this->urls      = NULL;
   this->parts     = new_array();
   this->rseed     = urandom();
+  generate_uuid(this->uuid, this->id);
   return this;
 }
 
@@ -153,6 +158,9 @@ browser_destroy(BROWSER this)
      * never instantiated in this class.  We'll reclaim that 
      * memory when we deconstruct main.c:urls 
      */
+    if (this->facts != NULL) {
+      this->facts = facts_destroy(this->facts);
+    }
 
     if (this->parts != NULL) {
       URL u;
@@ -165,6 +173,12 @@ browser_destroy(BROWSER this)
   }
   this = NULL;
   return this; 
+}
+
+char * 
+browser_get_cookies(BROWSER this)
+{
+  return get_cookies(this->facts);
 }
 
 unsigned long
@@ -250,8 +264,6 @@ start(BROWSER this)
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &this->state);
 #endif/*SIGNAL_CLIENT_PLATFORM*/
 
-  __init_cookies(this);
-
   if (my.login == TRUE) {
     URL tmp = new_url(array_next(my.lurl));
     url_set_ID(tmp, 0);
@@ -277,7 +289,8 @@ start(BROWSER this)
       if (y >= max_y) {
         y = 0;
         if (my.expire) {
-          cookies_delete_all(my.cookies);
+          //cookies_delete_all(my.cookies);
+          // XXX: FIX ME, use this->facts
         }
       }
     }
@@ -381,26 +394,6 @@ browser_set_cookies(BROWSER this, HASH cookies)
   this->cookies = cookies;
 }
 
-private void
-__init_cookies(BROWSER this) {
-  int i;
-  if (this->cookies != NULL) {
-    char **keys = hash_get_keys(this->cookies);
-    for (i = 0; i < hash_get_entries(this->cookies); i ++){
-      /**
-       * We need a local copy of the variable to pass to cookies_add
-       */
-      char *tmp;
-      int   len = strlen(hash_get(this->cookies, keys[i]));
-      tmp = xmalloc(len+2);
-      memset(tmp, '\0', len+2);
-      snprintf(tmp, len+1, "%s", (char*)hash_get(this->cookies, keys[i]));
-      cookies_add(my.cookies, tmp, ".");
-      xfree(tmp);
-    }
-  }
-}
-
 private BOOLEAN
 __request(BROWSER this, URL U) {
   this->conn->scheme = url_get_scheme(U);
@@ -482,13 +475,13 @@ __http(BROWSER this, URL U)
    */
   if (url_get_method(U) == POST   || url_get_method(U) == PUT || url_get_method(U) == PATCH || 
       url_get_method(U) == DELETE || url_get_method(U) == OPTIONS) {
-    if ((http_post(this->conn, U)) == FALSE) {
+    if ((http_post(this->conn, U, this->facts)) == FALSE) {
       this->conn->connection.reuse = 0;
       socket_close(this->conn);
       return FALSE;
     }
   } else {
-    if ((http_get(this->conn, U)) == FALSE) {
+    if ((http_get(this->conn, U, this->facts)) == FALSE) {
       this->conn->connection.reuse = 0;
       socket_close(this->conn);
       return FALSE;
@@ -498,7 +491,7 @@ __http(BROWSER this, URL U)
   /**
    * read from socket and collect statistics.
    */
-  if ((resp = http_read_headers(this->conn, U))==NULL) {
+  if ((resp = http_read_headers(this->conn, U, this->facts))==NULL) {
     this->conn->connection.reuse = 0;
     socket_close(this->conn);
     echo ("%s:%d NULL headers", __FILE__, __LINE__);
