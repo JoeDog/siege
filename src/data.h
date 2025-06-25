@@ -43,16 +43,17 @@ DATA  new_data();
 DATA  data_destroy(DATA this);
 
 /* setters */
-void  data_set_start      (DATA this);
-void  data_set_stop       (DATA this);
-void  data_set_highest    (DATA this, float highest);
-void  data_set_lowest     (DATA this, float lowest);
-void  data_increment_bytes(DATA this, unsigned long bytes);
-void  data_increment_count(DATA this, unsigned long count);
-void  data_increment_total(DATA this, float total);
-void  data_increment_code (DATA this, int code);
-void  data_increment_fail (DATA this, int fail);
-void  data_increment_okay (DATA this, int ok200);
+void  data_set_start        (DATA this);
+void  data_set_stop         (DATA this);
+void  data_set_highest      (DATA this, float highest);
+void  data_set_lowest       (DATA this, float lowest);
+void  data_increment_bytes  (DATA this, unsigned long bytes);
+void  data_increment_count  (DATA this, unsigned long count);
+void  data_increment_total  (DATA this, float total);
+void  data_increment_code   (DATA this, int code);
+void  data_increment_fail   (DATA this, int fail);
+void  data_increment_okay   (DATA this, int ok200);
+void  data_increment_cookies(DATA this, const char *str);
 
 /* getters */
 float    data_get_total(DATA this);
@@ -66,6 +67,7 @@ float    data_get_response_time(DATA this);
 float    data_get_transaction_rate(DATA this);
 float    data_get_throughput(DATA this);
 float    data_get_concurrency(DATA this);
+char *   data_get_cookies(DATA this);
 unsigned int data_get_count(DATA this);
 unsigned int data_get_code (DATA this);
 unsigned int data_get_fail (DATA this);
