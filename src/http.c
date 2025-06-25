@@ -1,7 +1,7 @@
 /**
  * HTTP/HTTPS protocol support 
  *
- * Copyright (C) 2000-2016 by
+ * Copyright (C) 2000-2025 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege 
  *
@@ -107,7 +107,7 @@ https_tunnel_response(CONN *C)
 }
 
 BOOLEAN
-http_get(CONN *C, URL U)
+http_get(CONN *C, URL U, FACTS facts)
 {
   size_t rlen;
   size_t mlen; 
@@ -162,7 +162,8 @@ http_get(CONN *C, URL U)
     snprintf(keepalive, sizeof(keepalive), "close");
   }
 
-  cookies_header(my.cookies, url_get_hostname(U), cookie);
+  cookies_header(facts->jar, url_get_hostname(U), cookie);
+
   if (C->auth.www) {
     if (C->auth.type.www==DIGEST) {
       snprintf (
@@ -269,7 +270,7 @@ http_get(CONN *C, URL U)
 }
 
 BOOLEAN
-http_post(CONN *C, URL U)
+http_post(CONN *C, URL U, FACTS facts)
 {
   size_t rlen;
   size_t mlen;
@@ -322,7 +323,7 @@ http_post(CONN *C, URL U)
     snprintf(keepalive, sizeof(keepalive), "close");
   }
 
-  cookies_header(my.cookies, url_get_hostname(U), cookie);
+  cookies_header(facts->jar, url_get_hostname(U), cookie);
   if (C->auth.www) {
     if (C->auth.type.www==DIGEST) {
       snprintf (
@@ -430,7 +431,7 @@ http_post(CONN *C, URL U)
  * header information into the struct.
  */
 RESPONSE
-http_read_headers(CONN *C, URL U)
+http_read_headers(CONN *C, URL U, FACTS facts)
 { 
   int  x;
   int  n; 
@@ -472,12 +473,10 @@ http_read_headers(CONN *C, URL U)
       C->content.length = atoi(line + 16); 
     }
     if (strncasecmp(line, SET_COOKIE, strlen(SET_COOKIE)) == 0) {
-      if (my.cookies) {
-        char tmp[MAX_COOKIE_SIZE];
-        memset(tmp, '\0', MAX_COOKIE_SIZE);
-        strncpy(tmp, line+12, strlen(line));
-        cookies_add(my.cookies, tmp, url_get_hostname(U));
-      }
+      char tmp[MAX_COOKIE_SIZE];
+      memset(tmp, '\0', MAX_COOKIE_SIZE);
+      strncpy(tmp, line+12, strlen(line));
+      set_cookie(facts, tmp, url_get_hostname(U)); 
     }
     if (strncasecmp(line, CONNECTION, strlen(CONNECTION)) == 0) {
       response_set_connection(resp, line);

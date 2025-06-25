@@ -32,6 +32,7 @@
 #include <cookie.h>
 #include <auth.h>
 #include <url.h>
+#include <facts.h>
 #include <response.h>
 #include <joedog/boolean.h>
 
@@ -44,9 +45,9 @@
 #define POSTBUF 63488
 
 /* http function prototypes */
-BOOLEAN   http_get (CONN *C, URL U);
-BOOLEAN   http_post(CONN *C, URL U);
-RESPONSE  http_read_headers(CONN *C, URL U);
+BOOLEAN   http_get (CONN *C, URL U, FACTS facts);
+BOOLEAN   http_post(CONN *C, URL U, FACTS facts);
+RESPONSE  http_read_headers(CONN *C, URL U, FACTS facts);
 ssize_t   http_read(CONN *C, RESPONSE R);
 BOOLEAN   https_tunnel_request(CONN *C, char *host, int port);
 int       https_tunnel_response(CONN *C);
