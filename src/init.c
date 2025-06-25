@@ -133,7 +133,6 @@ init_config( void )
   my.ssl_ciphers    = NULL; 
   my.lurl           = new_array();
   my.aurl           = new_array();
-  my.cookies        = new_cookies();
   my.nomap          = xcalloc(1, sizeof(LINES));
   my.nomap->index   = 0;
   my.nomap->line    = NULL;
@@ -258,7 +257,6 @@ show_config(int EXIT)
   my.auth    = auth_destroy(my.auth);
   my.lurl    = array_destroy(my.lurl);
   my.aurl    = array_destroy(my.aurl);
-  my.cookies = cookies_destroy(my.cookies); 
 
   if (EXIT) exit(0);
   else return 0;
@@ -273,7 +271,6 @@ readline(char **s, FILE *fp)
   int     size = 0;
   char    *tmp = NULL;
   char    *ptr = NULL;
-  char    *txt = NULL;
   BOOLEAN lop  = TRUE;
 
   ptr  = xmalloc(LINESZ);
@@ -313,19 +310,11 @@ readline(char **s, FILE *fp)
   }
   ptr[len] = '\0';
  
-  /**
-   * This condition is a band-aid. Some passwords 
-   * contain '#' which are treated like comments in
-   * the siege.conf file. So if a line begins with 
-   * login, we won't treat '#' as a comment. If lop
-   * is FALSE, we won't null out the line. 
-   */
-  txt = strdup(ptr);
-  trim(txt);
-  if (strncmp(txt, "login", 5) == 0) {
+  trim(ptr);
+  if (strncmp(ptr, "login", 5) == 0) {
     lop = FALSE;
-  } 
-  xfree(txt);
+  }
+
   for (i = 0; ptr[i] != '\0'; i++) {
     if (ptr[i] == '#' && lop == TRUE) {
       ptr[i] = '\0';
@@ -361,7 +350,7 @@ load_conf(char *filename)
     char *tmp = line;
     line = trim(line);
     if (*line == '#' || *line == '\0' || strlen(line) < 1) {
-      free(line);
+      free(tmp);
       continue;
     }
 
