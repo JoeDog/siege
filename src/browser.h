@@ -29,11 +29,13 @@
 typedef struct BROWSER_T *BROWSER;
 extern  size_t BROWSERSIZE;
 
-BROWSER  new_browser(int id);
+BROWSER  new_browser(int id, char *file);
 BROWSER  browser_destroy(BROWSER this);
 void *   start(BROWSER this);
+char *   browser_get_uuid(BROWSER this);
 void     browser_set_urls(BROWSER this, ARRAY urls);
 void     browser_set_cookies(BROWSER this, HASH cookies);
+char *   browser_get_cookies(BROWSER this);
 unsigned long browser_get_hits(BROWSER this);
 unsigned long long browser_get_bytes(BROWSER this);
 float    browser_get_time(BROWSER this);
