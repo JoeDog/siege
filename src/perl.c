@@ -46,62 +46,25 @@ chomp(char *str)
   return str;
 }
 
-/**
- * rtrim
- */
-char *
-rtrim(char *str)
-{
-  char *ptr;
-  int   len;
- 
-  if (str == NULL) { 
-    return NULL;
-  }
- 
-  for (ptr = str; *ptr && isspace((int)*ptr); ++ptr);
- 
-  len = strlen(str);
-  for (ptr = str + len - 1; ptr >= str && isspace((int)*ptr ); --ptr);
-  
-  ptr[1] = '\0';
- 
-  return str;
+char *ltrim(char *s) {
+  if (!s) return NULL;
+  while (isspace((unsigned char)*s)) s++;
+  return s;
 }
 
-/**
- * ltrim: trim white space off left of str 
- */ 
-char *
-ltrim(char *str)
-{
-  char *ptr;
-  int  len;
-  
-  if (str == NULL) { 
-    return NULL;
+char *rtrim(char *s) {
+  if (!s) return NULL;
+  char *end = s + strlen(s) - 1;
+  while (end >= s && isspace((unsigned char)*end)) {
+    *end = '\0';
+    end--;
   }
- 
-  for (ptr = str; *ptr && isspace((int)*ptr); ++ptr);
- 
-  len = strlen(ptr);
-  memmove(str, ptr, len + 1);
- 
-  return str;
+  return s;
 }
 
-/**
- * trim: calls ltrim and rtrim
- */ 
-char *
-trim(char *str)
-{
-  char *ptr;
-  if (str == NULL) return NULL;
-  ptr = rtrim(str);
-  str = ltrim(ptr);
-  return str;
-} 
+char *trim(char *s) {
+  return rtrim(ltrim(s));
+}
 
 int
 valid(const char *s)
