@@ -1,7 +1,7 @@
 /**
  * URL Support
  *
- * Copyright (C) 2013-2022 
+ * Copyright (C) 2013-2025
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * Copyright (C) 1999 by
  * Jeffrey Fulmer - <jeff@joedog.org>.
