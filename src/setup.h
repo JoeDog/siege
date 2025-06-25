@@ -1,7 +1,7 @@
 /**
  * Package header
  *
- * Copyright (C) 2000-2013 by
+ * Copyright (C) 2000-2025 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al. 
  * This file is distributed as part of Siege 
  * 
@@ -178,7 +178,7 @@ struct CONFIG
   BOOLEAN mark;          /* signifies a log file mark req.          */ 
   char    *markstr;      /* user defined string value to mark file  */
   int     protocol;      /* 0=HTTP/1.0; 1=HTTP/1.1                  */
-  COOKIES cookies;       /* cookies    */
+  //COOKIES cookies;       /* cookies    */
   char uagent[256];      /* user defined User-Agent string.         */
   char encoding[256];    /* user defined Accept-Encoding string.    */
   char conttype[256];    /* user defined default content type.      */
