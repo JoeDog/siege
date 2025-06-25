@@ -1,7 +1,7 @@
 /**
  * Storage for siege data
  *
- * Copyright (C) 2000-2016 by
+ * Copyright (C) 2000-2025 by
  * Jeffrey Fulmer - <jeff@joedog.org>, et al.
  * This file is distributed as part of Siege
  *
@@ -28,6 +28,7 @@
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef HAVE_SYS_TIMES_H
 # include <sys/times.h>
@@ -56,6 +57,8 @@ struct DATA_T
   unsigned int  okay;
   unsigned int  fail;
   unsigned long long bytes;
+  size_t   len;
+  char     *cookies;
 };
 
 DATA
@@ -64,15 +67,18 @@ new_data()
   DATA this;
 
   this = calloc(sizeof(*this),1);
-  this->total     = 0.0;
-  this->available = 0.0;
-  this->count     = 0.0;
-  this->okay      = 0;
-  this->fail      = 0.0;
-  this->lowest    =  -1;
-  this->highest   = 0.0;
-  this->elapsed   = 0.0;
-  this->bytes     = 0.0;
+  this->total      = 0.0;
+  this->available  = 0.0;
+  this->count      = 0.0;
+  this->okay       = 0;
+  this->fail       = 0.0;
+  this->lowest     =  -1;
+  this->highest    = 0.0;
+  this->elapsed    = 0.0;
+  this->bytes      = 0.0;
+  this->len        = 8096;
+  this->cookies    = xmalloc(this->len);
+  this->cookies[0] = '\0';
   return this;
 }
 
@@ -155,6 +161,30 @@ data_set_lowest(DATA this, float lowest)
     this->lowest = lowest;
   }
   return;
+}
+
+void
+data_increment_cookies(DATA this, const char *str)
+{
+  if (!this || !str) return;
+
+  size_t str_len = strlen(str);
+  size_t used = strlen(this->cookies);
+  size_t required = used + str_len + 2; // +1 for newline, +1 for null terminator
+
+  if (required > this->len) {
+    while (required > this->len) {
+      this->len *= 2;
+    }
+    char *temp = realloc(this->cookies, this->len);
+    if (!temp) {
+      return;
+    }
+    this->cookies = temp;
+  }
+
+  strcat(this->cookies, str);
+  //strcat(this->cookies, "\n");
 }
 
 unsigned int
@@ -265,5 +295,11 @@ data_get_concurrency(DATA this)
     return 0;
   /* total transaction time / elapsed time */
   return (this->total / this->elapsed);
+}
+
+char *
+data_get_cookies(DATA this) 
+{
+  return this->cookies;
 }
 
