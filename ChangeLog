@@ -1,7 +1,24 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
-2023/09/2023 Hennik Hunsaker https://github.com/danhunsaker
+2025/06/06 Jeffrey Fulmer https://www.joedog.org/support/
+ * configure.ac            Added checks for UUID
+ * facts.c                 Added to the distro
+ * facts.h                 Added to the distro
+ * uuid.c                  Added to the distro
+ * uuid.h                  Added to the distro
+ * src/cookies_def.h       Added to the distro
+ * src/main.c              Moved global cookie jar into the threads
+ * src/cookies.c           Moved global cookie jar into the threads
+ * src/cookies.h           Moved global cookie jar into the threads
+ * src/cookie.c            Bug fixes, improvements, new functionality
+ * src/cookie.h            Updated prototypes
+ * src/http.c              Build the cookie header from the thread
+ * src/http.h              Updated prototypes
+ * src/perl.c              Updated to reflect contemporary BP
+ * src/version.c           Version increment: 4.2.0-b
+
+2023/09/20 Hennik Hunsaker https://github.com/danhunsaker
  * src/setup.h             to change the size
  * src/main.c              to check the size rather than use a hard coded value
  * src/init.c              to check the size and offer half to the config; 
