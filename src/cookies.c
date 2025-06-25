@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <stddef.h>
@@ -13,6 +14,7 @@
 #include <memory.h>
 #include <notify.h>
 #include <cookies.h>
+#include <cookie_def.h>
 
 typedef struct NODE {
   size_t threadID;
@@ -26,17 +28,18 @@ struct COOKIES_T {
   char *          file;
 };
 
+private NODE *iter = NULL;
 
 private NODE *  __delete_node(NODE *node);
-private BOOLEAN __exists(char *file);
-private BOOLEAN __save_cookies(COOKIES this);
+private BOOLEAN __validity_test(COOKIE oreo, const char *host);
+private BOOLEAN __file_exists(char *file);
 private BOOLEAN __endswith(const char *str, const char *suffix);
 
 COOKIES
 new_cookies() {
   int len;
   COOKIES this;
-  char    name[] = "/.siege/cookies.txt";
+  char    name[] = "cookies.txt";
 
   this = calloc(sizeof(struct COOKIES_T), 1);
   this->size = 0;
@@ -53,7 +56,6 @@ COOKIES
 cookies_destroy(COOKIES this) 
 {
   NODE *cur     = NULL; 
-  __save_cookies(this);
   cur = this->head;
   while (cur) {
     cur = __delete_node(cur);
@@ -64,54 +66,53 @@ cookies_destroy(COOKIES this)
 }
 
 BOOLEAN
-cookies_add(COOKIES this, char *str, char *host)
+cookies_add(COOKIES this, COOKIE cookie, char *host)
 {
-  size_t  id    = pthread_self();
-  NODE   *cur   = NULL; 
-  NODE   *pre   = NULL; 
-  NODE   *new   = NULL;
+  size_t  id    = pthread_self(); // XXX: this should go after we cut-over
+  NODE    *cur  = NULL; 
+  NODE    *pre  = NULL; 
+  NODE    *new  = NULL;
   BOOLEAN found = FALSE;
   BOOLEAN valid = FALSE;
-  COOKIE  oreo  = new_cookie(str, host);
-  if (oreo == NULL) return FALSE;
-  if (cookie_get_name(oreo) == NULL || cookie_get_value(oreo) == NULL) return FALSE;
-  for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
-    const char *domainptr = cookie_get_domain(cur->cookie);
-    if (*domainptr == '.') ++domainptr;
-    if (__endswith(host, domainptr)){
-      valid = TRUE;
-    }
-    if (valid && cur->threadID == id && 
-        !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
-      cookie_reset_value(cur->cookie, cookie_get_value(oreo));
-      oreo  = cookie_destroy(oreo);
-      found = TRUE;
-      break;
-    }
-    if (my.get && valid && !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(oreo))) {
-      cookie_reset_value(cur->cookie, cookie_get_value(oreo));
-      oreo  = cookie_destroy(oreo);
-      found = TRUE;
-      break;
-    }
-  }   
 
-  if (!found) {
-    if (my.get && strlen(host) > 1) {
-      cookie_set_persistent(oreo, TRUE);
-    }
-    new = (NODE*)malloc(sizeof(NODE));
-    new->threadID = (cookie_get_persistent(oreo) == TRUE) ? 999999999999999 : id;
-    new->cookie   = oreo;
-    new->next     = cur;
-    if (cur == this->head)
-      this->head = new;
-    else
-      if (pre != NULL) pre->next  = new;
+  if (!cookie || cookie->magic != COOKIE_MAGIC) {
+    fprintf(stderr, "cookies_add: BAD COOKIE passed in! ptr=%p magic=0x%08x (expected 0x%08x)\n",
+            cookie,
+            cookie ? cookie->magic : 0,
+            COOKIE_MAGIC);
+    return FALSE;
   }
 
-  return TRUE;
-}
+  if (cookie_get_name(cookie) == NULL || cookie_get_value(cookie) == NULL) return FALSE;
+  for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
+    valid = __validity_test(cookie, host);
+    if (valid &&  !strcasecmp(cookie_get_name(cur->cookie), cookie_get_name(cookie))) {
+      if (cookie_match(cur->cookie, cookie)) {
+        found = TRUE;
+        break; 
+      }
+      cookie_reset_value(cur->cookie, cookie_get_value(cookie));
+      cookie  = cookie_destroy(cookie);
+      found = TRUE;
+      break;
+    }
+  }
+  if (!found) {
+    if (my.get && host != NULL) {
+      cookie_set_persistent(cookie, TRUE);
+    }
+    new = (NODE*)malloc(sizeof(NODE));
+    new->threadID = (cookie_get_persistent(cookie) == TRUE) ? 999999999999999 : id;
+    new->cookie   = cookie;
+    new->next     = cur;
+    if (cur == this->head) {
+      this->head = new;
+    } else {
+      if (pre != NULL) pre->next  = new;
+    }
+  }
+  return FALSE;
+} 
 
 BOOLEAN
 cookies_delete(COOKIES this, char *str)
@@ -147,11 +148,9 @@ cookies_delete_all(COOKIES this)
   NODE     *cur;
   NODE     *pre;
   pthread_t id  = pthread_self();
-  puts("DELETE ALL");
   // XXX: delete cookies by thread; not every cookie in the list
   for (cur = pre = this->head; cur != NULL; pre = cur, cur = cur->next) {
-    if (cur->threadID == id) {
-      //char *name    = cookie_get_name(cur->cookie);
+    if (cur->threadID == id) { /* XXX: Need to rework this for siege-# */
       cur->cookie = cookie_destroy(cur->cookie);
       pre->next   = cur->next;
       if (cur == this->head) {
@@ -168,48 +167,56 @@ cookies_delete_all(COOKIES this)
 char *
 cookies_header(COOKIES this, char *host, char *newton)
 {
-  NODE  *pre;
   NODE  *cur;
-  time_t tmp;
-  time_t now;
-  struct tm tm;
-  char   oreo[MAX_COOKIES_SIZE];
-  size_t id = pthread_self();
+  char oreo[MAX_COOKIES_SIZE];
+  char seen[MAX_COOKIES_SIZE]; // track names we've added
+  memset(oreo, 0, sizeof oreo);
+  memset(seen, 0, sizeof seen);
 
-  memset(oreo, '\0', sizeof oreo);
-  tmp = time(NULL);
-  gmtime_r(&tmp, &tm);
-  tm.tm_isdst = -1; // force mktime to figure it out!
-  now = mktime(&tm);
+  time_t now = time(NULL);
 
-  for (cur=pre=this->head; cur != NULL; pre=cur, cur=cur->next) {
-    /**
-     * for the purpose of matching, we'll ignore the leading '.'
-     */
-    const char *domainptr = cookie_get_domain(cur->cookie);
-    if (*domainptr == '.') ++domainptr;
-    if (my.get || my.print || cur->threadID == id) {
-      if (__endswith(host, domainptr)) {
-        if (cookie_get_expires(cur->cookie) <= now && cookie_get_session(cur->cookie) != TRUE) {
-          cookies_delete(this, cookie_get_name(cur->cookie));
-          continue;
-        }
-        if (strlen(oreo) > 0) {
-          xstrncat(oreo, ";",      sizeof(oreo) - 10 - strlen(oreo));
-        }
-        xstrncat(oreo, cookie_get_name(cur->cookie),  sizeof(oreo) - 10 - strlen(oreo));
-        xstrncat(oreo, "=",        sizeof(oreo) - 10 - strlen(oreo));
-        xstrncat(oreo, cookie_get_value(cur->cookie), sizeof(oreo) - 10 - strlen(oreo));
+  for (cur = this->head; cur != NULL; cur = cur->next) {
+    COOKIE c = cur->cookie;
+    const char *domainptr = cookie_get_domain(c);
+
+    if (!cookie_matches_host(c, host)) {
+      continue;
+    }
+
+    if (__endswith(host, domainptr)) {
+      if (cookie_get_expires(c) <= now && !cookie_get_session(c)) {
+        cookies_delete(this, cookie_get_name(c));
+        continue;
       }
+
+      const char *name = cookie_get_name(c);
+      if (strstr(seen, name)) {
+        continue;
+      }
+
+      xstrncat(seen, name, sizeof(seen) - strlen(seen) - 1);
+      xstrncat(seen, ";", sizeof(seen) - strlen(seen) - 1);
+
+      if (strlen(oreo) > 0) xstrncat(oreo, "; ", sizeof(oreo) - strlen(oreo) - 1);
+      xstrncat(oreo, name, sizeof(oreo) - strlen(oreo) - 1);
+      xstrncat(oreo, "=", sizeof(oreo) - strlen(oreo) - 1);
+      xstrncat(oreo, cookie_get_value(c), sizeof(oreo) - strlen(oreo) - 1);
     }
   }
+
   if (strlen(oreo) > 0) {
-    strncpy(newton, "Cookie: ", 9);
-    xstrncat(newton, oreo,       MAX_COOKIE_SIZE);
-    xstrncat(newton, "\015\012", 2);
-  } 
+    strncpy(newton, "Cookie: ", MAX_COOKIE_SIZE - 1);
+    xstrncat(newton, oreo, MAX_COOKIE_SIZE - strlen(newton) - 1);
+    xstrncat(newton, "\r\n", MAX_COOKIE_SIZE - strlen(newton) - 1);
+  }
 
   return newton;
+}
+
+char *
+cookies_file(COOKIES this)
+{
+  return this->file;
 }
 
 void
@@ -223,11 +230,39 @@ cookies_list(COOKIES this)
     if (tmp == NULL) 
       ; 
     else printf(
-      "%lld: NAME: %s\n   VALUE: %s\n   Expires: %s  Persistent: %s\n",
+      "%lld: NAME: %s\n   VALUE: %s\n   Expires: %s  Persistent: %s\nDomain: %s\n",
       (long long)cur->threadID, cookie_get_name(tmp), cookie_get_value(tmp), cookie_expires_string(tmp),
-      (cookie_get_persistent(tmp)==TRUE) ? "true" : "false"
+      (cookie_get_persistent(tmp)==TRUE) ? "true" : "false", cookie_get_domain(tmp)
     );
   }
+}
+
+
+char *
+cookies_next(COOKIES this) 
+{
+  BOOLEAN okay = FALSE;
+
+  if (this == NULL) return NULL;
+
+  do {
+    if (iter == NULL)
+      iter = this->head;
+    else
+      iter = iter->next;
+
+    if (iter == NULL)
+      return NULL;
+
+    if (cookie_get_persistent(iter->cookie)) {
+      return cookie_to_string(iter->cookie);
+    }
+  } while (! okay);
+  return NULL;
+}
+
+void cookies_reset_iterator(void) {
+  iter = NULL;
 }
 
 private NODE *
@@ -236,6 +271,7 @@ __delete_node(NODE *node)
   
   if (node == NULL) return NULL;
   NODE *tmp = node->next;
+  printf("__delete_node; cookies_destroy\n");
   node->cookie = cookie_destroy(node->cookie); 
   free(node); 
   node = tmp;
@@ -261,8 +297,7 @@ load_cookies(COOKIES this)
   HASH   IDX;
   const  size_t len = 4096; // max cookie size
   char   line[len];
-
-  if (! __exists(this->file)) {
+  if (! __file_exists(this->file)) {
     return NULL;
   }
 
@@ -336,61 +371,11 @@ load_cookies(COOKIES this)
   return HOH;
 }
 
-private BOOLEAN
-__save_cookies(COOKIES this) 
-{
-  FILE * fp;
-  char * line;
-  size_t len  = 4096+24; // max cookie size plus ID
-  time_t now;
-
-  NODE * cur  = NULL;
-  now = time(NULL);
-  fp  = fopen(this->file, "w");
-  if (fp == NULL) {
-    fprintf(stderr, "ERROR: Unable to open cookies file: %s\n", this->file);
-    return FALSE;
-  }
-  fputs("#\n", fp);
-  fputs("# Siege cookies file. You may edit this file to add cookies\n",fp);
-  fputs("# manually but comments and formatting will be removed.    \n",fp);
-  fputs("# All cookies that expire in the future will be preserved. \n",fp);
-  fputs("# ---------------------------------------------------------\n",fp);
-  line = malloc(sizeof(char *) * len);
-
-  for (cur = this->head; cur != NULL; cur = cur->next) {
-    COOKIE tmp = cur->cookie; 
-    /**
-     * Criteria for saving cookies:
-     * 1.) It's not null (obvs)
-     * 2.) It's not a session cookie
-     * 3.) It's not expired. 
-     * All cookies which meet the requirement are stored
-     * whether they were used during this session or not.
-     */
-    if (tmp != NULL && cookie_get_session(tmp) != TRUE && cookie_get_expires(cur->cookie) >= now) {
-      memset(line, '\0', len);
-      if (cookie_to_string(tmp) != NULL) {
-        snprintf(
-          line, len, 
-          "%ld | %s\n", 
-          (my.get || cookie_get_persistent(tmp)) ? 999999999999999 : cur->threadID, 
-          cookie_to_string(tmp)
-        );
-      }
-      fputs(line, fp); 
-    }
-  }   
-  free(line);
-  fclose(fp);
-  return TRUE;
-}
-
 /**
  * returns TRUE if the file exists,
  */
 private BOOLEAN
-__exists(char *file)
+__file_exists(char *file)
 {
   int  fd;
 
@@ -410,19 +395,59 @@ __exists(char *file)
   return FALSE;
 }
 
-
-private BOOLEAN 
-__endswith(const char *str, const char *suffix)
+private BOOLEAN
+__validity_test(COOKIE oreo, const char *host)
 {
-  if (!str || !suffix)
+  const char *domainptr = NULL;
+  if (cookie_get_domain(oreo) != NULL) {
+    return TRUE;
+  }
+  if (host == NULL || *host == '\0') {
+    return TRUE;
+  }
+  domainptr = cookie_get_domain(oreo);
+  if (!domainptr || *domainptr == '\0') {
+    fprintf(stderr, "Invalid domain pointer: %p\n", (void *)domainptr);
     return FALSE;
-  size_t lenstr = strlen(str);
-  size_t lensuffix = strlen(suffix);
-  if (lensuffix >  lenstr)
+  }
+  uintptr_t addr = (uintptr_t)domainptr;
+  if (addr < 0x1000 || addr % 8 != 0) {
+    fprintf(stderr, "domainptr likely bad: %p\n", (void *)domainptr);
     return FALSE;
-  if (! strncmp(str + lenstr - lensuffix, suffix, lensuffix)) {
+  }
+  if (domainptr == NULL || *domainptr == '\0') {
+    fprintf(stderr, "domainptr is null or empty\n");
+    return FALSE;
+  }
+  if (domainptr && strlen(domainptr) < 128) {  // sanity check, optional
+    printf("domain: %s\n", domainptr);
+  }
+  if (*domainptr == '.') ++domainptr;
+  if (__endswith(host, domainptr)){
     return TRUE;
   }
   return FALSE;
 }
+
+private BOOLEAN
+__endswith(const char *str, const char *suffix)
+{
+  if (!str) {
+    fprintf(stderr, "__endswith: str is NULL\n");
+    return FALSE;
+  }
+  if (!suffix) {
+    fprintf(stderr, "__endswith: suffix is NULL\n");
+    return FALSE;
+  }
+
+  size_t lenstr = strlen(str);
+  size_t lensuffix = strlen(suffix);
+
+  if (lensuffix > lenstr)
+    return FALSE;
+
+  return (strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0);
+}
+
 

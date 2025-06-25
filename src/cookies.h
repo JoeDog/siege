@@ -12,8 +12,11 @@ typedef struct COOKIES_T *COOKIES;
 
 COOKIES new_cookies();
 COOKIES cookies_destroy(COOKIES this);
-BOOLEAN cookies_add(COOKIES this, char *str, char *host);
+char *  cookies_next(COOKIES this);
+void    cookies_reset_iterator(void);
+BOOLEAN cookies_add(COOKIES this, COOKIE cookie, char *host);
 BOOLEAN cookies_add_id(COOKIES this, char *str, char *host, size_t id);
+char *  cookies_file(COOKIES this);
 char *  cookies_header(COOKIES this, char *host, char *newton);
 size_t  cookies_length(COOKIES this);
 BOOLEAN cookies_delete(COOKIES this, char *str);
