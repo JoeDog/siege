@@ -1,4 +1,6 @@
+#include <stdint.h>
 #include <cookie.h>
+#include <cookie_def.h>
 #include <util.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,25 +11,11 @@
 #include <perl.h>
 #include <joedog/defs.h>
 
-struct COOKIE_T {
-  char*     name;
-  char*     value;
-  char*     domain;
-  char*     path;
-  time_t    expires;
-  char *    expstr;
-  char *    none;
-  char *    string;
-  BOOLEAN   session;
-  BOOLEAN   secure;
-  BOOLEAN   persistent;
-};
-
-size_t COOKIESIZE = sizeof(struct COOKIE_T);
+size_t  COOKIESIZE = sizeof(struct COOKIE_T);
 
 private BOOLEAN __parse_input(COOKIE this, char *str, char *host);
-private char *  __parse_pair(char **str);
 private int     __parse_time(const char *str);
+private time_t  __timegm(struct tm *tm);
 private int     __mkmonth(char * s, char ** ends);
 private char *   months[12] = {
   "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
@@ -42,23 +30,34 @@ char *__cookie_none = "none";
  * Set-Cookie: exes=X; expires=Fri, 01-May-2015 12:51:25 GMT
  * ^ strip   ^ ^_ pass all this to the constructor         ^
  */
+static int cookie_id_counter = 0;
+
 COOKIE
 new_cookie(char *str, char *host)
 {
-  COOKIE this;
+  COOKIE this = calloc(1, sizeof(struct COOKIE_T));
+  if (!this) return NULL;
 
-  this = calloc(sizeof(struct COOKIE_T), 1);
+  this->magic      = COOKIE_MAGIC;
+  this->id         = ++cookie_id_counter;
+
   this->name       = NULL;
   this->value      = NULL;
   this->domain     = NULL;
   this->expires    = 0;
   this->expstr     = NULL;
   this->string     = NULL;
-  this->session    = TRUE;  
+  this->path       = NULL;
+  this->session    = TRUE;
   this->persistent = FALSE;
+  this->secure     = FALSE;
+  this->httponly   = FALSE;
   this->none       = strdup(__cookie_none);
-  if (__parse_input(this, str, host) == FALSE) {
-    return cookie_destroy(this);
+
+  if (str != NULL) {
+    if (__parse_input(this, str, host) == FALSE) {
+      return cookie_destroy(this);
+    }
   }
   return this;
 }
@@ -66,20 +65,47 @@ new_cookie(char *str, char *host)
 /**
  * Destroys a cookie by freeing all allocated memory
  */ 
-COOKIE
-cookie_destroy(COOKIE this)
-{
-  if (this != NULL) {
-    free(this->name);
-    free(this->value);
-    free(this->domain);
-    free(this->expstr);
-    free(this->path);
-    free(this->none);
-    free(this->string);
-    free(this);
+COOKIE 
+cookie_destroy(COOKIE this) {
+  if (!cookie_is_valid(this)) {
+    return NULL;
   }
+  xfree(this->name);    this->name = NULL;
+  xfree(this->value);   this->value = NULL;
+  xfree(this->domain);  this->domain = NULL;
+  xfree(this->path);    this->path = NULL;
+  xfree(this->string);  this->string = NULL;
+  xfree(this->expstr);  this->expstr = NULL;
+  xfree(this->none);    this->none = NULL;
+  this->magic = 0xDEADDEAD;
+  xfree(this);
+
   return NULL;
+}
+
+
+BOOLEAN
+cookie_is_valid(COOKIE this) 
+{
+  return this && this->magic == COOKIE_MAGIC;
+}
+
+BOOLEAN
+cookie_match(COOKIE this, COOKIE that)
+{
+  if (! strmatch(this->name, that->name)) {
+    return FALSE;
+  }  
+  if (! strmatch(this->value, that->value)) {
+    return FALSE;
+  }  
+  if (! strmatch(this->path, that->path)) {
+    return FALSE;
+  }  
+  if (! strmatch(this->domain, that->domain)) {
+    return FALSE;
+  }  
+  return TRUE;  
 }
 
 void 
@@ -110,12 +136,16 @@ cookie_set_path(COOKIE this, char *str)
 }
 
 void 
-cookie_set_domain(COOKIE this, char *str)
+cookie_set_domain(COOKIE this, const char *domain) {
+  if (!this || !domain) return;
+  if (this->domain) free(this->domain);
+  this->domain = strdup(domain);
+}
+
+void
+cookie_set_hostonly(COOKIE this, BOOLEAN hostonly)
 {
-  size_t len   = strlen(str)+1;
-  this->domain = malloc(sizeof this->domain * len);
-  memset(this->domain, '\0', len);
-  memcpy(this->domain, str, len);
+  this->hostonly = hostonly;
 }
 
 void 
@@ -162,10 +192,39 @@ cookie_get_value(COOKIE this)
 char *
 cookie_get_domain(COOKIE this)
 {
-  if (this == NULL || this->domain == NULL) 
+  if (!this || this->magic != COOKIE_MAGIC) {
+    return NULL;
+  }
+
+  if (this == NULL || this->domain == NULL)
     return __cookie_none;
+
+  uintptr_t addr = (uintptr_t)this->domain;
+  if (addr < 0x1000 || addr > 0x00007FFFFFFFFFFF) {  // quick sanity
+    fprintf(stderr, "Invalid domain pointer: %p\n", (void *)this->domain);
+    return __cookie_none;
+  }
+
+  // Optional: validate string
+  size_t maxlen = 256;
+  for (size_t i = 0; i < maxlen; ++i) {
+    char c = this->domain[i];
+    if (c == '\0') break;
+    if ((unsigned char)c < 32 || (unsigned char)c > 126) {
+      fprintf(stderr, "Domain string looks corrupt\n");
+      return __cookie_none;
+    }
+  }
+
   return this->domain;
 }
+
+BOOLEAN
+cookie_get_hostonly(COOKIE this)
+{
+  return this->hostonly;
+}
+
 
 /**
  * Returns the value of the path
@@ -199,7 +258,41 @@ cookie_get_persistent(COOKIE this)
 {
   if (this == NULL) 
     return TRUE;
+  if (this->expires > 0) {
+    return TRUE;
+  }
   return this->persistent;
+}
+
+BOOLEAN
+cookie_matches_host(COOKIE this, const char *host)
+{
+  const char *domain = cookie_get_domain(this);
+  if (!domain || !host) return FALSE;
+
+  size_t host_len   = strlen(host);
+  size_t domain_len = strlen(domain);
+
+  if (domain[0] == '.') {
+    domain++;
+    domain_len--;
+  }
+
+  if (this->hostonly) {
+    return strcasecmp(host, domain) == 0;
+  }
+
+  if (host_len < domain_len) return FALSE;
+
+  const char *host_suffix = host + (host_len - domain_len);
+  if (strcasecmp(host_suffix, domain) != 0)
+    return FALSE;
+
+  if (host_len == domain_len) return TRUE;
+
+  if (host[host_len - domain_len - 1] != '.') return FALSE;
+
+  return TRUE;
 }
 
 /**
@@ -221,22 +314,46 @@ cookie_expires_string(COOKIE this)
   return this->expstr;
 }
 
-char * 
-cookie_to_string(COOKIE this)
+char *
+cookie_to_string(COOKIE this) 
 {
-  int len = 4096;
+  if (!this || this->magic != COOKIE_MAGIC) {
+    fprintf(stderr,
+        "cookie_to_string: INVALID COOKIE POINTER! this=%p magic=%08x (expected %08x)\n",
+        (void*)this,
+        this ? this->magic : 0,
+        COOKIE_MAGIC
+    );
+    abort();  // Trap it right here
+  }
 
-  if (this->name == NULL || this->value == NULL || this->domain == NULL) return NULL;
+  if (!this || !this->name || !this->value || !this->domain)
+    return NULL;
 
-  this->string = realloc(this->string, sizeof(this->string)*len);
-  memset(this->string, '\0', len);
- 
+  char *s = this->string;
+
+  // memory poison check; platform-specific but should catch free'd memory
+  if (s && ((uintptr_t)s & 0xff00000000000000) == 0x3300000000000000) {
+    fprintf(stderr, "Warning: suspicious string pointer: %p\n", (void *)s);
+  }
+
+  char *new_buf = realloc(this->string, MAX_COOKIE_SIZE);
+  if (!new_buf)
+    return NULL;
+
+  this->string = new_buf;
+  memset(this->string, 0, MAX_COOKIE_SIZE);
+
   snprintf(
-    this->string, len, "%s=%s; domain=%s; path=%s; expires=%lld%s",
-    this->name, this->value, (this->domain != NULL) ? this->domain : "none", 
-    (this->path != NULL) ? this->path : "/", (long long)this->expires,
-    (this->persistent == TRUE) ? "; persistent=true" : ""
-  ); 
+    this->string, MAX_COOKIE_SIZE,
+    "%s=%s; domain=%s; path=%s; expires=%lld%s",
+    this->name, this->value,
+    this->domain ? this->domain : "none",
+    this->path ? this->path : "/",
+    (long long)this->expires,
+    this->persistent ? "; persistent=true" : ""
+  );
+
   return this->string;
 }
 
@@ -262,158 +379,158 @@ cookie_reset_value(COOKIE this, char *value)
 }
 
 COOKIE 
-cookie_clone(COOKIE this, COOKIE that) 
-{
-  this->value     = strealloc(this->value,  cookie_get_value(that)); 
-  this->domain    = strealloc(this->domain, cookie_get_domain(that));
-  this->path      = strealloc(this->path,   cookie_get_path(that));
-  this->persistent = cookie_get_persistent(that);
-  if (this->expires > 0) {
-    this->expires = time((time_t*)cookie_get_expires(that));
+cookie_clone(COOKIE original) {
+  if (!cookie_is_valid(original)) {
+    fprintf(stderr, "cookie_clone: invalid COOKIE passed in: %p\n", (void*)original);
+    return NULL;
   }
-  if (this->session == TRUE) {
-    this->session = cookie_get_session(that);
-  }
-  return this;
+
+  COOKIE clone = new_cookie(NULL, NULL);
+  if (!clone) return NULL;
+
+  if (original->name)    clone->name    = strdup(original->name);
+  if (original->value)   clone->value   = strdup(original->value);
+  if (original->domain)  clone->domain  = strdup(original->domain);
+  if (original->path)    clone->path    = strdup(original->path);
+  if (original->string)  clone->string  = strdup(original->string);
+
+  clone->expires    = original->expires;
+  clone->secure     = original->secure;
+  clone->persistent = original->persistent;
+  clone->session    = original->session;
+  clone->httponly   = original->httponly;
+
+  return clone;
 }
 
 private BOOLEAN
-__parse_input(COOKIE this, char *str, char *host) 
+__parse_input(COOKIE this, char *hdr, char *host)
 {
-  char   *tmp;
-  char   *key;
-  char   *val;
-  char   *pos;
-  int    expires = 0;
+  if (!hdr || !this) return FALSE;
 
-  if (str == NULL) {
-    printf("Coookie: Unable to parse header string");
-    return FALSE;
-  }
-  while (*str && *str == ' ') str++; // assume nothing...
+  BOOLEAN seen_max_age = FALSE;
+  time_t now = time(NULL);
+  time_t expires_candidate = 0;
+  time_t max_age_candidate = 0;
 
-  char *newline = (char*)str;
-  while ((tmp = __parse_pair(&newline)) != NULL) {
-    key = tmp;
-    while (*tmp && !ISSPACE((int)*tmp) && !ISSEPARATOR(*tmp))
-      tmp++;
-    *tmp++=0;
-    while (ISSPACE((int)*tmp) || ISSEPARATOR(*tmp))
-      tmp++;
-    val  = tmp;
-    while (*tmp)
-      tmp++;
-    if (!strncasecmp(key, "expires", 7)) {
-      expires = __parse_time(val);
-      if (expires != -1) {
-        this->session = FALSE;
-        this->expires = expires;
-      } // else this->expires was initialized 0 in the constructor
-    } else if (!strncasecmp(key, "max-age", 7)) {
-      struct tm *gmt;
-      long   max = -1;
-      time_t now = time(NULL);
-      gmt = gmtime(&now);
-      now = mktime(gmt);
-      max = atof(val);
-      if (max != -1) {
-        /**
-         * XXX: This "works" but I can't implement it until I understand the hour diff
-         *
-        time_t tmp = now+max-3600;
-        char buf1[20];
-        char buf2[20];
-        strftime(buf1, 20, "%Y-%m-%d %H:%M:%S", localtime(&this->expires));
-        strftime(buf2, 20, "%Y-%m-%d %H:%M:%S", localtime(&tmp));
-        printf("!!!!!!!!!!!!!!! %ld  %ld !!!!!!!!!!!!!!!\n", this->expires, tmp);
-        printf("expires: %s\n", buf1);
-        printf("max-age: %s\n", buf2);
-        this->expires = tmp; // I can't use this until I understand the hour diff
-         */
-        this->session = FALSE;
+  char *copy = strdup(hdr);
+  if (!copy) return FALSE;
+
+  char *token = strtok(copy, ";");
+
+  while (token) {
+    token = trim(token);
+    if (*token == '\0') {
+      token = strtok(NULL, ";");
+      continue;
+    }
+
+    char *sep = strchr(token, '=');
+
+    if (sep) {
+      *sep = '\0';
+      char *key_raw = token;
+      char *val_raw = sep + 1;
+
+      char *key_trimmed = trim(key_raw);
+      char *val_trimmed = trim(val_raw);
+
+      char *key = strdup(key_trimmed);
+      char *val = strdup(val_trimmed);
+
+      if (!key || !val) {
+        free(key);
+        free(val);
+        goto error;
       }
-    } else if (!strncasecmp(key, "path", 4))   {
-      this->path = strdup(val);
-    } else if (!strncasecmp(key, "domain", 6)) {
-      cookie_set_domain(this, val);
-    } else if (!strncasecmp(key, "secure", 6)) {
-      this->secure = TRUE;
-    } else if (!strncasecmp(key, "persistent", 10)) {
-      if (!strncasecmp(val, "true", 4)) {
-        this->persistent = TRUE;
+
+      if (!strncasecmp(key, "max-age", 7)) {
+        long max = atol(val);
+        if (max > 0) {
+          seen_max_age = TRUE;
+          max_age_candidate = now + max;
+        }
+      } else if (!strncasecmp(key, "expires", 7)) {
+        time_t parsed = __parse_time(val);
+        if (parsed > 0) {
+          expires_candidate = parsed;
+        }
+      } else if (!strncasecmp(key, "path", 4)) {
+        this->path = strdup(val);
+        if (!this->path) goto error;
+
+      } else if (!strncasecmp(key, "domain", 6)) {
+        cookie_set_domain(this, val); 
+        cookie_set_hostonly(this, FALSE);
+      } else if (!strncasecmp(key, "secure", 6)) {
+        this->secure = TRUE;
+
+      } else if (!strncasecmp(key, "persistent", 10)) {
+        if (!strncasecmp(val, "true", 4)) {
+          this->persistent = TRUE;
+        }
+      } else if (!this->name) {
+        this->name = key;
+        this->value = val;
+        key = NULL;
+        val = NULL;
       }
+
+      free(key);
+      free(val);
     } else {
-      this->name  = strdup(key);
-      this->value = strdup(val);
+      token = trim(token);
+      if (!strncasecmp(token, "secure", 6)) {
+        this->secure = TRUE;
+      }
     }
+
+    token = strtok(NULL, ";");
   }
-  if (this->expires < 1000) {
-    this->session = TRUE;
+
+  // Handle expiration assignment (RFC 6265: Max-Age takes precedence)
+  if (seen_max_age && max_age_candidate > 0) {
+    this->session = FALSE;
+    this->expires = max_age_candidate;
+  } else if (expires_candidate > 0) {
+    this->session = FALSE;
+    this->expires = expires_candidate;
   }
- 
-  if (this->domain == NULL) {
-    pos = strchr (host, '.');
-    if (pos == NULL)
-      this->domain = xstrdup(".");
-    else
-      this->domain = xstrdup(pos);
+
+  if (cookie_get_domain(this) == NULL) {
+    cookie_set_domain(this, host);
+    cookie_set_hostonly(this, TRUE);
   }
+
+  free(copy);
   return TRUE;
+
+error:
+  free(copy);
+  return FALSE;
 }
 
-private char *
-__parse_pair(char **str)
-{
-  int  okay  = 0;
-  char *p    = *str;
-  char *pair = NULL;
+private time_t
+__timegm(struct tm *tm) {
+  char *old_tz = getenv("TZ");
+  char *tz_backup = old_tz ? strdup(old_tz) : NULL;
 
-  if (!str || !*str) return NULL;
+  setenv("TZ", "UTC", 1);  // explicitly UTC, not ""
+  tzset();
 
-  pair = p;
-  if (p == NULL) return NULL;
+  time_t result = mktime(tm);
 
-  while (*p != '\0' && *p != ';') {
-    if (!*p) {
-      *str = p;
-      return NULL;
-    }
-    if (*p == '=') okay = 1;
-    p++;
-  }
-  *p++ = '\0';
-  *str = p;
-  trim(pair);
-
-  if (okay) {
-    return pair;
+  // restore previous TZ
+  if (tz_backup) {
+    setenv("TZ", tz_backup, 1);
+    free(tz_backup);
   } else {
-    return NULL;
+    unsetenv("TZ");
   }
+  tzset();
+
+  return result;
 }
-
-
-/**
- * We'll travel back in time to Jan 2, 1900 to determine
- * what timezone we're in. With that information, we can
- * return an offset in hours. For example, EST returns -5
- */ 
-private int 
-__utc_offset() 
-{
-  int         hrs;
-  struct tm * ptr;
-  time_t      zip = 24*60*60L;
-
-  ptr = localtime(&zip);
-  hrs = ptr->tm_hour;
-
-  if (ptr->tm_mday < 2)
-    hrs -= 24;
-
-  return hrs;
-}
-
 
 /**
  *  Mostly copied from the MIT reference library HTWWWStr.c
@@ -429,30 +546,29 @@ __utc_offset()
 private int
 __parse_time(const char *str) 
 {
-  char * s;
+  char *s;
   struct tm tm;
   time_t rv;
   time_t now;
 
   if (!str) return 0;
 
-  if ((s = strchr(str, ','))) {	/* Thursday, 10-Jun-93 01:29:59 GMT */
-    s++;                        /* or: Thu, 10 Jan 1993 01:29:59 GMT */
-    while (*s && *s==' ') s++;
-    if (strchr(s,'-')) {	/* First format */
-      if ((int)strlen(s) < 18) {
-        return 0;
-      }
+  memset(&tm, 0, sizeof(tm));  // Initialize struct tm to zero
+
+  if ((s = strchr(str, ','))) {	/* e.g. "Thu, 10 Jan 1993 01:29:59 GMT" or "Thursday, 10-Jun-93 01:29:59 GMT" */
+    s++;                        
+    while (*s && *s == ' ') s++;
+    if (strchr(s, '-')) {  /* RFC 850 format */
+      if ((int)strlen(s) < 18) return 0;
       tm.tm_mday = strtol(s, &s, 10);
       tm.tm_mon  = __mkmonth(++s, &s);
-      tm.tm_year = strtol(++s, &s, 10) - 1900;
+      tm.tm_year = strtol(++s, &s, 10);
+      tm.tm_year += (tm.tm_year < 70) ? 100 : 0;  // 2-digit year correction
       tm.tm_hour = strtol(++s, &s, 10);
       tm.tm_min  = strtol(++s, &s, 10);
       tm.tm_sec  = strtol(++s, &s, 10);
-    } else {  /* Second format */
-      if ((int)strlen(s) < 20) {
-        return 0;
-      }
+    } else {  /* RFC 1123 format */
+      if ((int)strlen(s) < 20) return 0;
       tm.tm_mday = strtol(s, &s, 10);
       tm.tm_mon  = __mkmonth(s, &s);
       tm.tm_year = strtol(s, &s, 10) - 1900;
@@ -461,27 +577,22 @@ __parse_time(const char *str)
       tm.tm_sec  = strtol(++s, &s, 10);
     }
   } else if (isdigit((int) *str)) {
-    if (strchr(str, 'T')) { /* ISO (limited format) date string */
+    if (strchr(str, 'T')) { /* ISO format: YYYY-MM-DDTHH:MM:SS */
       s = (char *) str;
-      while (*s && *s==' ') s++;
-      if ((int)strlen(s) < 21) {
-        return 0;
-      }
+      if ((int)strlen(s) < 21) return 0;
       tm.tm_year = strtol(s, &s, 10) - 1900;
-      tm.tm_mon  = strtol(++s, &s, 10);
+      tm.tm_mon  = strtol(++s, &s, 10) - 1;
       tm.tm_mday = strtol(++s, &s, 10);
       tm.tm_hour = strtol(++s, &s, 10);
       tm.tm_min  = strtol(++s, &s, 10);
       tm.tm_sec  = strtol(++s, &s, 10);
-    } else { /* delta seconds */
-      return atol(str);
+    } else {
+      return atol(str);  // delta seconds format
     }
-  } else { /* Try the other format:  Wed Jun  9 01:29:59 1993 GMT */
+  } else {  /* ANSI C asctime() format: "Wkd Mon DD HH:MM:SS YYYY" */
     s = (char *) str;
-    while (*s && *s != ' ') s++; // trim the weekday
-    if ((int)strlen(s) < 20) {
-      return 0;
-    }
+    while (*s && *s != ' ') s++; // skip weekday
+    if ((int)strlen(s) < 20) return 0;
     tm.tm_mon  = __mkmonth(s, &s);
     tm.tm_mday = strtol(s, &s, 10);
     tm.tm_hour = strtol(s, &s, 10);
@@ -489,32 +600,47 @@ __parse_time(const char *str)
     tm.tm_sec  = strtol(++s, &s, 10);
     tm.tm_year = strtol(s, &s, 10) - 1900;
   }
-  if (tm.tm_sec  < 0  ||  tm.tm_sec  > 59  ||
-      tm.tm_min  < 0  ||  tm.tm_min  > 59  ||
-      tm.tm_hour < 0  ||  tm.tm_hour > 23  ||
-      tm.tm_mday < 1  ||  tm.tm_mday > 31  ||
-      tm.tm_mon  < 0  ||  tm.tm_mon  > 11) {
+
+  if (tm.tm_sec  < 0 || tm.tm_sec  > 59 ||
+      tm.tm_min  < 0 || tm.tm_min  > 59 ||
+      tm.tm_hour < 0 || tm.tm_hour > 23 ||
+      tm.tm_mday < 1 || tm.tm_mday > 31 ||
+      tm.tm_mon  < 0 || tm.tm_mon  > 11) {
     return 0;
   }
-  tm.tm_isdst = -1;
-  rv = mktime(&tm);
-  if (!strstr(str, " GMT") && !strstr(str, " UTC")) {
-  	// It's not zulu time, so assume it's in local time
-	rv += __utc_offset() * 3600;
-  }
 
-  if (rv == -1) {
-    return rv;
-  }
+  tm.tm_isdst = 0;
+  rv = __timegm(&tm);  // Use UTC time conversion
+  if (rv == -1) return 0;
 
-  now = time (NULL);
+  now = time(NULL);
+  if (rv - now < 0) return 0;
 
-  if (rv - now < 0) {
-    return 0;
-  }
   return rv;
 }
 
+private int 
+__mkmonth(char * s, char ** ends)
+{
+  char * ptr = s;
+  while (!isalpha((int) *ptr)) ptr++;
+
+  if (*ptr) {
+    int i;
+    for (i = 0; i < 12; i++) {
+      if (!strncasecmp(months[i], ptr, 3)) {
+        ptr += 3;
+        while (*ptr && isspace((unsigned char)*ptr)) ptr++;
+        *ends = ptr;
+        return i;
+      }
+    }
+  }
+  return 0;
+}
+
+
+#if 0
 private int 
 __mkmonth(char * s, char ** ends)
 {
@@ -528,4 +654,5 @@ __mkmonth(char * s, char ** ends)
   }
   return 0;
 }
+#endif
 
