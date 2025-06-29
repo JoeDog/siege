@@ -1,6 +1,10 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2025/06/29 Colin Leroy-Mira https://github.com/colinleroy
+ * src/auth.c              Don't segfault when auth algorithm is NULL
+ * src/version.c           Version increment: 4.2.0-b2
+
 2025/06/06 Jeffrey Fulmer https://www.joedog.org/support/
  * configure.ac            Added checks for UUID
  * facts.c                 Added to the distro
