@@ -1,6 +1,9 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2025/06/29 Fabian Keil https://github.com/fabiankeil
+ * src/browser.c           Only send CONNECT if secure conn has not been est'd
+
 2025/06/29 Chen, Dylan https://github.com/dylan2intel
  * Dockerfile              Added to the distro
  * Dockerfile.md           Added to the distro
