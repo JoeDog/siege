@@ -46,7 +46,7 @@
 #define LINESZ 1024
 
 int
-init_config( void )
+init_config(void)
 {
   char *e;
   char dir[256];
