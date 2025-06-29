@@ -25,7 +25,8 @@
 #ifndef UUID_H
 #define UUID_H
 
-void generate_uuid(char *uuid_str, unsigned int id);
+char * uuid_header(char *input);
+void   generate_uuid(char *uuid_str, unsigned int id);
 
 #endif
 

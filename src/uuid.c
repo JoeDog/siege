@@ -2,11 +2,44 @@
 # include <config.h>
 #endif/*HAVE_CONFIG_H*/
 
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
 #include <pthread.h>
+#include <uuid.h>
+
+char *
+uuid_header(char *input) 
+{
+  const char *token = "{uuid}";
+  char uuid_str[37];
+
+  const char *pos = strstr(input, token);
+  if (!pos) {
+    printf("Token not found\n");
+    return input;
+  }
+
+  generate_uuid(uuid_str, 10);
+  size_t prefix_len = pos - input;
+  size_t suffix_len = strlen(pos + strlen(token));
+  size_t total_len = prefix_len + strlen(uuid_str) + suffix_len + 1;
+
+  char *result = malloc(total_len);
+  if (!result) {
+    return input;
+  }
+
+  memcpy(result, input, prefix_len);
+  memcpy(result + prefix_len, uuid_str, strlen(uuid_str));
+  memcpy(result + prefix_len + strlen(uuid_str),
+         pos + strlen(token),
+         suffix_len);
+  result[total_len - 1] = '\0';
+  return result;
+}
 
 #ifdef HAVE_LIBUUID
 #include <uuid/uuid.h>
