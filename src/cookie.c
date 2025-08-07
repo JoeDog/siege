@@ -497,7 +497,8 @@ __parse_input(COOKIE this, char *hdr, char *host)
     this->expires = expires_candidate;
   }
 
-  if (cookie_get_domain(this) == NULL) {
+  const char *domain = cookie_get_domain(this);
+  if (domain == NULL || domain == __cookie_none) {
     cookie_set_domain(this, host);
     cookie_set_hostonly(this, TRUE);
   }
