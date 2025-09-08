@@ -110,7 +110,7 @@ okay(int code)
 
 
 BOOLEAN
-strmatch(char *option, char *param)
+strmatch(const char *option, const char *param)
 {
   if (!strncasecmp(option,param,strlen(param))&&strlen(option)==strlen(param))
     return TRUE;
