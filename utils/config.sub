@@ -2,7 +2,7 @@
 # Configuration validation subroutine script.
 #   Copyright 1992-2018 Free Software Foundation, Inc.
 
-timestamp='2018-02-22'
+timestamp='2018-05-05'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -110,28 +110,48 @@ case $# in
     exit 1;;
 esac
 
-# Separate what the user gave into CPU-COMPANY and OS or KERNEL-OS (if any).
-# Here we must recognize all the valid KERNEL-OS combinations.
-maybe_os=`echo "$1" | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\2/'`
-case $maybe_os in
-  nto-qnx* | linux-gnu* | linux-android* | linux-dietlibc | linux-newlib* | \
-  linux-musl* | linux-uclibc* | uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | \
-  knetbsd*-gnu* | netbsd*-gnu* | netbsd*-eabi* | \
-  kopensolaris*-gnu* | cloudabi*-eabi* | \
-  storm-chaos* | os2-emx* | rtmk-nova*)
-    os=-$maybe_os
-    basic_machine=`echo "$1" | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`
-    ;;
-  android-linux)
-    os=-linux-android
-    basic_machine=`echo "$1" | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`-unknown
-    ;;
-  *)
-    basic_machine=`echo "$1" | sed 's/-[^-]*$//'`
-    if [ "$basic_machine" != "$1" ]
-    then os=`echo "$1" | sed 's/.*-/-/'`
-    else os=; fi
-    ;;
+# Spilt fields of configuration type
+IFS="-" read -r field1 field2 field3 field4 <<EOF
+$1
+EOF
+
+# Separate into logical components for further validation
+case $1 in
+	*-*-*-*)
+		basic_machine=$field1-$field2
+		os=-$field3-$field4
+		;;
+	*-*-*)
+		# Ambiguous whether COMPANY is present, or skipped and KERNEL-OS is two
+		# parts
+		maybe_os=$field2-$field3
+		case $maybe_os in
+			nto-qnx* | linux-gnu* | linux-android* | linux-dietlibc \
+			| linux-newlib* | linux-musl* | linux-uclibc* | uclinux-uclibc* \
+			| uclinux-gnu* | kfreebsd*-gnu* | knetbsd*-gnu* | netbsd*-gnu* \
+			| netbsd*-eabi* | kopensolaris*-gnu* | cloudabi*-eabi* \
+			| storm-chaos* | os2-emx* | rtmk-nova*)
+				basic_machine=$field1
+				os=-$maybe_os
+				;;
+			android-linux)
+				basic_machine=$field1-unknown
+				os=-linux-android
+				;;
+			*)
+				basic_machine=$field1-$field2
+				os=-$field3
+				;;
+		esac
+		;;
+	*-*)
+		basic_machine=$field1
+		os=-$field2
+		;;
+	*)
+		basic_machine=$1
+		os=
+		;;
 esac
 
 ### Let's recognize common machines as not being operating systems so
@@ -249,12 +269,12 @@ case $basic_machine in
 	| alpha64 | alpha64ev[4-8] | alpha64ev56 | alpha64ev6[78] | alpha64pca5[67] \
 	| am33_2.0 \
 	| arc | arceb \
-	| arm | arm[bl]e | arme[lb] | armv[2-8] | armv[3-8][lb] | armv7[arm] \
+	| arm | arm[bl]e | arme[lb] | armv[2-8] | armv[3-8][lb] | armv6m | armv[78][arm] \
 	| avr | avr32 \
 	| ba \
 	| be32 | be64 \
 	| bfin \
-	| c4x | c8051 | clipper \
+	| c4x | c8051 | clipper | csky \
 	| d10v | d30v | dlx | dsp16xx \
 	| e2k | epiphany \
 	| fido | fr30 | frv | ft32 \
@@ -293,6 +313,7 @@ case $basic_machine in
 	| mt \
 	| msp430 \
 	| nds32 | nds32le | nds32be \
+	| nfp \
 	| nios | nios2 | nios2eb | nios2el \
 	| ns16k | ns32k \
 	| open8 | or1k | or1knd | or32 \
@@ -334,6 +355,10 @@ case $basic_machine in
 		os=-none
 		;;
 	m88110 | m680[12346]0 | m683?2 | m68360 | m5200 | v70 | w65)
+		;;
+	m9s12z | m68hcs12z | hcs12z | s12z)
+		basic_machine=s12z-unknown
+		os=-none
 		;;
 	ms1)
 		basic_machine=mt-unknown
@@ -378,7 +403,7 @@ case $basic_machine in
 	| be32-* | be64-* \
 	| bfin-* | bs2000-* \
 	| c[123]* | c30-* | [cjt]90-* | c4x-* \
-	| c8051-* | clipper-* | craynv-* | cydra-* \
+	| c8051-* | clipper-* | craynv-* | csky-* | cydra-* \
 	| d10v-* | d30v-* | dlx-* \
 	| e2k-* | elxsi-* \
 	| f30[01]-* | f700-* | fido-* | fr30-* | frv-* | fx80-* \
@@ -419,6 +444,7 @@ case $basic_machine in
 	| mt-* \
 	| msp430-* \
 	| nds32-* | nds32le-* | nds32be-* \
+	| nfp-* \
 	| nios-* | nios2-* | nios2eb-* | nios2el-* \
 	| none-* | np1-* | ns16k-* | ns32k-* \
 	| open8-* \
@@ -1334,7 +1360,7 @@ esac
 
 # Decode manufacturer-specific aliases for certain operating systems.
 
-if [ x"$os" != x"" ]
+if [ x$os != x ]
 then
 case $os in
 	# First match some system type aliases that might get confused
@@ -1376,7 +1402,7 @@ case $os in
 	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
 	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
 	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
-	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* \
+	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* | -hcos* \
 	      | -chorusos* | -chorusrdb* | -cegcc* | -glidix* \
 	      | -cygwin* | -msys* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
 	      | -midipix* | -mingw32* | -mingw64* | -linux-gnu* | -linux-android* \
@@ -1523,6 +1549,12 @@ case $os in
 	-ios)
 		;;
 	-none)
+		;;
+	-*-eabi)
+		case $basic_machine in
+		    arm*)
+			;;
+		esac
 		;;
 	*)
 		# Get rid of the `-' at the beginning of $os.
@@ -1794,7 +1826,7 @@ echo "$basic_machine$os"
 exit
 
 # Local variables:
-# eval: (add-hook 'write-file-functions 'time-stamp)
+# eval: (add-hook 'before-save-hook 'time-stamp)
 # time-stamp-start: "timestamp='"
 # time-stamp-format: "%:y-%02m-%02d"
 # time-stamp-end: "'"
