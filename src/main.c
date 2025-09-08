@@ -456,6 +456,10 @@ main(int argc, char *argv[])
   } else { 
     for (i = 0; i < my.length; i++) {
       URL tmp = new_url(lines->line[i]);
+      if (tmp == NULL) {
+        // fprintf(stderr, "new_url failed for index %zu\n", i);
+        continue;
+      }
       url_set_ID(tmp, i);
       array_npush(urls, tmp, URLSIZE);
     }
