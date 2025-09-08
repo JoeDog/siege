@@ -1,6 +1,19 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2025/08/15 Jeffrey Fulmer https://www.joedog.org/support/
+ * m4/libtool.m4           Updated software
+ * src/browser.c           Added check for null requests; 403 auto-recovery
+ * src/cookie.c            Added check for null or "none" domain
+ * src/main.c              Added check for null urls from urls.txt
+ * src/url.c               Fixed issues with parsing content-type within URL
+ * src/version.c           Version increment: 4.2.0-b3
+ * utils/config.guess      Updated software
+ * utils/config.sub        Updated software
+
+2025/08/14 Tenor Thrifts https://github.com/tenor-thrifts
+ * src/cookie.c            Check for domain to be NULL or __cookie_none when setting default cookie domain
+
 2025/06/29 Fabian Keil https://github.com/fabiankeil
  * src/browser.c           Only send CONNECT if secure conn has not been est'd
 
