@@ -29,6 +29,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 #include <setup.h>
 #include <url.h>
 #include <load.h>
@@ -86,11 +88,15 @@ private char *  __url_set_fragment(URL this, char *str);
 private char *  __url_escape(const char *s);
 private METHOD  __url_has_method(const char *url);
 private void    __url_replace(char *url, const char *needle, const char *replacement);
+static  void    __set_ctype(URL this, char *line);
 
 URL
 new_url(char *str)
 {
   URL this;
+  if (str == NULL) {
+    return NULL;
+  }
   this = xmalloc(URLSIZE);
   this->ID        = 0;
   this->scheme    = HTTP;
@@ -661,39 +667,25 @@ __url_parse(URL this, char *url)
 private void
 __parse_post_data(URL this, char *datap)
 {
-  char *ctype;
-  char *end_ctype;
-
-    // check content type
-  ctype = strstr(datap,"-T");
+  /* Default content type (overridden by -T or global my.conttype) */
   if (!empty(my.conttype)) {
+    if (this->conttype) xfree(this->conttype);
     this->conttype = xstrdup(my.conttype);
-  }else{
+  } else if (!this->conttype) {
     this->conttype = xstrdup("application/x-www-form-urlencoded");
   }
-  
-  //if -T arg passed in line retrieve content type
-  if (ctype != NULL) {
-    // get end of content type defined by ; delimeter and separate strings with null terminator
-    // url file line should be constructed like this: http://url -T application/json; {data}
-    end_ctype = strstr(datap, ";");
-    *end_ctype = '\0';
-    // ctype moves to beginning of content type definition
-    ctype += 3;
-    // set conttype
-    this->conttype = xstrdup(ctype);
-    // move datap to char after null terminator
-    datap = end_ctype + 1;
-  }
 
-  for (; isspace((unsigned int)*datap); datap++) {
-    /* Advance past white space */
-  }
+  /* Remove any -T <ctype>[;] and set this->conttype before anything else */
+  __set_ctype(this, datap);
 
+  /* Trim leading whitespace for payload parsing */
+  while (isspace((unsigned char)*datap)) datap++;
 
   if (*datap == '<') {
+    /* file-body marker: "< path" */
     datap++;
-    load_file(this, datap);
+    while (isspace((unsigned char)*datap)) datap++;
+    load_file(this, datap);              /* datap no longer contains "-T ..." */
     datap = __url_set_path(this, datap);
     datap = __url_set_file(this, datap);
     return;
@@ -702,8 +694,77 @@ __parse_post_data(URL this, char *datap)
     this->postlen  = strlen(this->postdata);
     return;
   }
+}
 
-  return;
+
+/**
+ * Remove any "-T <ctype>[;]" segment(s) in-place and set this->conttype.
+ *  Rules:
+ *  - Accepts "-T" bounded by whitespace/BOS and followed by whitespace.
+ *  - <ctype> ends at ';' if present, otherwise at next whitespace/EOL.
+ *  - Deletes surrounding extra spaces when removing the segment.
+ *  - If multiple -T appear, the *last one wins* for content-type. 
+ */
+private void
+__set_ctype(URL this, char *line)
+{
+  char *p = line;
+
+  while ((p = strstr(p, "-T")) != NULL) {
+    /* Must be preceded by BOS/space and followed by space/EOS */
+    if (p > line && !isspace((unsigned char)p[-1])) { p += 2; continue; }
+    if (p[2] != '\0' && !isspace((unsigned char)p[2])) { p += 2; continue; }
+
+    /* Skip "-T" and whitespace to find ctype start */
+    char *q = p + 2;
+    while (*q && isspace((unsigned char)*q)) q++;
+    if (*q == '\0') { /* malformed "-T" at line end: just remove "-T" token */
+      /* Eat leading spaces before -T */
+      char *del_start = p;
+      while (del_start > line && isspace((unsigned char)del_start[-1])) del_start--;
+
+      /* Eat trailing spaces after -T */
+      char *del_end = q;
+      while (*del_end && isspace((unsigned char)*del_end)) del_end++;
+
+      memmove(del_start, del_end, strlen(del_end) + 1);
+      p = del_start;
+      continue;
+    }
+
+    /* Find end of ctype: up to ';' if present, else first whitespace/EOL */
+    char *semi = strchr(q, ';');
+    char *ct_end;
+    int used_semicolon = 1;
+
+    if (semi) {
+      ct_end = semi;              /* excludes ';' */
+    } else {
+      used_semicolon = 0;
+      ct_end = q + strcspn(q, " \t\r\n");
+    }
+
+    /* Capture content-type */
+    {
+      char saved = *ct_end;
+      *ct_end = '\0';
+      if (this->conttype) xfree(this->conttype);
+      this->conttype = xstrdup(q);
+      *ct_end = saved;
+    }
+
+    /* Define deletion span: include spaces around the -T block */
+    char *del_start = p;
+    while (del_start > line && isspace((unsigned char)del_start[-1])) del_start--;
+    char *del_end = used_semicolon ? (ct_end + 1) : ct_end; /* skip ';' if present */
+    while (*del_end && isspace((unsigned char)*del_end)) del_end++;
+
+    /* Remove the segment in-place */
+    memmove(del_start, del_end, strlen(del_end) + 1);
+
+    /* Continue scanning from where we deleted */
+    p = del_start;
+  }
 }
 
 /**
@@ -1326,7 +1387,6 @@ __url_escape(const char *s)
   *p2 = '\0';
   return newstr;
 }
-
 
 private void
 __url_replace(char *url, const char *needle, const char *replacement)
