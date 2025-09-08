@@ -2,7 +2,7 @@
 # Attempt to guess a canonical system name.
 #   Copyright 1992-2018 Free Software Foundation, Inc.
 
-timestamp='2018-02-24'
+timestamp='2018-03-08'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -1046,11 +1046,7 @@ EOF
 	echo "$UNAME_MACHINE"-dec-linux-"$LIBC"
 	exit ;;
     x86_64:Linux:*:*)
-	if objdump -f /bin/sh | grep -q elf32-x86-64; then
-	    echo "$UNAME_MACHINE"-pc-linux-"$LIBC"x32
-	else
-	    echo "$UNAME_MACHINE"-pc-linux-"$LIBC"
-	fi
+	echo "$UNAME_MACHINE"-pc-linux-"$LIBC"
 	exit ;;
     xtensa*:Linux:*:*)
 	echo "$UNAME_MACHINE"-unknown-linux-"$LIBC"
@@ -1473,7 +1469,7 @@ EOF
 exit 1
 
 # Local variables:
-# eval: (add-hook 'write-file-functions 'time-stamp)
+# eval: (add-hook 'before-save-hook 'time-stamp)
 # time-stamp-start: "timestamp='"
 # time-stamp-format: "%:y-%02m-%02d"
 # time-stamp-end: "'"
