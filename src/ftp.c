@@ -319,6 +319,7 @@ __response(CONN *C)
   return code; 
 }
 
+#if 0
 private int
 __response_code(const char *buf)
 {
@@ -329,6 +330,20 @@ __response_code(const char *buf)
   code[3] = '\0';
   ret = atoi(code);
   return ret;
+}
+#endif
+
+
+private int 
+__response_code(const char *buf)
+{
+  if (!buf ||
+    !isdigit((unsigned char)buf[0]) ||
+    !isdigit((unsigned char)buf[1]) ||
+    !isdigit((unsigned char)buf[2])) {
+    return -1; // or whatever error code you use
+  }
+  return (buf[0]-'0')*100 + (buf[1]-'0')*10 + (buf[2]-'0');
 }
 
 private BOOLEAN 
