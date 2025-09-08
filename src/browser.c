@@ -266,8 +266,12 @@ start(BROWSER this)
 
   if (my.login == TRUE) {
     URL tmp = new_url(array_next(my.lurl));
-    url_set_ID(tmp, 0);
-    __request(this, tmp);
+    if (tmp == NULL) {
+      NOTIFY (ERROR, "Malformed login url: %s\nCheck $HOME/.siege/siege.conf for 'login-url'\n", my.lurl);  
+    } else {
+      url_set_ID(tmp, 0);
+      __request(this, tmp);
+    }
   }
 
   len = (my.reps == -1) ? (int)array_length(this->urls) : my.reps;
@@ -690,6 +694,7 @@ __http(BROWSER this, URL U)
         }
       }
       break;
+#if 0    
     case 403:
       res = FALSE;
       while ((url = array_pop(my.aurl)) != NULL) {
@@ -702,6 +707,40 @@ __http(BROWSER this, URL U)
             res = __request(this, U);
             return res;
           }
+        }
+        xfree(url);
+      }
+      return res;
+#endif
+    case 403: 
+      res = FALSE;
+      char *url = NULL;
+
+      while ((url = array_pop(my.aurl)) != NULL) {
+        if (url[0] == '\0') { xfree(url); continue; }
+
+        URL tmp = new_url(url);
+        if (tmp == NULL) {
+          xfree(url);
+          continue;
+        }
+
+        const char *hU = url_get_hostname(U);
+        const char *hT = url_get_hostname(tmp);
+
+        if (hU != NULL && hT != NULL && strmatch(hU, hT)) {
+          url_set_ID(tmp, 0);
+          res = __request(this, tmp);
+
+          tmp = url_destroy(tmp);
+
+          if (res == TRUE) {
+            xfree(url);
+            res = __request(this, U);
+            return res;
+          }
+        } else {
+          url_destroy(tmp);
         }
         xfree(url);
       }
