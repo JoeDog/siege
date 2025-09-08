@@ -421,7 +421,6 @@ __request(BROWSER this, URL U) {
 private BOOLEAN
 __http(BROWSER this, URL U)
 {
-  char     *url;
   BOOLEAN  res;
   unsigned long bytes  = 0;
   int      code, okay, fail;
@@ -694,24 +693,6 @@ __http(BROWSER this, URL U)
         }
       }
       break;
-#if 0    
-    case 403:
-      res = FALSE;
-      while ((url = array_pop(my.aurl)) != NULL) {
-        URL tmp = new_url(url);
-        if (strmatch(url_get_hostname(U), url_get_hostname(tmp))) {
-          url_set_ID(tmp, 0);
-          res = __request(this, tmp);
-          if (res == TRUE) {
-            xfree(url);
-            res = __request(this, U);
-            return res;
-          }
-        }
-        xfree(url);
-      }
-      return res;
-#endif
     case 403: 
       res = FALSE;
       char *url = NULL;
