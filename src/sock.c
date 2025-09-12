@@ -70,7 +70,9 @@
 private int     __socket_block(int socket, BOOLEAN block);
 private ssize_t __socket_write(int sock, const void *vbuf, size_t len);  
 private BOOLEAN __socket_check(CONN *C, SDSET mode);
+#ifndef HAVE_POLL
 private BOOLEAN __socket_select(CONN *C, SDSET mode);
+#endif
 private int     __socket_create(CONN *C, int domain);
 private void   __hostname_strip(char *hn, int len);
 #ifdef  HAVE_POLL
@@ -304,11 +306,7 @@ private BOOLEAN
 __socket_check(CONN *C, SDSET mode)
 {
 #ifdef HAVE_POLL
- if (C->sock >= FD_SETSIZE) {
-   return __socket_poll(C, mode);
- } else {
-   return __socket_select(C, mode);
- } 
+ return __socket_poll(C, mode);
 #else 
  return __socket_select(C, mode);
 #endif/*HAVE_POLL*/
@@ -348,6 +346,7 @@ __socket_poll(CONN *C, SDSET mode)
 }
 #endif/*HAVE_POLL*/
 
+#ifndef HAVE_POLL
 private BOOLEAN
 __socket_select(CONN *C, SDSET mode)
 {
@@ -386,6 +385,7 @@ __socket_select(CONN *C, SDSET mode)
     return TRUE;
   }
 }
+#endif
 
 /**
  * Create new socket and set socket options.
