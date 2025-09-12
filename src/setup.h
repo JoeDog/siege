@@ -91,16 +91,16 @@ char *strchr (), *strrchr ();
 
 
 #ifndef HAVE_STRCASECMP
-int strcasecmp();
+int strcasecmp(const char *, const char *);
 #endif
 #ifndef HAVE_STRNCASECMP
-int strncasecmp();
+int strncasecmp(const char *, const char *, size_t);
 #endif
 #ifndef HAVE_STRNCMP
-int strncmp();
+int strncmp(const char *, const char *, size_t);
 #endif
 #ifndef HAVE_STRLEN
-int strlen();
+int strlen(const char *);
 #endif
 
 #include <url.h>

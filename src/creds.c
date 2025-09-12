@@ -44,7 +44,7 @@ new_creds(SCHEME scheme, char *str)
 {
   CREDS this;
 
-  this = calloc(sizeof(struct CREDS_T), 1);
+  this = calloc(1, sizeof(struct CREDS_T));
   this->scheme   = scheme;
   this->username = NULL;
   this->password = NULL;

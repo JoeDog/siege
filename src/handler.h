@@ -26,7 +26,7 @@
 #include <signal.h>
 #include <crew.h>
 
-void spin_doctor();
+void spin_doctor(CREW crew);
 void sig_handler(CREW crew); 
 
 #endif/*HANDLER_H*/

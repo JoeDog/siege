@@ -55,7 +55,7 @@ new_crew(int size, int maxsize, BOOLEAN block)
   int    c;
   CREW this;
   
-  if ((this = calloc(sizeof(*this),1)) == NULL)
+  if ((this = calloc(1,sizeof(*this))) == NULL)
     return NULL;
   
   if ((this->threads = (pthread_t *)malloc(sizeof(pthread_t)*size)) == NULL)
@@ -147,7 +147,7 @@ private void
 }
 
 BOOLEAN
-crew_add(CREW crew, void (*routine)(), void *arg)
+crew_add(CREW crew, void (*routine)(void *), void *arg)
 {
   int c;
   WORK *workptr;

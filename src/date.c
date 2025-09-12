@@ -142,7 +142,7 @@ DATE
 new_date(char *date)
 {
   time_t now;
-  DATE this  = calloc(DATESIZE, 1);
+  DATE this  = calloc(1, DATESIZE);
   this->tm   = NULL;
   this->etag = NULL;
   this->date = xmalloc(MAX_DATE_LEN);
