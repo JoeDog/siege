@@ -267,25 +267,24 @@ new_socket(CONN *C, const char *hostparam, int portparam)
       case EISCONN:       {NOTIFY(ERROR, "socket: %d already connected.",      pthread_self()); break;}
       default:            {NOTIFY(ERROR, "socket: %d unknown network error.",  pthread_self()); break;}
     } socket_close(C); return -1;
-  } else {
-    if (__socket_check(C, READ) == FALSE) {
+  } else if (conn < 0) { /* && errno == EINPROGRESS */
+    if (__socket_check(C, WRITE) == FALSE) {
       pthread_testcancel();
-      NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", my.timeout, __FILE__, __LINE__);
+      NOTIFY(WARNING, "socket: connect() check timed out(%d) %s:%d", my.timeout, __FILE__, __LINE__);
       socket_close(C);
-      return -1; 
-    } else { 
-      /**
-       * If we reconnect and receive EISCONN, then we have a successful connection
-       */
-      res = connect(C->sock, s_addr, addrlen);
-      if((res < 0)&&(errno != EISCONN)){
-        NOTIFY(ERROR, "socket: unable to connect %s:%d", __FILE__, __LINE__);
+      return -1;
+    } else {
+      int opt = 0;
+      socklen_t len = sizeof(opt);
+      if (0 != getsockopt(C->sock, SOL_SOCKET, SO_ERROR, &opt, &len) || 0 != opt) {
+        pthread_testcancel();
+        NOTIFY(WARNING, "socket: connect() error (%d) %s:%d", opt ? opt : errno, __FILE__, __LINE__);
         socket_close(C);
-        return -1; 
+        return -1;
       }
-      C->status = S_READING; 
     }
   } /* end of connect conditional */
+  C->status = S_READING;
 
   if ((__socket_block(C->sock, TRUE)) < 0) {
     NOTIFY(ERROR, "socket: unable to set socket to non-blocking %s:%d", __FILE__, __LINE__);
