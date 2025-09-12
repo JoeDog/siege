@@ -66,7 +66,7 @@ new_data()
 {
   DATA this;
 
-  this = calloc(sizeof(*this),1);
+  this = calloc(1,sizeof(*this));
   this->total      = 0.0;
   this->available  = 0.0;
   this->count      = 0.0;

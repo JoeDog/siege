@@ -41,7 +41,7 @@ new_cookies() {
   COOKIES this;
   char    name[] = "cookies.txt";
 
-  this = calloc(sizeof(struct COOKIES_T), 1);
+  this = calloc(1, sizeof(struct COOKIES_T));
   this->size = 0;
   char *p = getenv("HOME");
   len = p ? strlen(p) : 60;
