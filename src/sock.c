@@ -330,7 +330,7 @@ __socket_poll(CONN *C, SDSET mode)
   int timo = (my.timeout) ? my.timeout * 1000 : 15000;
 
   C->pfd[0].fd     = C->sock + 1;
-  C->pfd[0].events |= POLLIN;
+  C->pfd[0].events |= (mode == READ ? POLLIN : POLLOUT);
 
   do {
     res = poll(C->pfd, 1, timo);
@@ -376,8 +376,8 @@ __socket_select(CONN *C, SDSET mode)
   do {
     FD_ZERO(&rs);
     FD_ZERO(&ws);
-    FD_SET(C->sock, &rs);
-    FD_SET(C->sock, &ws);
+    if (mode == READ)  FD_SET(C->sock, &rs);
+    if (mode == WRITE) FD_SET(C->sock, &ws);
     res = select(C->sock+1, &rs, &ws, NULL, &timeout);
     pthread_testcancel();
   } while (res < 0 && errno == EINTR);
