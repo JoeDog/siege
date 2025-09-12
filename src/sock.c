@@ -288,6 +288,16 @@ new_socket(CONN *C, const char *hostparam, int portparam)
   } /* end of connect conditional */
   C->status = S_READING;
 
+#ifdef TCP_NODELAY
+  {
+    int opt = 1;
+    socklen_t len = sizeof(opt);
+    if (0 != setsockopt(C->sock, IPPROTO_TCP, TCP_NODELAY, &opt, &len)) {
+      NOTIFY(ERROR, "socket: unable to set socket to disable TCP Nagle algo %s:%d", __FILE__, __LINE__);
+    }
+  }
+#endif
+
   if ((__socket_block(C->sock, TRUE)) < 0) {
     NOTIFY(ERROR, "socket: unable to set socket to non-blocking %s:%d", __FILE__, __LINE__);
     return -1; 
