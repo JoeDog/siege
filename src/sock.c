@@ -320,7 +320,6 @@ __socket_poll(CONN *C, SDSET mode)
 {
   int res;
   int timo = (my.timeout) ? my.timeout * 1000 : 15000;
-  __socket_block(C->sock, FALSE);
 
   C->pfd[0].fd     = C->sock + 1;
   C->pfd[0].events |= POLLIN;
