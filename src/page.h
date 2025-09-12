@@ -7,7 +7,7 @@
  */
 typedef struct PAGE_T *PAGE;
 
-PAGE   new_page();
+PAGE   new_page(char *);
 PAGE   page_destroy(PAGE this);
 void   page_concat(PAGE this, const char *str, const int len);
 void   page_clear(PAGE this);

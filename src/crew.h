@@ -28,7 +28,7 @@
 
 typedef struct work
 {
-  void          (*routine)();
+  void          (*routine)(void *);
   void          *arg;
   struct work   *next;
 } WORK;
@@ -36,7 +36,7 @@ typedef struct work
 typedef struct CREW_T *CREW;
 
 CREW    new_crew(int size, int maxsize, BOOLEAN block);
-BOOLEAN crew_add(CREW this, void (*routine)(), void *arg); 
+BOOLEAN crew_add(CREW this, void (*routine)(void *), void *arg);
 BOOLEAN crew_cancel(CREW this);
 BOOLEAN crew_join(CREW this, BOOLEAN finish, void **payload);
 void    crew_destroy(CREW this);
