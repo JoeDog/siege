@@ -499,7 +499,7 @@ AC_CONFIG_COMMANDS([default-1],[[
 
 #endif/*JOEDOG_PATH_H*/
 _EOF_
-]],[[ prefix=$prefix sysconfdir=$sysconfdir localstatedir=$localstatedir platform=$PLATFORM ]])
+]],[[ prefix=$prefix exec_prefix=$exec_prefix sysconfdir=$sysconfdir localstatedir=$localstatedir platform=$PLATFORM ]])
 
 dnl
 dnl update dates and versioning in doc
