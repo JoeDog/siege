@@ -379,7 +379,7 @@ dnl Checks for library functions.
 dnl
 AC_FUNC_ALLOCA
 AC_CHECK_FUNCS(strchr memcpy strncpy strstr strlen)
-AC_CHECK_FUNCS(strncasecmp strncmp)
+AC_CHECK_FUNCS(strcasecmp strncasecmp strncmp)
 AC_CHECK_FUNCS(socket, , AC_CHECK_LIB(socket, socket))
 AC_CHECK_FUNCS(gethostbyname, , AC_CHECK_LIB(nsl, gethostbyname))
 AC_CHECK_FUNCS(snprintf)
