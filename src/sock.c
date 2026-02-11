@@ -70,7 +70,9 @@
 private int     __socket_block(int socket, BOOLEAN block);
 private ssize_t __socket_write(int sock, const void *vbuf, size_t len);  
 private BOOLEAN __socket_check(CONN *C, SDSET mode);
+#ifndef HAVE_POLL
 private BOOLEAN __socket_select(CONN *C, SDSET mode);
+#endif
 private int     __socket_create(CONN *C, int domain);
 private void   __hostname_strip(char *hn, int len);
 #ifdef  HAVE_POLL
@@ -267,25 +269,34 @@ new_socket(CONN *C, const char *hostparam, int portparam)
       case EISCONN:       {NOTIFY(ERROR, "socket: %d already connected.",      pthread_self()); break;}
       default:            {NOTIFY(ERROR, "socket: %d unknown network error.",  pthread_self()); break;}
     } socket_close(C); return -1;
-  } else {
-    if (__socket_check(C, READ) == FALSE) {
+  } else if (conn < 0) { /* && errno == EINPROGRESS */
+    if (__socket_check(C, WRITE) == FALSE) {
       pthread_testcancel();
-      NOTIFY(WARNING, "socket: read check timed out(%d) %s:%d", my.timeout, __FILE__, __LINE__);
+      NOTIFY(WARNING, "socket: connect() check timed out(%d) %s:%d", my.timeout, __FILE__, __LINE__);
       socket_close(C);
-      return -1; 
-    } else { 
-      /**
-       * If we reconnect and receive EISCONN, then we have a successful connection
-       */
-      res = connect(C->sock, s_addr, addrlen);
-      if((res < 0)&&(errno != EISCONN)){
-        NOTIFY(ERROR, "socket: unable to connect %s:%d", __FILE__, __LINE__);
+      return -1;
+    } else {
+      int opt = 0;
+      socklen_t len = sizeof(opt);
+      if (0 != getsockopt(C->sock, SOL_SOCKET, SO_ERROR, &opt, &len) || 0 != opt) {
+        pthread_testcancel();
+        NOTIFY(WARNING, "socket: connect() error (%d) %s:%d", opt ? opt : errno, __FILE__, __LINE__);
         socket_close(C);
-        return -1; 
+        return -1;
       }
-      C->status = S_READING; 
     }
   } /* end of connect conditional */
+  C->status = S_READING;
+
+#ifdef TCP_NODELAY
+  {
+    int opt = 1;
+    socklen_t len = sizeof(opt);
+    if (0 != setsockopt(C->sock, IPPROTO_TCP, TCP_NODELAY, &opt, &len)) {
+      NOTIFY(ERROR, "socket: unable to set socket to disable TCP Nagle algo %s:%d", __FILE__, __LINE__);
+    }
+  }
+#endif
 
   if ((__socket_block(C->sock, TRUE)) < 0) {
     NOTIFY(ERROR, "socket: unable to set socket to non-blocking %s:%d", __FILE__, __LINE__);
@@ -305,11 +316,7 @@ private BOOLEAN
 __socket_check(CONN *C, SDSET mode)
 {
 #ifdef HAVE_POLL
- if (C->sock >= FD_SETSIZE) {
-   return __socket_poll(C, mode);
- } else {
-   return __socket_select(C, mode);
- } 
+ return __socket_poll(C, mode);
 #else 
  return __socket_select(C, mode);
 #endif/*HAVE_POLL*/
@@ -321,10 +328,9 @@ __socket_poll(CONN *C, SDSET mode)
 {
   int res;
   int timo = (my.timeout) ? my.timeout * 1000 : 15000;
-  __socket_block(C->sock, FALSE);
 
   C->pfd[0].fd     = C->sock + 1;
-  C->pfd[0].events |= POLLIN;
+  C->pfd[0].events |= (mode == READ ? POLLIN : POLLOUT);
 
   do {
     res = poll(C->pfd, 1, timo);
@@ -350,6 +356,7 @@ __socket_poll(CONN *C, SDSET mode)
 }
 #endif/*HAVE_POLL*/
 
+#ifndef HAVE_POLL
 private BOOLEAN
 __socket_select(CONN *C, SDSET mode)
 {
@@ -369,8 +376,8 @@ __socket_select(CONN *C, SDSET mode)
   do {
     FD_ZERO(&rs);
     FD_ZERO(&ws);
-    FD_SET(C->sock, &rs);
-    FD_SET(C->sock, &ws);
+    if (mode == READ)  FD_SET(C->sock, &rs);
+    if (mode == WRITE) FD_SET(C->sock, &ws);
     res = select(C->sock+1, &rs, &ws, NULL, &timeout);
     pthread_testcancel();
   } while (res < 0 && errno == EINTR);
@@ -388,6 +395,7 @@ __socket_select(CONN *C, SDSET mode)
     return TRUE;
   }
 }
+#endif
 
 /**
  * Create new socket and set socket options.
