@@ -147,7 +147,7 @@ private void
 }
 
 BOOLEAN
-crew_add(CREW crew, void (*routine)(), void *arg)
+crew_add(CREW crew, void (*routine)(void *), void *arg)
 {
   int c;
   WORK *workptr;

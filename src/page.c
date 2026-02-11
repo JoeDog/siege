@@ -15,7 +15,7 @@ size_t PAGESIZE = sizeof(struct PAGE_T);
 void __expand(PAGE this, const int len);
 
 PAGE
-new_page(char *str)
+new_page(const char *str)
 { 
   PAGE this;
   
