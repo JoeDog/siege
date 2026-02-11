@@ -139,7 +139,7 @@ struct DATE_T
 size_t DATESIZE = sizeof(struct DATE_T);
 
 DATE
-new_date(char *date)
+new_date(const char *date)
 {
   time_t now;
   DATE this  = calloc(DATESIZE, 1);

@@ -34,7 +34,7 @@ extern  size_t DATESIZE;
  * because then we have one destroyer
  * that we can pass to the HASH
  */
-DATE   new_date();
+DATE   new_date(const char *);
 DATE   new_etag(char *etag);
 
 DATE    date_destroy(DATE this);
