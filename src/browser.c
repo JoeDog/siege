@@ -965,7 +965,12 @@ __init_connection(BROWSER this, URL U)
   );
 
   if (url_get_scheme(U) == HTTPS) {
-    if (auth_get_proxy_required(my.auth) && this->conn->ssl == NULL) {
+#ifdef HAVE_SSL
+    if (auth_get_proxy_required(my.auth) && this->conn->ssl == NULL)
+#else
+    if (auth_get_proxy_required(my.auth))
+#endif
+    {
       https_tunnel_request(this->conn, url_get_hostname(U), url_get_port(U));
       https_tunnel_response(this->conn);
     }
