@@ -137,14 +137,15 @@ SSL_initialize(CONN *C, const char *servername)
   }  
 
   C->ssl = SSL_new(C->ctx);
-#if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME)
-  SSL_ctrl(C->ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, TLSEXT_NAMETYPE_host_name, (char *)servername);
-#endif/*SSL_CTRL_SET_TLSEXT_HOSTNAME*/
-
   if (C->ssl==NULL) {
     SSL_error_stack();
     return FALSE;
   }
+
+#ifdef SSL_set_tlsext_host_name
+  // Enable TLS Extension SNI Support
+  SSL_set_tlsext_host_name(C->ssl, servername);
+#endif
 
   SSL_set_fd(C->ssl, C->sock);
   serr = SSL_connect(C->ssl);
