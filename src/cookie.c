@@ -14,7 +14,7 @@
 size_t  COOKIESIZE = sizeof(struct COOKIE_T);
 
 private BOOLEAN __parse_input(COOKIE this, char *str, char *host);
-private int     __parse_time(const char *str);
+private time_t  __parse_time(const char *str);
 private time_t  __timegm(struct tm *tm);
 private int     __mkmonth(char * s, char ** ends);
 private char *   months[12] = {
@@ -544,7 +544,7 @@ __timegm(struct tm *tm) {
  *  Wkd Mon 00 00:00:00 0000 GMT    (CTIME)
  *  1*DIGIT (delta-seconds)
  */
-private int
+private time_t
 __parse_time(const char *str) 
 {
   char *s;
@@ -588,7 +588,7 @@ __parse_time(const char *str)
       tm.tm_min  = strtol(++s, &s, 10);
       tm.tm_sec  = strtol(++s, &s, 10);
     } else {
-      return atol(str);  // delta seconds format
+      return atoll(str);  // delta seconds format
     }
   } else {  /* ANSI C asctime() format: "Wkd Mon DD HH:MM:SS YYYY" */
     s = (char *) str;
