@@ -355,7 +355,7 @@ __config_setup(int argc, char *argv[])
     printf("WARNING: The number of users is capped at %d.%sTo increase this\n", my.limit, (my.limit>999)?" ":"  ");
     printf("         limit, search your siege.conf file for 'limit' and change\n");
     printf("         its value. Make sure you read the instructions there.\n");
-    printf("         Siege will soon proceed with %d users (unless you sigint...)\n", my.limit);
+    printf("         Siege will soon proceed with %d users (unless you abort...)\n", my.limit);
     printf("================================================================\n");
     sleep(10);
     my.cusers = my.limit;
