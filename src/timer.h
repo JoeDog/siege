@@ -25,6 +25,6 @@
 
 #include <pthread.h>
 
-void siege_timer(pthread_t handler);
+void *siege_timer(void *arg);
  
 #endif/*TIMER_H*/

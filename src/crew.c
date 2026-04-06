@@ -231,7 +231,7 @@ crew_join(CREW crew, BOOLEAN finish, void **payload)
     NOTIFY(FATAL, "pthread lock");
   }
 
-  if (crew->closed || crew->shutdown) {
+  if (crew->closed) {
     if ((c = pthread_mutex_unlock(&(crew->lock))) != 0) {
       NOTIFY(FATAL, "pthread unlock");
     }

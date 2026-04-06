@@ -28,8 +28,9 @@
 #include <joedog/boolean.h>
 
 void
-siege_timer(pthread_t handler)
+*siege_timer(void *arg)
 {
+  pthread_t handler = *((pthread_t *)arg);
   int err;
   time_t now;
   struct timespec timeout;
@@ -57,7 +58,7 @@ siege_timer(pthread_t handler)
     }
   }
   pthread_mutex_unlock(&timer_mutex);
-  return;
+  return NULL;
 }
 
 

@@ -54,8 +54,9 @@ spin_doctor(CREW crew)
 }
 
 void 
-sig_handler(CREW crew)
+*sig_handler(void *arg)
 {
+  CREW crew = (CREW)arg;
   int gotsig = 0; 
   sigset_t  sigs;
  
@@ -81,6 +82,6 @@ sig_handler(CREW crew)
    * the siege to make up the discrepancy. 
    */
   pthread_usleep_np(501125); 
-  pthread_exit(NULL);
+  return NULL;
 }
 

@@ -356,7 +356,7 @@ __config_setup(int argc, char *argv[])
     printf("         limit, search your .siegerc file for 'limit' and change\n");
     printf("         its value. Make sure you read the instructions there...\n");
     printf("================================================================\n");
-    sleep(10);
+    sleep(2);
     my.cusers = my.limit;
   }
 }
@@ -495,11 +495,15 @@ main(int argc, char *argv[])
     NOTIFY(FATAL, "unable to allocate memory for %d simulated browser", my.cusers);  
   } 
 
-  if ((result = pthread_create(&cease, NULL, (void*)sig_handler, (void*)crew)) < 0) {
+  /**
+   * pthread_create retruns an errno (not necessarily a negative) on failure!
+   * should keep it != not <.
+   */
+  if ((result = pthread_create(&cease, NULL, sig_handler, (void*)crew)) != 0) {
     NOTIFY(FATAL, "failed to create handler: %d\n", result);
   }
   if (my.secs > 0) {
-    if ((result = pthread_create(&timer, NULL, (void*)siege_timer, (void*)cease)) < 0) {
+    if ((result = pthread_create(&timer, NULL, siege_timer, (void*)&cease)) != 0) {
       NOTIFY(FATAL, "failed to create handler: %d\n", result);
     } 
   }
