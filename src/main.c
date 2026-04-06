@@ -537,6 +537,22 @@ main(int argc, char *argv[])
   crew_join(crew, TRUE, &status);
   data_set_stop(data); 
 
+  if ((result = pthread_kill(cease, SIGTERM)) != 0 && result != ESRCH) {
+    NOTIFY(FATAL, "failed to signal handler thread: %d\n", result);
+  }
+  if ((result = pthread_join(cease, NULL)) != 0 && result != ESRCH) {
+    NOTIFY(FATAL, "failed to join handler thread: %d\n", result);
+  }
+
+  if (my.secs > 0) {
+    if ((result = pthread_cancel(timer)) != 0 && result != ESRCH) {
+      NOTIFY(FATAL, "failed to cancel timer thread: %d\n", result);
+    }
+    if ((result = pthread_join(timer, NULL)) != 0 && result != ESRCH) {
+      NOTIFY(FATAL, "failed to join timer thread: %d\n", result);
+    }
+  }
+
 #ifdef HAVE_SSL
   SSL_thread_cleanup();
 #endif
