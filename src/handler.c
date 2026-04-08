@@ -70,7 +70,11 @@ void
    * Now wait around for something to happen ... 
    */
   sigwait(&sigs, &gotsig);
-  my.verbose = FALSE;
+  
+  if (gotsig == SIGTERM && my.secs <= 0 && crew_get_shutdown(crew) == TRUE) {
+    return NULL;
+  }
+
   if (!my.quiet) {
     fprintf(stderr, "\nLifting the server siege...");
   }
