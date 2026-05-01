@@ -1,6 +1,16 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2026/05/01 dotacow (yousef kitaneh) https://github.com/dotacow
+ * src/main.c   fix: fixed use after free from crew pointer cleanup. 
+ * src/crew.c   fix:crew_set_shutdown correctly shuts down in sigint. 
+*               more error value checking for non-zero rather than
+*               synchronized shutdown reads in crew_get_shutdown() to use the same mutex
+*               there was a breif window where use-after-frees occured when main thread got signaled
+* src/handler.c fixed -r and -t shutdown paths conflict 
+*               sig_handler now only ignores sigterm that the main thread sends during
+*                normal non-timed teardowns
+
 2025/08/15 Jeffrey Fulmer https://www.joedog.org/support/
  * m4/libtool.m4           Updated software
  * src/browser.c           Added check for null requests; 403 auto-recovery
