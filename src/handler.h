@@ -27,6 +27,6 @@
 #include <crew.h>
 
 void spin_doctor(CREW crew);
-void sig_handler(CREW crew); 
+void *sig_handler(void *arg);
 
 #endif/*HANDLER_H*/

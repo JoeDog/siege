@@ -353,8 +353,9 @@ __config_setup(int argc, char *argv[])
     printf("\n");
     printf("================================================================\n");
     printf("WARNING: The number of users is capped at %d.%sTo increase this\n", my.limit, (my.limit>999)?" ":"  ");
-    printf("         limit, search your .siegerc file for 'limit' and change\n");
-    printf("         its value. Make sure you read the instructions there...\n");
+    printf("         limit, search your siege.conf file for 'limit' and change\n");
+    printf("         its value. Make sure you read the instructions there.\n");
+    printf("         Siege will soon proceed with %d users (unless you abort...)\n", my.limit);
     printf("================================================================\n");
     sleep(10);
     my.cusers = my.limit;
@@ -495,11 +496,15 @@ main(int argc, char *argv[])
     NOTIFY(FATAL, "unable to allocate memory for %d simulated browser", my.cusers);  
   } 
 
-  if ((result = pthread_create(&cease, NULL, (void*)sig_handler, (void*)crew)) < 0) {
+  /**
+   * pthread_create retruns an errno (not necessarily a negative) on failure!
+   * should keep it != not <.
+   */
+  if ((result = pthread_create(&cease, NULL, sig_handler, (void*)crew)) != 0) {
     NOTIFY(FATAL, "failed to create handler: %d\n", result);
   }
   if (my.secs > 0) {
-    if ((result = pthread_create(&timer, NULL, (void*)siege_timer, (void*)cease)) < 0) {
+    if ((result = pthread_create(&timer, NULL, siege_timer, (void*)&cease)) != 0) {
       NOTIFY(FATAL, "failed to create handler: %d\n", result);
     } 
   }
@@ -531,6 +536,22 @@ main(int argc, char *argv[])
   } 
   crew_join(crew, TRUE, &status);
   data_set_stop(data); 
+
+  if ((result = pthread_kill(cease, SIGTERM)) != 0 && result != ESRCH) {
+    NOTIFY(FATAL, "failed to signal handler thread: %d\n", result);
+  }
+  if ((result = pthread_join(cease, NULL)) != 0 && result != ESRCH) {
+    NOTIFY(FATAL, "failed to join handler thread: %d\n", result);
+  }
+
+  if (my.secs > 0) {
+    if ((result = pthread_cancel(timer)) != 0 && result != ESRCH) {
+      NOTIFY(FATAL, "failed to cancel timer thread: %d\n", result);
+    }
+    if ((result = pthread_join(timer, NULL)) != 0 && result != ESRCH) {
+      NOTIFY(FATAL, "failed to join timer thread: %d\n", result);
+    }
+  }
 
 #ifdef HAVE_SSL
   SSL_thread_cleanup();

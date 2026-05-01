@@ -231,7 +231,7 @@ crew_join(CREW crew, BOOLEAN finish, void **payload)
     NOTIFY(FATAL, "pthread lock");
   }
 
-  if (crew->closed || crew->shutdown) {
+  if (crew->closed) {
     if ((c = pthread_mutex_unlock(&(crew->lock))) != 0) {
       NOTIFY(FATAL, "pthread unlock");
     }
@@ -263,17 +263,16 @@ crew_join(CREW crew, BOOLEAN finish, void **payload)
   }
 
   crew->shutdown = TRUE;
-
-  if ((c = pthread_mutex_unlock(&(crew->lock))) != 0) {
-    NOTIFY(FATAL, "pthread_mutex_unlock");
-  }
-
   if ((c = pthread_cond_broadcast(&(crew->not_empty))) != 0) {
     NOTIFY(FATAL, "pthread broadcast");
   }
   
   if ((c = pthread_cond_broadcast(&(crew->not_full))) != 0) {
     NOTIFY(FATAL, "pthread broadcast");
+  }
+
+  if ((c = pthread_mutex_unlock(&(crew->lock))) != 0) {
+    NOTIFY(FATAL, "pthread_mutex_unlock");
   }
 
   for (x = 0; x < crew->size; x++) {
@@ -304,13 +303,26 @@ void crew_destroy(CREW crew) {
 public void 
 crew_set_shutdown(CREW this, BOOLEAN shutdown)
 {
-//  pthread_mutex_lock(&this->lock);
+  int c;
+
+  if ((c = pthread_mutex_lock(&this->lock)) != 0) {
+    NOTIFY(FATAL, "pthread lock");
+  }
   this->shutdown = shutdown;
-//  pthread_mutex_unlock(&this->lock);
   
-  pthread_cond_broadcast(&this->not_empty);
-  pthread_cond_broadcast(&this->not_full);
-  pthread_cond_broadcast(&this->empty);
+  if ((c = pthread_cond_broadcast(&this->not_empty)) != 0) {
+    NOTIFY(FATAL, "pthread broadcast");
+  }
+  if ((c = pthread_cond_broadcast(&this->not_full)) != 0) {
+    NOTIFY(FATAL, "pthread broadcast");
+  }
+  if ((c = pthread_cond_broadcast(&this->empty)) != 0) {
+    NOTIFY(FATAL, "pthread broadcast");
+  }
+  if ((c = pthread_mutex_unlock(&this->lock)) != 0) {
+    NOTIFY(FATAL, "pthread unlock");
+  }
+
   return;
 }
 
@@ -329,7 +341,18 @@ crew_get_total(CREW this)
 public BOOLEAN 
 crew_get_shutdown(CREW this)
 {
-  return this->shutdown;
+  int c;
+  BOOLEAN shutdown;
+
+  if ((c = pthread_mutex_lock(&this->lock)) != 0) {
+    NOTIFY(FATAL, "pthread lock");
+  }
+  shutdown = this->shutdown;
+  if ((c = pthread_mutex_unlock(&this->lock)) != 0) {
+    NOTIFY(FATAL, "pthread unlock");
+  }
+
+  return shutdown;
 }
 
 

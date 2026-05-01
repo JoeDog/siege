@@ -54,8 +54,9 @@ spin_doctor(CREW crew)
 }
 
 void 
-sig_handler(CREW crew)
+*sig_handler(void *arg)
 {
+  CREW crew = (CREW)arg;
   int gotsig = 0; 
   sigset_t  sigs;
  
@@ -69,7 +70,11 @@ sig_handler(CREW crew)
    * Now wait around for something to happen ... 
    */
   sigwait(&sigs, &gotsig);
-  my.verbose = FALSE;
+  
+  if (gotsig == SIGTERM && my.secs <= 0 && crew_get_shutdown(crew) == TRUE) {
+    return NULL;
+  }
+
   if (!my.quiet) {
     fprintf(stderr, "\nLifting the server siege...");
   }
@@ -81,6 +86,6 @@ sig_handler(CREW crew)
    * the siege to make up the discrepancy. 
    */
   pthread_usleep_np(501125); 
-  pthread_exit(NULL);
+  return NULL;
 }
 
