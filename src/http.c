@@ -480,6 +480,8 @@ http_read_headers(CONN *C, URL U, FACTS facts)
     }
     if (strncasecmp(line, CONNECTION, strlen(CONNECTION)) == 0) {
       response_set_connection(resp, line);
+      if (response_get_connection(resp) == CLOSE)
+        C->connection.reuse = 0;
     }
     if (strncasecmp(line, "keep-alive: ", 12) == 0) {
       if (response_set_keepalive(resp, line) == TRUE) {
