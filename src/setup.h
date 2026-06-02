@@ -106,7 +106,6 @@ int strlen();
 #include <url.h>
 #include <auth.h>
 #include <array.h>
-#include <cookies.h>
 #include <joedog/boolean.h>
 
 #define  MXCHLD         1024
