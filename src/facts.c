@@ -32,18 +32,20 @@ new_facts(int id, char *file)
 FACTS
 facts_destroy(FACTS this)
 {
-  if (this != NULL) {
-    get_cookies(this);
-    this = NULL;
+  if (this) {
+    if (this->jar) {
+      this->jar = cookies_destroy(this->jar);
+    }
+    free(this);
   }
-  return this;
+  return NULL;
 }
 
 BOOLEAN
 set_cookie(FACTS this, char *line, char *host)
 {
   COOKIE tmp = new_cookie(line, host);
-  cookies_add(this->jar, tmp, host);
+  cookies_add(this->jar, tmp, this->id, host);
   return TRUE;
 }
 
@@ -142,7 +144,8 @@ __load_cookies(FACTS this, char * file)
       if (strmatch(this->key, pair[0])) {
         val = strdup(pair[1]);
         tmp = new_cookie(val, NULL);
-        cookies_add(this->jar, tmp, NULL);
+        cookies_add(this->jar, tmp, this->id, NULL);
+        xfree(val);
       }
       split_free(pair, num); 
     }
