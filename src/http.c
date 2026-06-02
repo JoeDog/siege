@@ -162,7 +162,7 @@ http_get(CONN *C, URL U, FACTS facts)
     snprintf(keepalive, sizeof(keepalive), "close");
   }
 
-  cookies_header(facts->jar, url_get_hostname(U), cookie);
+  cookies_header(facts, U, cookie);
 
   if (C->auth.www) {
     if (C->auth.type.www==DIGEST) {
@@ -323,7 +323,8 @@ http_post(CONN *C, URL U, FACTS facts)
     snprintf(keepalive, sizeof(keepalive), "close");
   }
 
-  cookies_header(facts->jar, url_get_hostname(U), cookie);
+  cookies_header(facts, U, cookie);
+
   if (C->auth.www) {
     if (C->auth.type.www==DIGEST) {
       snprintf (
