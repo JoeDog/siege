@@ -23,6 +23,7 @@
 #ifndef __BROWSER_H
 #define __BROWSER_H
 
+#include <hash.h>
 #include <joedog/defs.h>
 #include <joedog/boolean.h>
 
