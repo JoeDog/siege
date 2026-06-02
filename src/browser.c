@@ -693,14 +693,48 @@ __http(BROWSER this, URL U)
         }
       }
       break;
+    case 403:
+      res = FALSE;
+
+      for (size_t i = 0; i < array_length(my.aurl); i++) {
+        char *url = array_next(my.aurl);
+
+        if (url == NULL || url[0] == '\0') {
+          continue;
+        }
+
+        URL tmp = new_url(url);
+        if (tmp == NULL) {
+          continue;
+        }
+
+        const char *hU = url_get_hostname(U);
+        const char *hT = url_get_hostname(tmp);
+
+        if (hU != NULL && hT != NULL && strmatch(hU, hT)) {
+          url_set_ID(tmp, 0);
+          res = __request(this, tmp);
+          tmp = url_destroy(tmp);
+
+          if (res == TRUE) {
+            res = __request(this, U);
+            return res;
+          }
+        } else {
+          tmp = url_destroy(tmp);
+        }
+      }
+      return res;
+#if 0
     case 403: 
       res = FALSE;
       char *url = NULL;
-
-      while ((url = array_pop(my.aurl)) != NULL) {
+     
+      while ((url = array_next(my.aurl)) != NULL) {
         if (url[0] == '\0') { xfree(url); continue; }
 
         URL tmp = new_url(url);
+        printf("%s\n", url_get_absolute(tmp));
         if (tmp == NULL) {
           xfree(url);
           continue;
@@ -726,6 +760,7 @@ __http(BROWSER this, URL U)
         xfree(url);
       }
       return res;
+#endif
     case 407:
       /**
        * Proxy-Authenticate challenge from the proxy server.
