@@ -111,35 +111,56 @@ cookie_match(COOKIE this, COOKIE that)
 void 
 cookie_set_name(COOKIE this, char *str)
 {
-  size_t len = strlen(str)+1;
-  this->name = malloc(sizeof this->name * len);
-  memset(this->name, '\0', len);
+  if (!this || !str) return;
+
+  free(this->name);
+
+  size_t len = strlen(str) + 1;
+  this->name = malloc(len);
+  if (!this->name) return;
+
   memcpy(this->name, str, len);
 }
 
 void 
 cookie_set_value(COOKIE this, char *str)
 {
-  size_t len  = strlen(str)+1;
-  this->value = malloc(sizeof this->value * len);
-  memset(this->value, '\0', len);
+  if (!this || !str) return;
+
+  free(this->value);
+
+  size_t len = strlen(str) + 1;
+  this->value = malloc(len);
+  if (!this->value) return;
+
   memcpy(this->value, str, len);
 }
 
-void 
+void
 cookie_set_path(COOKIE this, char *str)
 {
-  size_t len = strlen(str)+1;
-  this->path = malloc(sizeof this->path * len);
-  memset(this->path, '\0', len);
+  if (!this || !str) return;
+
+  xfree(this->path);
+
+  size_t len = strlen(str) + 1;
+  this->path = malloc(len);
+  if (!this->path) return;
+
   memcpy(this->path, str, len);
 }
 
 void 
-cookie_set_domain(COOKIE this, const char *domain) {
-  if (!this || !domain) return;
-  if (this->domain) free(this->domain);
-  this->domain = strdup(domain);
+cookie_set_domain(COOKIE this, const char *str) {
+  if (!this || !str) return;
+
+  xfree(this->domain);
+
+  size_t len = strlen(str) + 1;
+  this->domain = malloc(len);
+  if (!this->domain) return;
+
+  memcpy(this->domain, str, len);
 }
 
 void
@@ -229,11 +250,11 @@ cookie_get_hostonly(COOKIE this)
 /**
  * Returns the value of the path
  */
-char * 
+char *
 cookie_get_path(COOKIE this)
 {
   if (this == NULL || this->path == NULL)
-    return __cookie_none;
+    return "/";
   return this->path;
 }
 
@@ -281,16 +302,20 @@ cookie_matches_host(COOKIE this, const char *host)
   if (this->hostonly) {
     return strcasecmp(host, domain) == 0;
   }
-
   if (host_len < domain_len) return FALSE;
 
   const char *host_suffix = host + (host_len - domain_len);
-  if (strcasecmp(host_suffix, domain) != 0)
+  if (strcasecmp(host_suffix, domain) != 0){
     return FALSE;
+  }
 
-  if (host_len == domain_len) return TRUE;
+  if (host_len == domain_len) { 
+    return TRUE;
+  }
 
-  if (host[host_len - domain_len - 1] != '.') return FALSE;
+  if (host[host_len - domain_len - 1] != '.') {
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -363,10 +388,11 @@ cookie_to_string(COOKIE this)
 void *
 strealloc(char *old, char *str)
 {
-  size_t num   = strlen(str) + 1;
-  char *newptr = realloc(old, sizeof (char*) * num); 
+  if (!str) return old;
+
+  size_t num = strlen(str) + 1;
+  char *newptr = realloc(old, num);
   if (newptr) {
-    memset(newptr, '\0', num+1);
     memcpy(newptr, str, num);
   }
   return newptr;
@@ -501,6 +527,10 @@ __parse_input(COOKIE this, char *hdr, char *host)
   if (domain == NULL || domain == __cookie_none) {
     cookie_set_domain(this, host);
     cookie_set_hostonly(this, TRUE);
+  }
+
+  if (this->path == NULL) {
+    cookie_set_path(this, "/");
   }
 
   free(copy);
