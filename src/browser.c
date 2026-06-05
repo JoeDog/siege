@@ -583,7 +583,7 @@ __http(BROWSER this, URL U)
   /**
    * close the socket and free memory.
    */
-  if (!my.keepalive) {
+  if (!my.keepalive || !this->conn->connection.reuse) {
     socket_close(this->conn);
   }
 
