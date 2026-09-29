@@ -133,6 +133,24 @@ typedef struct {
   char **line;
 } LINES;
 
+#define MAX_ERROR_TYPES  32
+
+typedef struct{
+  int          code;   /* HTTP status code, e.g. 404, 500 */
+  unsigned int count;  /* Number of occurrences */
+} ERROR_ENTRY;
+
+typedef struct {
+  ERROR_ENTRY entries[MAX_ERROR_TYPES];
+  int         total_types;
+} ERROR_MAP;
+
+void error_map_increment(ERROR_MAP *map, int code, unsigned int count);
+void error_map_sort(ERROR_MAP *map);
+void error_map_merge(ERROR_MAP *dest, const ERROR_MAP *src);
+void error_map_print(ERROR_MAP *map);
+void error_map_print_json(ERROR_MAP *map);
+
 void display_help();
 void display_version(BOOLEAN b);
 
@@ -197,7 +215,8 @@ struct CONFIG
   BOOLEAN login;         /* boolean, client must login first.       */
   char    *loginurl;     /* XXX: deprecated the initial login URL   */
   ARRAY   lurl;
-  ARRAY   aurl; 
+  ARRAY   aurl;
+  BOOLEAN extended_errors; /* TRUE == display error code breakdown */
   int     failures;      /* number of failed attempts before abort. */
   int     failed;        /* total number of socket failures.        */
   BOOLEAN escape;        /* boolean, TRUE == url-escaping           */
