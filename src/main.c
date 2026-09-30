@@ -84,6 +84,7 @@ static struct option long_options[] =
   { "user-agent",   required_argument, NULL, 'A' },
   { "content-type", required_argument, NULL, 'T' },
   { "json-output",  no_argument,       NULL, 'j' },
+  { "extended-errors", no_argument,    NULL, 'e' },
   {0, 0, 0, 0}
 };
 
@@ -158,6 +159,7 @@ display_help()
   puts("  -A, --user-agent=\"text\"   Sets User-Agent in request" ); 
   puts("  -T, --content-type=\"text\" Sets Content-Type in request" ); 
   puts("  -j, --json-output         JSON OUTPUT, print final stats to stdout as JSON");
+  puts("  -e, --extended-errors     EXTENDED ERRORS, print breakdown of each error code");
   puts("      --no-parser           NO PARSER, turn off the HTML page parser");
   puts("      --no-follow           NO FOLLOW, do not follow HTTP redirects");
   puts("");
@@ -180,7 +182,7 @@ parse_rc_cmdline(int argc, char *argv[])
   strcpy(my.rc, "");
   
   while( a > -1 ){
-    a = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:j", long_options, (int*)0);
+    a = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:je", long_options, (int*)0);
     if(a == 'R'){
       strcpy(my.rc, optarg);
       a = -1;
@@ -199,7 +201,7 @@ parse_cmdline(int argc, char *argv[])
 {
   int c = 0;
   int nargs;
-  while ((c = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:j", long_options, (int *)0)) != EOF) {
+  while ((c = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:je", long_options, (int *)0)) != EOF) {
   switch (c) {
       case 'V':
         display_version(TRUE);
@@ -301,6 +303,9 @@ parse_cmdline(int argc, char *argv[])
         break;
       case 'j':
         my.json_output = TRUE;
+        break;
+      case 'e':
+        my.extended_errors = TRUE;
         break;
 
     } /* end of switch( c )           */
@@ -423,6 +428,8 @@ main(int argc, char *argv[])
   pthread_t cease; 
   pthread_t timer;  
   pthread_attr_t scope_attr;
+  ERROR_MAP total_errors;
+  memset(&total_errors, 0, sizeof(ERROR_MAP));
 
 
   file = xmalloc(sizeof (char*) * length);
@@ -569,6 +576,7 @@ main(int argc, char *argv[])
     data_set_highest      (data, browser_get_himark(B));
     data_set_lowest       (data, browser_get_lomark(B));
     data_increment_cookies(data, browser_get_cookies(B));
+    error_map_merge       (&total_errors, browser_get_error_map(B));
   } crew_destroy(crew);
 
   __save_cookies(file, data_get_cookies(data));
@@ -596,6 +604,9 @@ main(int argc, char *argv[])
       fprintf(stderr, "HTTP OK received:\t%9u\n",             data_get_okay(data));
     }
     fprintf(stderr, "Failed transactions:\t%9u\n",          my.failed);
+    if (my.extended_errors) {
+      error_map_print(&total_errors);
+    }
     fprintf(stderr, "Longest transaction:\t%12.2f ms\n",        1000.0f * data_get_highest(data));
     fprintf(stderr, "Shortest transaction:\t%12.2f ms\n",       1000.0f * data_get_lowest(data));
     fprintf(stderr, " \n");
@@ -628,7 +639,10 @@ main(int argc, char *argv[])
 
     printf("\t\"failed_transactions\":\t\t%12u,\n", my.failed);
     printf("\t\"longest_transaction\":\t\t%12.2f,\n", data_get_highest(data));
-    printf("\t\"shortest_transaction\":\t\t%12.2f\n", data_get_lowest(data));
+    printf("\t\"shortest_transaction\":\t\t%12.2f,\n", data_get_lowest(data));
+    if (my.extended_errors) {
+      error_map_print_json(&total_errors);
+    }
     puts("}");
   }
 

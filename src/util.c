@@ -415,3 +415,92 @@ strncasestr(const char *str1, const char *str2, size_t len)
   return NULL;
 }
 #endif
+
+/**
+ * Increment the count for an error code, or add it as a new entry.
+ */
+void
+error_map_increment(ERROR_MAP *map, int code, unsigned int count)
+{
+  if (map == NULL || count == 0)  return;
+
+  for (int i = 0; i < map->total_types; i++) {
+    if(map->entries[i].code == code) {
+      map->entries[i].count += count;
+      return;
+    }
+  }
+
+  if (map->total_types < MAX_ERROR_TYPES) {
+    map->entries[map->total_types].code = code;
+    map->entries[map->total_types].count = count;
+    map->total_types++;
+  }
+}
+
+/**
+ * Sort error map entries in ascending numerical order of HTTP status code.
+ */
+void
+error_map_sort(ERROR_MAP *map)
+{
+  if (map == NULL || map->total_types <= 1) return;
+
+  for (int i = 0; i < map->total_types - 1; i++) {
+    for (int j = 0; j < map->total_types - i - 1; j++) {
+      if (map->entries[j].code > map->entries[j + 1].code) {
+        ERROR_ENTRY temp = map->entries[j];
+        map->entries[j] = map->entries[j + 1];
+        map->entries[j + 1] = temp;
+      }
+    }
+  }
+}
+
+/**
+ * Merge all error codes from a worker's map into the main total map.
+ */
+void
+error_map_merge(ERROR_MAP *dest, const ERROR_MAP *src)
+{
+  if (dest == NULL || src == NULL) return;
+
+  for(int i = 0; i < src->total_types; i++) {
+    error_map_increment(dest, src->entries[i].code, src->entries[i].count);
+  }
+}
+
+/**
+ * Sort and print the error breakdown in Siege's summary table format.
+ */
+void
+error_map_print(ERROR_MAP *map)
+{
+  if (map == NULL || map->total_types == 0) return;
+
+  error_map_sort(map);
+
+  for (int i = 0; i < map->total_types; i++) {
+    fprintf(stderr, "  HTTP-%d:\t\t%9u\n", map->entries[i].code, map->entries[i].count);
+  }
+}
+
+/**
+ * Sort and print the error breakdown as JSON fields (for -j mode).
+ */
+void
+error_map_print_json(ERROR_MAP *map)
+{
+  if (map == NULL || map->total_types == 0) return;
+
+  error_map_sort(map);
+
+  printf("\t\"extended_errors\": {\n");
+  for (int i = 0; i < map->total_types; i++) {
+    printf("\t\t\"HTTP-%d\":\t\t%12u%s\n",
+            map->entries[i].code,
+            map->entries[i].count,
+            (i < map->total_types - 1) ? "," : "");
+  }
+  printf("\t}\n");
+}

@@ -45,5 +45,6 @@ unsigned int browser_get_okay(BROWSER this);
 unsigned int browser_get_fail(BROWSER this);
 float    browser_get_himark(BROWSER this);
 float    browser_get_lomark(BROWSER this);
+ERROR_MAP * browser_get_error_map(BROWSER this);
 
 #endif/*__BROWSER_H*/
