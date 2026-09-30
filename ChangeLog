@@ -1,6 +1,10 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2026/09/30 Jeffrey Fulmer https://www.joedog.org/support/
+ * src/cookie.c            Fixed parsing error for RFC850 two-digit dates
+ * src/version.c           Version increment: 4.2.1
+
 2026/08/18 Jeffrey Fulmer https://www.joedog.org/support/
  * src/init.c              Fixed empty test for logfile[] 
  * src/ftp.c               Made Macintosh clang happy
