@@ -14,7 +14,7 @@
 size_t  COOKIESIZE = sizeof(struct COOKIE_T);
 
 private BOOLEAN __parse_input(COOKIE this, char *str, char *host);
-private int     __parse_time(const char *str);
+private time_t  __parse_time(const char *str);
 private time_t  __timegm(struct tm *tm);
 private int     __mkmonth(char * s, char ** ends);
 private char *   months[12] = {
@@ -575,8 +575,8 @@ __timegm(struct tm *tm) {
  *  Wkd Mon 00 00:00:00 0000 GMT    (CTIME)
  *  1*DIGIT (delta-seconds)
  */
-private int
-__parse_time(const char *str) 
+private time_t 
+__parse_time(const char *str)
 {
   char *s;
   struct tm tm;
@@ -594,8 +594,14 @@ __parse_time(const char *str)
       if ((int)strlen(s) < 18) return 0;
       tm.tm_mday = strtol(s, &s, 10);
       tm.tm_mon  = __mkmonth(++s, &s);
-      tm.tm_year = strtol(++s, &s, 10);
-      tm.tm_year += (tm.tm_year < 70) ? 100 : 0;  // 2-digit year correction
+
+      long year = strtol(++s, &s, 10);
+      if (year >= 1900) {
+        tm.tm_year = year - 1900;
+      } else {
+        tm.tm_year = year + ((year < 70) ? 100 : 0);
+      }
+
       tm.tm_hour = strtol(++s, &s, 10);
       tm.tm_min  = strtol(++s, &s, 10);
       tm.tm_sec  = strtol(++s, &s, 10);
