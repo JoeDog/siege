@@ -13,6 +13,7 @@ include/stamp-h1
 lib/joedog/.libs/
 lib/joedog/libjoedog.la
 libtool
+m4/*
 
 # Compile Related
 *.o
