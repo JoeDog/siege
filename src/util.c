@@ -415,3 +415,103 @@ strncasestr(const char *str1, const char *str2, size_t len)
   return NULL;
 }
 #endif
+
+/**
+ * Increment the count for an error code, or add it as a new entry.
+ */
+void
+status_map_increment(STATUS_MAP *map, int code, unsigned int count)
+{
+  if (map == NULL || count == 0)  return;
+
+  for (int i = 0; i < map->total_types; i++) {
+    if(map->entries[i].code == code) {
+      map->entries[i].count += count;
+      return;
+    }
+  }
+
+  if (map->total_types < MAX_STATUS_TYPES) {
+    map->entries[map->total_types].code = code;
+    map->entries[map->total_types].count = count;
+    map->total_types++;
+  }
+}
+
+/**
+ * Sort error map entries in ascending numerical order of HTTP status code.
+ */
+void
+status_map_sort(STATUS_MAP *map)
+{
+  if (map == NULL || map->total_types <= 1) return;
+
+  for (int i = 0; i < map->total_types - 1; i++) {
+    for (int j = 0; j < map->total_types - i - 1; j++) {
+      if (map->entries[j].code > map->entries[j + 1].code) {
+        STATUS_ENTRY temp = map->entries[j];
+        map->entries[j] = map->entries[j + 1];
+        map->entries[j + 1] = temp;
+      }
+    }
+  }
+}
+
+/**
+ * Merge all error codes from a worker's map into the main total map.
+ */
+void
+status_map_merge(STATUS_MAP *dest, const STATUS_MAP *src)
+{
+  if (dest == NULL || src == NULL) return;
+
+  for(int i = 0; i < src->total_types; i++) {
+    status_map_increment(dest, src->entries[i].code, src->entries[i].count);
+  }
+}
+
+/**
+ * Sort and print the error breakdown in Siege's summary table format.
+ */
+void
+status_map_print(STATUS_MAP *map)
+{
+  if (map == NULL || map->total_types == 0) return;
+
+  status_map_sort(map);
+
+  if (my.extended == EXT_ERRORS) {
+    fprintf(stderr, "HTTP error response codes:\n");
+  } else {
+    fprintf(stderr, "HTTP response codes:\n");
+  }
+
+  for (int i = 0; i < map->total_types; i++) {
+    fprintf(stderr, "  HTTP-%d:\t\t%9u\n", map->entries[i].code, map->entries[i].count);
+  }
+}
+
+/**
+ * Sort and print the error breakdown as JSON fields (for -j mode).
+ */
+void
+status_map_print_json(STATUS_MAP *map)
+{
+  if (map == NULL || map->total_types == 0) return;
+
+  status_map_sort(map);
+
+  if (my.extended == EXT_ERRORS) {
+    printf("\t\"extended_errors\": {\n");
+  } else {
+    printf("\t\"response_codes\": {\n");
+  }   
+
+  for (int i = 0; i < map->total_types; i++) {
+    printf("\t\t\"HTTP-%d\":\t\t%12u%s\n",
+            map->entries[i].code,
+            map->entries[i].count,
+            (i < map->total_types - 1) ? "," : "");
+  }
+  printf("\t}\n");
+}

@@ -84,6 +84,8 @@ static struct option long_options[] =
   { "user-agent",   required_argument, NULL, 'A' },
   { "content-type", required_argument, NULL, 'T' },
   { "json-output",  no_argument,       NULL, 'j' },
+  { "extended",     no_argument,       NULL, 'E' },
+  { "extended-errors", no_argument,    NULL, 'e' },
   {0, 0, 0, 0}
 };
 
@@ -158,6 +160,8 @@ display_help()
   puts("  -A, --user-agent=\"text\"   Sets User-Agent in request" ); 
   puts("  -T, --content-type=\"text\" Sets Content-Type in request" ); 
   puts("  -j, --json-output         JSON OUTPUT, print final stats to stdout as JSON");
+  puts("      --extended            EXTENDED, print breakdown of all HTTP status codes");
+  puts("      --extended-errors     EXTENDED ERRORS, print breakdown of each error code");
   puts("      --no-parser           NO PARSER, turn off the HTML page parser");
   puts("      --no-follow           NO FOLLOW, do not follow HTTP redirects");
   puts("");
@@ -302,6 +306,12 @@ parse_cmdline(int argc, char *argv[])
       case 'j':
         my.json_output = TRUE;
         break;
+      case 'E':
+        my.extended = EXT_ALL;
+        break;
+      case 'e':
+        my.extended = EXT_ERRORS;
+        break;
 
     } /* end of switch( c )           */
   }   /* end of while c = getopt_long */
@@ -423,6 +433,8 @@ main(int argc, char *argv[])
   pthread_t cease; 
   pthread_t timer;  
   pthread_attr_t scope_attr;
+  STATUS_MAP status_count;
+  memset(&status_count, 0, sizeof(STATUS_MAP));
 
 
   file = xmalloc(sizeof (char*) * length);
@@ -569,6 +581,7 @@ main(int argc, char *argv[])
     data_set_highest      (data, browser_get_himark(B));
     data_set_lowest       (data, browser_get_lomark(B));
     data_increment_cookies(data, browser_get_cookies(B));
+    status_map_merge       (&status_count, browser_get_status_map(B));
   } crew_destroy(crew);
 
   __save_cookies(file, data_get_cookies(data));
@@ -598,6 +611,9 @@ main(int argc, char *argv[])
     fprintf(stderr, "Failed transactions:\t%9u\n",          my.failed);
     fprintf(stderr, "Longest transaction:\t%12.2f ms\n",        1000.0f * data_get_highest(data));
     fprintf(stderr, "Shortest transaction:\t%12.2f ms\n",       1000.0f * data_get_lowest(data));
+    if (my.extended != EXT_NONE) {
+      status_map_print(&status_count);
+    }
     fprintf(stderr, " \n");
   }
 
@@ -628,7 +644,10 @@ main(int argc, char *argv[])
 
     printf("\t\"failed_transactions\":\t\t%12u,\n", my.failed);
     printf("\t\"longest_transaction\":\t\t%12.2f,\n", data_get_highest(data));
-    printf("\t\"shortest_transaction\":\t\t%12.2f\n", data_get_lowest(data));
+    printf("\t\"shortest_transaction\":\t\t%12.2f%s\n", data_get_lowest(data), (my.extended != EXT_NONE) ? "," : "");
+    if (my.extended != EXT_NONE) {
+      status_map_print_json(&status_count);
+    }
     puts("}");
   }
 

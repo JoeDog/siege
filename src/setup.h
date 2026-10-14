@@ -133,6 +133,30 @@ typedef struct {
   char **line;
 } LINES;
 
+typedef enum {
+  EXT_NONE   = 0,
+  EXT_ERRORS = 1,  /* --extended-errors (4xx, 5xx) */
+  EXT_ALL    = 2   /* --extended (all codes: 2xx-5xx) */
+} EXT_MODE;
+
+#define MAX_STATUS_TYPES  64
+
+typedef struct{
+  int          code;   /* HTTP status code, e.g. 404, 500 */
+  unsigned int count;  /* Number of occurrences */
+} STATUS_ENTRY;
+
+typedef struct {
+  STATUS_ENTRY entries[MAX_STATUS_TYPES];
+  int         total_types;
+} STATUS_MAP;
+
+void status_map_increment(STATUS_MAP *map, int code, unsigned int count);
+void status_map_sort(STATUS_MAP *map);
+void status_map_merge(STATUS_MAP *dest, const STATUS_MAP *src);
+void status_map_print(STATUS_MAP *map);
+void status_map_print_json(STATUS_MAP *map);
+
 void display_help();
 void display_version(BOOLEAN b);
 
@@ -197,7 +221,8 @@ struct CONFIG
   BOOLEAN login;         /* boolean, client must login first.       */
   char    *loginurl;     /* XXX: deprecated the initial login URL   */
   ARRAY   lurl;
-  ARRAY   aurl; 
+  ARRAY   aurl;
+  EXT_MODE extended;     /* extended reporting mode */
   int     failures;      /* number of failed attempts before abort. */
   int     failed;        /* total number of socket failures.        */
   BOOLEAN escape;        /* boolean, TRUE == url-escaping           */
