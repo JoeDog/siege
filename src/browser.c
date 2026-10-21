@@ -104,6 +104,7 @@ struct BROWSER_T
   unsigned long hits;
   unsigned long long bytes;
   unsigned int  rseed;
+  STATUS_MAP status_map;
 };
 
 size_t BROWSERSIZE = sizeof(struct BROWSER_T);
@@ -227,6 +228,12 @@ float
 browser_get_lomark(BROWSER this)
 {
   return this->lomark;
+}
+
+STATUS_MAP *
+browser_get_status_map(BROWSER this)
+{
+  return &(this->status_map);
 }
 
 void *
@@ -503,6 +510,12 @@ __http(BROWSER this, URL U)
   }
 
   code = response_get_code(resp);
+
+  if (my.extended == EXT_ALL && code >= 200 && code < 600) {
+    status_map_increment(&(this->status_map), code, 1);
+  } else if (my.extended == EXT_ERRORS && code >= 400 && code < 600) {
+    status_map_increment(&(this->status_map), code, 1);
+  }
 
   if (code == 418) {
     /**
