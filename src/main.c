@@ -160,8 +160,8 @@ display_help()
   puts("  -A, --user-agent=\"text\"   Sets User-Agent in request" ); 
   puts("  -T, --content-type=\"text\" Sets Content-Type in request" ); 
   puts("  -j, --json-output         JSON OUTPUT, print final stats to stdout as JSON");
-  puts("      --extended            EXTENDED, print breakdown of all HTTP status codes");
-  puts("      --extended-errors     EXTENDED ERRORS, print breakdown of each error code");
+  puts("  -E,  --extended           EXTENDED, print breakdown of all HTTP status codes");
+  puts("  -e,  --extended-errors    EXTENDED ERRORS, print breakdown of each error code");
   puts("      --no-parser           NO PARSER, turn off the HTML page parser");
   puts("      --no-follow           NO FOLLOW, do not follow HTTP redirects");
   puts("");
@@ -184,7 +184,7 @@ parse_rc_cmdline(int argc, char *argv[])
   strcpy(my.rc, "");
   
   while( a > -1 ){
-    a = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:j", long_options, (int*)0);
+    a = getopt_long(argc, argv, "VhvqEeCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:j", long_options, (int*)0);
     if(a == 'R'){
       strcpy(my.rc, optarg);
       a = -1;
@@ -203,7 +203,7 @@ parse_cmdline(int argc, char *argv[])
 {
   int c = 0;
   int nargs;
-  while ((c = getopt_long(argc, argv, "VhvqCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:j", long_options, (int *)0)) != EOF) {
+  while ((c = getopt_long(argc, argv, "VhvqEeCDNFpgl::ibr:t:f:d:c:m:H:R:A:T:j", long_options, (int *)0)) != EOF) {
   switch (c) {
       case 'V':
         display_version(TRUE);
