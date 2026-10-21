@@ -39,6 +39,11 @@
 #include <openssl/des.h>
 #include <openssl/md4.h>
 #include <openssl/opensslv.h>
+# if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#  if defined(__GNUC__) || defined(__clang__)
+#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#  endif
+# endif
 # if OPENSSL_VERSION_NUMBER < 0x00907001L
 #  define DES_key_schedule des_key_schedule
 #  define DES_cblock des_cblock
