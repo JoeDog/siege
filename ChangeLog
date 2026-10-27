@@ -1,6 +1,14 @@
 To email a contributor remove "DELETE" from the email address.
 (The DELETEs are necessary as this list is published online.)
 
+2026/10/27 Salma El-Sayed https://github.com/salmaaliia
+ * src/auth.c              Silenced openssl deprecation warnings (JF)
+ * src/browser.c           Collect and count HTTP errors by type
+ * src/browser.h           Prototype: STATUS_MAP * browser_get_status_map(BROWSER this);
+ * src/main.c              Added extended and extended-errors to getopts
+ * setup.h                 extended and extended-errors helpers
+ * src/version.c           Version increment: 4.2.2 (JF)
+
 2026/09/30 Jeffrey Fulmer https://www.joedog.org/support/
  * src/cookie.c            Fixed parsing error for RFC850 two-digit dates
  * src/version.c           Version increment: 4.2.1
